@@ -5,6 +5,6 @@ Season manager for a 12-team superflex Sleeper league ("Battle for the Gridiron 
 - **Dashboard** — [the-nebulizer.github.io/gridiron](https://the-nebulizer.github.io/gridiron/): live scorebug, slot-by-slot lineups, standings, trending free agents. Static page, no backend; the browser talks to Sleeper directly.
 - **Data layer** — `npm run sync` snapshots the whole league to `data/league/snapshot.json` with every player ID resolved.
 - **Skills** — open Claude Code in this folder and run `/lineup`, `/waivers`, or `/trade`; each syncs before it reasons.
-- **Routines** — cloud agents commit a Tuesday waiver report and a Sunday inactives check to `reports/`.
+- **Routines** — cloud agents commit weekly reports to `reports/`: trades (Mon), waivers (Tue), lineup (Thu), inactives (Sun). Each shows up on the dashboard's "brief" tabs.
 
 Sleeper's API is read-only, so all actual moves happen in the Sleeper app. Docs live in `docs/`; start with `docs/RESUME.md`.
