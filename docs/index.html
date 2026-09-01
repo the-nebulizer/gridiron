@@ -7,105 +7,104 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Graduate&family=Barlow+Semi+Condensed:wght@400;500;600&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
 <style>
   :root{
-    --turf:#0C1D12;        /* page ground: night field */
-    --pitch:#14291B;       /* card ground */
-    --line:#1C3A26;        /* chalk rules, dimmed */
-    --chalk:#EFF3E7;       /* primary text */
-    --chalk-dim:#93A894;   /* secondary text */
-    --amber:#FFB41F;       /* scorebug accent */
-    --flag:#E8442A;        /* OUT / penalty flag */
-    --display:'Graduate',serif;
-    --body:'Barlow Semi Condensed',system-ui,sans-serif;
+    --turf:#0C1D12; --pitch:#15291C; --pitch-2:#182F20; --line:#24422F;
+    --chalk:#F2F5EB; --chalk-dim:#A8BCA9; --amber:#FFB41F; --flag:#F0503A;
+    --display:'Graduate',serif; --body:'Barlow Semi Condensed',system-ui,sans-serif;
     --mono:'Spline Sans Mono',ui-monospace,monospace;
   }
   *{box-sizing:border-box}
   html,body{margin:0}
-  body{
-    background:var(--turf) ;
-    /* chalk yard-lines: the field carries the layout */
-    background-image:repeating-linear-gradient(90deg,transparent 0 119px,rgba(239,243,231,.045) 119px 120px);
-    color:var(--chalk);
-    font-family:var(--body);
-    font-size:16px;line-height:1.45;
-    min-height:100vh;
-  }
+  body{background:var(--turf);color:var(--chalk);font-family:var(--body);font-size:17px;line-height:1.55}
   a{color:var(--amber);text-decoration:none}
   a:hover,a:focus-visible{text-decoration:underline}
   :focus-visible{outline:2px solid var(--amber);outline-offset:2px}
-  .wrap{max-width:1060px;margin:0 auto;padding:0 20px 80px}
+  .wrap{max-width:960px;margin:0 auto;padding:0 20px 90px}
 
-  header.masthead{padding:34px 0 10px;display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap}
-  .wordmark{font-family:var(--display);font-size:clamp(26px,4.5vw,40px);letter-spacing:.04em;color:var(--chalk)}
+  /* masthead: the only place the chalk yard-lines live */
+  .field{background-image:repeating-linear-gradient(90deg,transparent 0 95px,rgba(242,245,235,.06) 95px 96px);border-bottom:1px solid var(--line)}
+  header.masthead{max-width:960px;margin:0 auto;padding:30px 20px 22px;display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .wordmark{font-family:var(--display);font-size:clamp(24px,4vw,34px);letter-spacing:.04em}
   .wordmark .throne{color:var(--amber)}
-  .weekchip{font-family:var(--mono);font-size:13px;color:var(--chalk-dim)}
+  .weekchip{font-family:var(--mono);font-size:14px;color:var(--chalk-dim)}
   .weekchip b{color:var(--amber);font-weight:500}
 
-  /* ——— scorebug hero ——— */
-  .scorebug{
-    margin-top:14px;border:1px solid var(--line);background:var(--pitch);
-    display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
-    border-top:3px solid var(--amber);
-  }
-  .side{padding:18px 22px;min-width:0}
+  /* scorebug */
+  .scorebug{margin-top:28px;border:1px solid var(--line);border-top:3px solid var(--amber);background:var(--pitch);display:grid;grid-template-columns:1fr auto 1fr;align-items:center}
+  .side{padding:20px 24px;min-width:0}
   .side.opp{text-align:right}
-  .side .team{font-size:20px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .side .rec{font-family:var(--mono);font-size:13px;color:var(--chalk-dim)}
-  .side .pts{font-family:var(--mono);font-size:clamp(30px,6vw,44px);color:var(--amber);line-height:1.1}
-  .vs{font-family:var(--display);font-size:14px;color:var(--chalk-dim);padding:0 14px;border-left:1px solid var(--line);border-right:1px solid var(--line);align-self:stretch;display:flex;align-items:center}
+  .side .team{font-size:21px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .side .rec{font-family:var(--mono);font-size:14px;color:var(--chalk-dim);margin-top:2px}
+  .side .pts{font-family:var(--mono);font-size:clamp(32px,6vw,46px);color:var(--amber);line-height:1.15;margin-top:6px}
+  .vs{font-family:var(--display);font-size:14px;color:var(--chalk-dim);padding:0 18px;align-self:stretch;display:flex;align-items:center;border-left:1px solid var(--line);border-right:1px solid var(--line)}
 
-  /* ——— sections ——— */
-  section{margin-top:44px}
-  h2{
-    font-family:var(--display);font-size:15px;font-weight:400;letter-spacing:.12em;color:var(--chalk-dim);
-    margin:0 0 14px;display:flex;align-items:center;gap:12px;text-transform:uppercase;
-  }
-  h2::after{content:"";flex:1;height:1px;background:var(--line)}
+  section{margin-top:56px}
+  h2{font-family:var(--display);font-size:16px;font-weight:400;letter-spacing:.12em;color:var(--chalk);margin:0 0 6px;text-transform:uppercase}
+  .sub{font-size:15px;color:var(--chalk-dim);margin:0 0 18px}
 
-  /* lineup: slot-by-slot faceoff */
+  /* the brief: rendered reports + run buttons */
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:0}
+  .tab{font-family:var(--mono);font-size:14px;background:none;border:1px solid var(--line);color:var(--chalk-dim);padding:8px 16px;cursor:pointer}
+  .tab[aria-selected="true"]{background:var(--pitch);color:var(--amber);border-color:var(--amber);border-bottom-color:var(--pitch)}
+  .brief{border:1px solid var(--line);background:var(--pitch);padding:8px 28px 24px}
+  .brief-meta{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding:14px 0;font-family:var(--mono);font-size:13px;color:var(--chalk-dim)}
+  .runlink{font-family:var(--mono);font-size:13px;border:1px solid var(--amber);color:var(--amber);padding:6px 14px;white-space:nowrap}
+  .runlink:hover{background:var(--amber);color:var(--turf);text-decoration:none}
+  .report{max-width:70ch}
+  .report h1{font-size:24px;line-height:1.3;margin:22px 0 10px}
+  .report h2,.report h3{font-family:var(--body);font-size:19px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--chalk);margin:26px 0 8px;display:block}
+  .report h2::after{display:none}
+  .report p,.report li{font-size:17px;color:var(--chalk)}
+  .report em{color:var(--chalk-dim)}
+  .report strong{color:var(--amber);font-weight:600}
+  .report table{margin:14px 0}
+  .report code{font-family:var(--mono);font-size:14px;background:var(--pitch-2);padding:1px 5px}
+  .report blockquote{margin:14px 0;padding:2px 18px;border-left:3px solid var(--line);color:var(--chalk-dim)}
+  .empty{padding:26px 0 14px;color:var(--chalk-dim)}
+
+  /* lineups */
   .lineup{border:1px solid var(--line);background:var(--pitch)}
-  .slotrow{display:grid;grid-template-columns:1fr 84px 1fr;border-top:1px solid var(--line)}
-  .slotrow:first-child{border-top:0}
-  .slot{font-family:var(--display);font-size:11px;letter-spacing:.08em;color:var(--chalk-dim);display:flex;align-items:center;justify-content:center;border-left:1px solid var(--line);border-right:1px solid var(--line)}
-  .pcell{padding:9px 14px;display:flex;align-items:baseline;gap:8px;min-width:0}
+  .lineup .head{display:grid;grid-template-columns:1fr 76px 1fr;font-family:var(--mono);font-size:13px;color:var(--chalk-dim);border-bottom:1px solid var(--line)}
+  .lineup .head div{padding:10px 16px}
+  .lineup .head .r{text-align:right}
+  .slotrow{display:grid;grid-template-columns:1fr 76px 1fr}
+  .slotrow:nth-child(even){background:var(--pitch-2)}
+  .slot{font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--chalk-dim);display:flex;align-items:center;justify-content:center}
+  .pcell{padding:11px 16px;display:flex;align-items:baseline;gap:9px;min-width:0}
   .pcell.opp{flex-direction:row-reverse;text-align:right}
-  .pname{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .pmeta{font-family:var(--mono);font-size:12px;color:var(--chalk-dim);flex-shrink:0}
-  .ppts{font-family:var(--mono);font-size:13px;color:var(--amber);margin-left:auto;flex-shrink:0}
+  .pname{font-weight:500;font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pmeta{font-family:var(--mono);font-size:13px;color:var(--chalk-dim);flex-shrink:0}
+  .ppts{font-family:var(--mono);font-size:14px;color:var(--amber);margin-left:auto;flex-shrink:0}
   .pcell.opp .ppts{margin-left:0;margin-right:auto}
-  .badge{font-family:var(--mono);font-size:11px;padding:0 5px;border:1px solid;flex-shrink:0}
+  .badge{font-family:var(--mono);font-size:11px;padding:1px 6px;border:1px solid;flex-shrink:0}
   .badge.q{color:var(--amber);border-color:var(--amber)}
   .badge.out{color:var(--flag);border-color:var(--flag)}
-  .benchnote{padding:10px 14px;font-size:14px;color:var(--chalk-dim);border-top:1px solid var(--line)}
+  .benchnote{padding:12px 16px;font-size:16px;color:var(--chalk-dim);border-top:1px solid var(--line);line-height:1.7}
   .benchnote b{color:var(--chalk);font-weight:500}
 
-  /* standings + waivers side by side */
-  .cols{display:grid;grid-template-columns:1fr 1fr;gap:44px}
-  table{width:100%;border-collapse:collapse;font-size:15px}
-  th{font-family:var(--mono);font-size:11px;font-weight:400;letter-spacing:.06em;color:var(--chalk-dim);text-align:left;padding:4px 8px;border-bottom:1px solid var(--line);text-transform:uppercase}
-  td{padding:6px 8px;border-bottom:1px solid var(--line)}
-  td.num{font-family:var(--mono);font-size:13px;text-align:right;color:var(--chalk-dim)}
+  table{width:100%;border-collapse:collapse;font-size:17px}
+  th{font-family:var(--mono);font-size:12px;font-weight:400;letter-spacing:.06em;color:var(--chalk-dim);text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);text-transform:uppercase}
+  th.r{text-align:right}
+  td{padding:9px 10px;border-bottom:1px solid var(--line)}
+  tbody tr:nth-child(even){background:var(--pitch)}
+  td.num{font-family:var(--mono);font-size:14px;text-align:right;color:var(--chalk-dim)}
   tr.me td{color:var(--amber)}
   tr.me td.num{color:var(--amber)}
-  .avail{color:var(--amber)}
-  .gone{color:var(--chalk-dim)}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:56px}
 
-  /* reports */
-  .reports li{margin:6px 0}
-  .reports ul{margin:0;padding-left:18px}
-
-  footer{margin-top:60px;padding-top:16px;border-top:1px solid var(--line);font-family:var(--mono);font-size:12px;color:var(--chalk-dim);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
-  button.refresh{font-family:var(--mono);font-size:12px;background:none;border:1px solid var(--line);color:var(--chalk);padding:4px 12px;cursor:pointer}
+  footer{margin-top:70px;padding-top:18px;border-top:1px solid var(--line);font-family:var(--mono);font-size:13px;color:var(--chalk-dim);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  button.refresh{font-family:var(--mono);font-size:13px;background:none;border:1px solid var(--line);color:var(--chalk);padding:5px 14px;cursor:pointer}
   button.refresh:hover{border-color:var(--amber);color:var(--amber)}
-
-  .loading,.error{padding:60px 0;text-align:center;color:var(--chalk-dim);font-family:var(--mono);font-size:14px}
+  .loading,.error{padding:70px 0;text-align:center;color:var(--chalk-dim);font-family:var(--mono);font-size:15px}
   .error b{color:var(--flag)}
 
   @media (max-width:720px){
     .cols{grid-template-columns:1fr}
-    .slotrow{grid-template-columns:1fr 56px 1fr}
+    .slotrow,.lineup .head{grid-template-columns:1fr 52px 1fr}
     .pmeta{display:none}
+    .brief{padding:6px 16px 18px}
   }
   @media (prefers-reduced-motion:no-preference){
     .scorebug{animation:drop .35s ease-out}
@@ -114,26 +113,31 @@
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="field">
   <header class="masthead">
     <div class="wordmark">GRIDIRON <span class="throne">THRONE</span></div>
     <div class="weekchip" id="weekchip">loading…</div>
   </header>
-
+</div>
+<div class="wrap">
   <main id="app"><div class="loading">Reading the field…</div></main>
-
   <footer>
-    <span>Live from the Sleeper public API · lineup changes happen in the Sleeper app</span>
+    <span>Live from the Sleeper public API · moves happen in the Sleeper app</span>
     <span><span id="stamp"></span> <button class="refresh" id="refresh">Refresh</button></span>
   </footer>
 </div>
 
 <script>
 const CFG = { league:'1353093442397294592', me:12, repo:'the-nebulizer/gridiron' };
+const ROUTINES = {
+  waivers:  {label:'Waivers',   id:'trig_018jkMrmz2vDLU6qQdiGeKZE', auto:'auto-runs Tuesdays 7am'},
+  lineup:   {label:'Lineup',    id:'trig_01DxqQ5pTd1sJRc8CSnX4YHy', auto:'auto-runs Thursdays 7am'},
+  trades:   {label:'Trades',    id:'trig_01Jr9ik2fKEiwcs4yaS99ZeQ', auto:'auto-runs Mondays 7am'},
+  inactives:{label:'Inactives', id:'trig_01WEymfugQorRLQeP2YLdvqx', auto:'auto-runs Sundays 10am'},
+};
 const API = 'https://api.sleeper.app/v1';
 const $ = (id)=>document.getElementById(id);
 const esc = (s)=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-
 async function j(url){ const r = await fetch(url); if(!r.ok) throw new Error(r.status+' '+url); return r.json(); }
 
 function resolve(players, id){
@@ -146,17 +150,39 @@ function resolve(players, id){
 const injBadge = (inj)=>{
   if(!inj) return '';
   const out = /out|ir|pup|doubtful/i.test(inj);
-  const label = {Questionable:'Q',Doubtful:'D',Out:'OUT',IR:'IR',PUP:'PUP',Sus:'SUS'}[inj] || inj.slice(0,3).toUpperCase();
+  const label = {Questionable:'Q',Doubtful:'D',Out:'OUT',IR:'IR',PUP:'PUP'}[inj] || inj.slice(0,3).toUpperCase();
   return `<span class="badge ${out?'out':'q'}" title="${esc(inj)}">${esc(label)}</span>`;
 };
-
 function playerCell(p, pts, side){
   if(!p) return `<div class="pcell ${side}"><span class="pmeta">—</span></div>`;
-  return `<div class="pcell ${side}">
-    <span class="pname">${esc(p.name)}</span>${injBadge(p.inj)}
+  return `<div class="pcell ${side}"><span class="pname">${esc(p.name)}</span>${injBadge(p.inj)}
     <span class="pmeta">${esc(p.pos)} · ${esc(p.team)}</span>
-    <span class="ppts">${pts!=null?pts.toFixed(1):''}</span>
-  </div>`;
+    <span class="ppts">${pts!=null?pts.toFixed(1):''}</span></div>`;
+}
+
+/* ——— reports: newest file per type, rendered inline ——— */
+let reportFiles = [];
+async function loadReports(){
+  try{ reportFiles = (await j(`https://api.github.com/repos/${CFG.repo}/contents/reports`))
+        .filter(f=>f.name.endsWith('.md')); }
+  catch{ reportFiles = []; }
+}
+const newestOf = (type)=> reportFiles.filter(f=>f.name.includes('-'+type)).sort((a,b)=>b.name.localeCompare(a.name))[0];
+
+async function showBrief(type){
+  document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected', t.dataset.type===type));
+  const r = ROUTINES[type], f = newestOf(type);
+  const meta = `<div class="brief-meta">
+      <span>${f ? esc(f.name.replace('.md','')) : 'no report yet'} · ${esc(r.auto)}</span>
+      <a class="runlink" href="https://claude.ai/code/routines/${r.id}" target="_blank" rel="noopener">Run fresh ↗</a>
+    </div>`;
+  const box = $('brief');
+  if(!f){ box.innerHTML = meta + `<div class="empty">Nothing here yet. “Run fresh” starts a cloud run — its report lands here a few minutes later (refresh to see it).</div>`; return; }
+  box.innerHTML = meta + `<div class="empty">Loading report…</div>`;
+  try{
+    const md = await (await fetch(f.download_url)).text();
+    box.innerHTML = meta + `<article class="report">${marked.parse(md)}</article>`;
+  }catch{ box.innerHTML = meta + `<div class="empty">Couldn't load the report — <a href="https://github.com/${CFG.repo}/tree/main/reports">read it on GitHub</a>.</div>`; }
 }
 
 async function load(){
@@ -171,13 +197,13 @@ async function load(){
       j(`${API}/league/${CFG.league}/users`), j(`${API}/league/${CFG.league}/matchups/${wk}`),
       j(`${API}/players/nfl/trending/add?lookback_hours=48&limit=40`), j(`${API}/players/nfl`),
     ]);
+    await loadReports();
 
     const owner = Object.fromEntries(users.map(u=>[u.user_id,u.display_name]));
     const byId  = Object.fromEntries(rosters.map(r=>[r.roster_id,r]));
     const name  = (rid)=>owner[byId[rid]?.owner_id] || ('Team '+rid);
     const rec   = (rid)=>{const s=byId[rid]?.settings||{};return `${s.wins||0}–${s.losses||0}`};
     const rostered = new Set(rosters.flatMap(r=>r.players||[]));
-
     const mine = matchups.find(m=>m.roster_id===CFG.me);
     const opp  = mine && matchups.find(m=>m.matchup_id===mine.matchup_id && m.roster_id!==CFG.me);
     const slots = (league.roster_positions||[]).filter(s=>s!=='BN');
@@ -190,59 +216,60 @@ async function load(){
         <div class="vs">VS</div>
         <div class="side opp"><div class="team">${esc(name(opp.roster_id))}</div><div class="rec">${rec(opp.roster_id)}</div><div class="pts">${(opp.points||0).toFixed(1)}</div></div>
       </div>`;
+    }
 
-      html += `<section><h2>This week's lineups</h2><div class="lineup">`;
+    // The brief — Claude's layer, the reason this page exists
+    html += `<section><h2>The brief</h2>
+      <p class="sub">Claude's analysis of this league, written by the cloud routines. "Run fresh" starts one now (one click on the page that opens); the report lands back here a few minutes later.</p>
+      <div class="tabs" role="tablist">${Object.entries(ROUTINES).map(([t,r])=>`<button class="tab" role="tab" data-type="${t}" aria-selected="false">${r.label}</button>`).join('')}</div>
+      <div class="brief" id="brief"></div>
+      <p class="sub" style="margin-top:12px">Something these don't cover — a trade offer to evaluate, a what-if? <a href="https://claude.ai/code" target="_blank" rel="noopener">Open a cloud session</a> on <b>the-nebulizer/gridiron</b> and ask; the skills run there too.</p>
+    </section>`;
+
+    if(mine && opp){
+      const myRoster = byId[CFG.me];
+      const startSet = new Set(myRoster.starters||[]);
+      const bench = (myRoster.players||[]).filter(id=>!startSet.has(id)&&!(myRoster.reserve||[]).includes(id)).map(id=>resolve(players,id));
+      const reserve = (myRoster.reserve||[]).map(id=>resolve(players,id));
+      html += `<section><h2>This week's lineups</h2>
+        <p class="sub">Slot by slot against ${esc(name(opp.roster_id))}. Points fill in live on game days.</p>
+        <div class="lineup">
+        <div class="head"><div>${esc(name(CFG.me))} (you)</div><div></div><div class="r">${esc(name(opp.roster_id))}</div></div>`;
       slots.forEach((slot,i)=>{
         const a = resolve(players,(mine.starters||[])[i]);
         const b = resolve(players,(opp.starters||[])[i]);
         html += `<div class="slotrow">${playerCell(a,ppts(mine,(mine.starters||[])[i]),'')}<div class="slot">${esc(slot.replace('SUPER_FLEX','SFLX'))}</div>${playerCell(b,ppts(opp,(opp.starters||[])[i]),'opp')}</div>`;
       });
-      const myRoster = byId[CFG.me];
-      const startSet = new Set(myRoster.starters||[]);
-      const bench = (myRoster.players||[]).filter(id=>!startSet.has(id)&&!(myRoster.reserve||[]).includes(id)).map(id=>resolve(players,id));
-      const reserve = (myRoster.reserve||[]).map(id=>resolve(players,id));
-      html += `<div class="benchnote"><b>Bench:</b> ${bench.map(p=>esc(p.name)+(p.inj?' '+injBadge(p.inj):'')).join(' · ')||'—'}`
-            + (reserve.length?` &nbsp;<b>IR:</b> ${reserve.map(p=>esc(p.name)).join(' · ')}`:' &nbsp;<b>IR:</b> empty')
-            + `</div></div></section>`;
+      html += `<div class="benchnote"><b>Bench:</b> ${bench.map(p=>esc(p.name)+' '+injBadge(p.inj)).join(' · ')||'—'}<br><b>IR:</b> ${reserve.length?reserve.map(p=>esc(p.name)+' '+injBadge(p.inj)).join(' · '):'empty'}</div>
+      </div></section>`;
     }
 
-    // standings + waiver intel
     const standings = rosters.slice().sort((x,y)=>(y.settings?.wins||0)-(x.settings?.wins||0) || (y.settings?.fpts||0)-(x.settings?.fpts||0));
     const budget = league.settings?.waiver_budget||0;
-    html += `<div class="cols"><section><h2>Standings</h2><table>
-      <tr><th>Team</th><th style="text-align:right">Rec</th><th style="text-align:right">PF</th><th style="text-align:right">FAAB</th></tr>
-      ${standings.map(r=>`<tr class="${r.roster_id===CFG.me?'me':''}"><td>${esc(name(r.roster_id))}</td><td class="num">${rec(r.roster_id)}</td><td class="num">${(r.settings?.fpts||0)}</td><td class="num">$${budget-(r.settings?.waiver_budget_used||0)}</td></tr>`).join('')}
-    </table></section>`;
-
     const adds = trending.map(t=>({...resolve(players,t.player_id), n:t.count, taken:rostered.has(t.player_id)}));
-    const free = adds.filter(a=>!a.taken).slice(0,12);
-    html += `<section><h2>Trending free agents</h2><table>
-      <tr><th>Player</th><th></th><th style="text-align:right">Adds 48h</th></tr>
-      ${free.map(a=>`<tr><td>${esc(a.name)} ${injBadge(a.inj)}</td><td class="num">${esc(a.pos)} · ${esc(a.team)}</td><td class="num avail">+${a.n.toLocaleString()}</td></tr>`).join('')}
-    </table>
-    <p style="font-size:13px;color:var(--chalk-dim)">Unrostered in this league right now. Claims process Wednesday — full reasoning in the weekly report below.</p>
-    </section></div>`;
-
-    // reports from the repo
-    html += `<section class="reports"><h2>Reports</h2><div id="reports"><span style="color:var(--chalk-dim);font-size:14px">Loading…</span></div></section>`;
+    const free = adds.filter(a=>!a.taken).slice(0,10);
+    html += `<div class="cols">
+      <section><h2>Standings</h2><p class="sub">FAAB = what each manager can still bid.</p>
+      <table><thead><tr><th>Team</th><th class="r">Rec</th><th class="r">PF</th><th class="r">FAAB</th></tr></thead><tbody>
+      ${standings.map(r=>`<tr class="${r.roster_id===CFG.me?'me':''}"><td>${esc(name(r.roster_id))}</td><td class="num">${rec(r.roster_id)}</td><td class="num">${(r.settings?.fpts||0)}</td><td class="num">$${budget-(r.settings?.waiver_budget_used||0)}</td></tr>`).join('')}
+      </tbody></table></section>
+      <section><h2>Free agents rising</h2><p class="sub">Hot adds across Sleeper, filtered to players nobody in this league rosters.</p>
+      <table><thead><tr><th>Player</th><th></th><th class="r">Adds 48h</th></tr></thead><tbody>
+      ${free.map(a=>`<tr><td>${esc(a.name)} ${injBadge(a.inj)}</td><td class="num">${esc(a.pos)} · ${esc(a.team)}</td><td class="num" style="color:var(--amber)">+${a.n.toLocaleString()}</td></tr>`).join('')}
+      </tbody></table></section></div>`;
 
     $('app').innerHTML = html;
     $('stamp').textContent = 'updated '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-
-    try{
-      const files = await j(`https://api.github.com/repos/${CFG.repo}/contents/reports`);
-      const list = files.filter(f=>f.name.endsWith('.md')).sort((a,b)=>b.name.localeCompare(a.name)).slice(0,10);
-      $('reports').innerHTML = list.length
-        ? `<ul>${list.map(f=>`<li><a href="https://github.com/${CFG.repo}/blob/main/reports/${encodeURIComponent(f.name)}">${esc(f.name.replace('.md',''))}</a></li>`).join('')}</ul>`
-        : '<span style="color:var(--chalk-dim);font-size:14px">No reports yet. The Tuesday and Sunday routines publish here.</span>';
-    }catch{ $('reports').innerHTML = '<span style="color:var(--chalk-dim);font-size:14px">No reports yet.</span>'; }
-
+    document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>showBrief(t.dataset.type)));
+    // open on the freshest report
+    const newest = reportFiles.slice().sort((a,b)=>b.name.localeCompare(a.name))[0];
+    const initial = newest ? (Object.keys(ROUTINES).find(t=>newest.name.includes('-'+t)) || 'waivers') : 'waivers';
+    showBrief(initial);
   }catch(e){
     $('app').innerHTML = `<div class="error"><b>Couldn't reach the Sleeper API.</b><br><br>${esc(e.message)}<br><br>Check your connection, then refresh.</div>`;
   }
 }
 $('refresh').addEventListener('click', load);
-// live scoreboard: refresh every 2 minutes while the tab is visible
 setInterval(()=>{ if(!document.hidden) load(); }, 120000);
 load();
 </script>
