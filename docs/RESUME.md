@@ -9,6 +9,7 @@ Season manager for Ben's Sleeper league. Ground truth = `node scripts/sync.mjs` 
 ## State (2026-09-01)
 
 - **Built + verified**: data layer (`scripts/`), snapshot resolves all 12 rosters to real names against the live league; skills `/lineup`, `/waivers`, `/trade`; docs.
+- **Dashboard**: `docs/index.html` on GitHub Pages (main//docs) at https://the-nebulizer.github.io/gridiron/ — client-side Sleeper fetches (CORS open), scorebug + lineups + standings + trending; auto-refreshes every 2 min while visible. Repo is PUBLIC by Ben's choice.
 - **Scheduled routines**: Tue ~7am waiver report, Sun ~11am ET inactives check — status: see repo issues/log; created at initial build (verify they still exist with `/schedule list`).
 - **Not done**: nothing in-app can be automated (Sleeper API is read-only — all roster moves are manual in the Sleeper app).
 
