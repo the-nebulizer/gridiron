@@ -2,7 +2,9 @@
 
 Living doc. Update as the season moves. Every item was checked against the live snapshot on 2026-09-01 — notably, the draft-day transcript's claim that Jordyn Tyson was rostered turned out to be **false** (he is not on the team). Trust the snapshot.
 
-## Immediate (before Week 1 kickoff)
+## Immediate (before Week 1 kickoff — season starts Sep 9)
+
+0. **Pre-season adds are instant and free right now** (FCFS, not waivers — confirmed from the league's transaction log on Sep 1). The Sep 1 waiver report's Cousins/Davis/Hill picks are right, but as immediate adds, not Wednesday bids. Grab them in the app the moment you decide.
 
 1. **IR slot is empty.** Zach Charbonnet (RB, SEA) is on the bench with **PUP** status — if Sleeper allows PUP into the IR slot, move him there in the app to free a bench spot for a waiver add. (Roster moves are manual; the API is read-only.)
 2. Questionable tags to watch before Sunday: Jeanty, Kraft, Dicker (starters), Meyers, Pierce (bench).

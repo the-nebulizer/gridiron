@@ -100,6 +100,8 @@ const trendResolve = (list) =>
 const snapshot = {
   fetched_at: new Date().toISOString(),
   season: state.season,
+  season_start_date: state.season_start_date ?? null,
+  games_have_started: state.season_start_date ? new Date() >= new Date(state.season_start_date) : null,
   week,
   league: {
     name: league.name,
