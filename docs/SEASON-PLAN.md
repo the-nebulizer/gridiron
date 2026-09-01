@@ -19,4 +19,5 @@ Living doc. Update as the season moves. Every item was checked against the live 
 ## Log
 
 - 2026-09-01: repo built; Week 1 lineup as drafted.
-- 2026-09-01: Charbonnet → IR (Ben, in app). Bench open: 4 of 5 spots used. Pending decision: instant-add Cousins/Davis/Hill per the waiver report (FCFS until Sep 9).
+- 2026-09-01: Charbonnet → IR (Ben, in app). Bench open: 4 of 5 spots used.
+- 2026-09-01: **Kirk Cousins added** — instant FCFS, $0 FAAB (pre-season mode confirmed in practice). QB room now Lamar/Goff/Cousins/Young — bye weeks 6 and 13 are covered in-house; the ~$20 FAAB reserve for QB streaming can relax. Roster is FULL (15+1 IR): Davis/Hill or any further add now requires a drop (report suggested Pierce / Allen).
