@@ -1,39 +1,7 @@
 # Week 1 Inactives Check — 2026-09-01
 
-## Not actionable yet — this ran before game day
+> Regenerated 2026-09-01T14:46:03Z: baseline refresh
 
-Week 1 kickoffs are **Sept 9–14, 2026**, not today. Official NFL inactive lists
-aren't released until ~90 minutes before each kickoff, so there is nothing to
-act on right now. Nothing below is a lineup-lock decision — treat it as an
-early read, and **re-run this check the actual Sunday morning of Week 1**
-before lineups lock.
+## Not actionable yet — this ran before any games exist
 
-## Checklist
-
-- **ACTIVE (as of today) — no change**: Lamar Jackson (QB BAL), Bucky Irving
-  (RB TB), Tetairoa McMillan (WR CAR), Stefon Diggs (WR WAS), Jaylen Warren
-  (RB PIT), Jared Goff (QB DET), Buffalo Bills DEF — no injury designation in
-  the snapshot; no news suggesting a change.
-- **QUESTIONABLE — Ashton Jeanty (RB LV)**: ankle, did not practice Monday;
-  Raiders did not put him on IR and coach left the door open for Week 1
-  (opener Sept 13 vs. MIA). No official word yet — first Raiders injury
-  report is Wednesday before that game. **No bench RB to pivot to** (bench is
-  WR/WR/WR/QB) — if he's out, no like-for-like replacement on this roster.
-- **QUESTIONABLE — Tucker Kraft (TE GB)**: recovering from last year's ACL
-  tear, but reported "full go" / trending active for the opener (Sept 13 vs.
-  MIN). **No bench TE** — no pivot available if he's out.
-- **QUESTIONABLE — Cameron Dicker (K LAC)**: minor preseason issue, team not
-  concerned, trending active for the opener (Sept 14 vs. ARI). **No bench K**
-  — no pivot available if he's out.
-
-## Bench depth gap
-
-Bench is Keenan Allen, Jakobi Meyers (Q), Alec Pierce (Q), Bryce Young — no
-RB, TE, or K. If Jeanty, Kraft, or Dicker end up out for the opener, there is
-no in-roster pivot. Worth a look at FAAB before Wednesday waivers.
-
-## Action
-
-Re-run this inactives check the actual Sunday morning of Week 1 kickoffs
-(Sept 9–14) so the report reflects real injury reports and inactive lists
-instead of late-August/preseason chatter.
+`season_start_date` in the snapshot is 2026-09-09 and `games_have_started` is false; today is 2026-09-01, more than a week before Week 1 kickoff. There is no NFL slate imminent or underway, so there is nothing for an inactives check to do: no injury reports have been finalized, no Sunday/Thursday inactive lists exist, and none of my starters (Lamar Jackson, Ashton Jeanty, Bucky Irving, Tetairoa McMillan, Stefon Diggs, Tucker Kraft, Jaylen Warren, Jared Goff, Cameron Dicker, Buffalo Bills DEF) can be confirmed active or inactive for a game that hasn't been scheduled to start. The Questionable tags currently on Jeanty, Kraft, Dicker, and bench player Meyers are preseason/camp designations, not game-day injury statuses — they carry no start/sit implication right now. This report will do real work once Week 1 games are underway (Sept 9–14, 2026); no action needed before then.
