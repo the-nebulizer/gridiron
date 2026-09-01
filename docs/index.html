@@ -135,6 +135,8 @@ const ROUTINES = {
   trades:   {label:'Trades',    id:'trig_01Jr9ik2fKEiwcs4yaS99ZeQ', auto:'auto-runs Mondays 7am'},
   inactives:{label:'Inactives', id:'trig_01WEymfugQorRLQeP2YLdvqx', auto:'auto-runs Sundays 10am'},
 };
+const WATCHER = {label:'Roster watcher', id:'trig_01DTuqiqG69gfwSjFfW65vah',
+  auto:'checks hourly 7am–10pm; re-writes all four tabs after any roster move'};
 const API = 'https://api.sleeper.app/v1';
 const $ = (id)=>document.getElementById(id);
 const esc = (s)=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -169,8 +171,19 @@ async function loadReports(){
 }
 const newestOf = (type)=> reportFiles.filter(f=>f.name.includes('-'+type)).sort((a,b)=>b.name.localeCompare(a.name))[0];
 
+function settingsPanel(){
+  const rows = [...Object.values(ROUTINES), WATCHER];
+  return `<div class="brief-meta"><span>the cloud routines behind this page</span></div>
+    <table style="margin:18px 0"><thead><tr><th>Routine</th><th>Schedule</th><th class="r"></th></tr></thead><tbody>
+    ${rows.map(r=>`<tr><td>${esc(r.label)}</td><td>${esc(r.auto)}</td>
+      <td class="num"><a href="https://claude.ai/code/routines/${r.id}" target="_blank" rel="noopener">manage / pause ↗</a></td></tr>`).join('')}
+    </tbody></table>
+    <p class="sub">Each link opens the routine on claude.ai — pause/resume is the toggle there, and you can run it immediately or edit its schedule and prompt. The report tabs also have their own "Run fresh" button. Everything else on this page (scorebug, lineups, standings, free agents) is live from the Sleeper API and refreshes itself every 2 minutes.</p>`;
+}
+
 async function showBrief(type){
   document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected', t.dataset.type===type));
+  if(type==='settings'){ $('brief').innerHTML = settingsPanel(); return; }
   const r = ROUTINES[type], f = newestOf(type);
   const meta = `<div class="brief-meta">
       <span>${f ? esc(f.name.replace('.md','')) : 'no report yet'} · ${esc(r.auto)}</span>
@@ -221,7 +234,7 @@ async function load(){
     // The brief — Claude's layer, the reason this page exists
     html += `<section><h2>The brief</h2>
       <p class="sub">Claude's analysis of this league, written by the cloud routines. "Run fresh" starts one now (one click on the page that opens); the report lands back here a few minutes later.</p>
-      <div class="tabs" role="tablist">${Object.entries(ROUTINES).map(([t,r])=>`<button class="tab" role="tab" data-type="${t}" aria-selected="false">${r.label}</button>`).join('')}</div>
+      <div class="tabs" role="tablist">${Object.entries(ROUTINES).map(([t,r])=>`<button class="tab" role="tab" data-type="${t}" aria-selected="false">${r.label}</button>`).join('')}<button class="tab" role="tab" data-type="settings" aria-selected="false">Settings</button></div>
       <div class="brief" id="brief"></div>
       <p class="sub" style="margin-top:12px">Something these don't cover — a trade offer to evaluate, a what-if? <a href="https://claude.ai/code" target="_blank" rel="noopener">Open a cloud session</a> on <b>the-nebulizer/gridiron</b> and ask; the skills run there too.</p>
     </section>`;
