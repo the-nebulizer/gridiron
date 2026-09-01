@@ -6,7 +6,7 @@ Living doc. Update as the season moves. Every item was checked against the live 
 
 0. **Pre-season adds are instant and free right now** (FCFS, not waivers — confirmed from the league's transaction log on Sep 1). The Sep 1 waiver report's Cousins/Davis/Hill picks are right, but as immediate adds, not Wednesday bids. Grab them in the app the moment you decide.
 
-1. **IR slot is empty.** Zach Charbonnet (RB, SEA) is on the bench with **PUP** status — if Sleeper allows PUP into the IR slot, move him there in the app to free a bench spot for a waiver add. (Roster moves are manual; the API is read-only.)
+1. ~~IR slot is empty~~ **DONE 2026-09-01**: Ben moved Zach Charbonnet (RB, SEA — PUP) into the IR slot; bench now has an open spot (verified in snapshot). Revisit when Charbonnet comes off PUP — Sleeper will require moving him back to the active roster (or cutting him) to keep the slot legal.
 2. Questionable tags to watch before Sunday: Jeanty, Kraft, Dicker (starters), Meyers, Pierce (bench).
 
 ## Standing
@@ -18,4 +18,5 @@ Living doc. Update as the season moves. Every item was checked against the live 
 
 ## Log
 
-- 2026-09-01: repo built; Week 1 lineup as drafted; nothing actioned yet.
+- 2026-09-01: repo built; Week 1 lineup as drafted.
+- 2026-09-01: Charbonnet → IR (Ben, in app). Bench open: 4 of 5 spots used. Pending decision: instant-add Cousins/Davis/Hill per the waiver report (FCFS until Sep 9).
