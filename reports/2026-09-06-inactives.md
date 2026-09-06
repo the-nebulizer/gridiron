@@ -1,0 +1,3 @@
+# Week 1 Inactives Check — 2026-09-06
+
+No action needed: `data/league/snapshot.json` reports `season_start_date: 2026-09-09` and `games_have_started: false`, so Week 1 hasn't kicked off yet — there are no Sunday games today for anyone to be inactive from, and no lineup lock to beat. This Sunday-morning inactives job doesn't have a job to do yet; the first real inactives check should land after Week 1 games begin (first kickoff 2026-09-09). Injury tags currently on the roster (Jeanty, Kraft, Dicker Questionable; Charbonnet PUP) are pre-season camp designations, not game-day status, per CLAUDE.md calendar calibration.
