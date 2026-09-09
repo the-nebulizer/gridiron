@@ -15,7 +15,7 @@ const dataDir = path.join(root, 'data');
 const state = await sleeper.getState();
 const week = Number(process.argv[2]) || state.week || 1;
 
-const [league, rosters, users, matchups, trendingAdds, trendingDrops, players] =
+const [league, rosters, users, matchups, trendingAdds, trendingDrops, players, schedule] =
   await Promise.all([
     sleeper.getLeague(config.league_id),
     sleeper.getRosters(config.league_id),
@@ -24,7 +24,13 @@ const [league, rosters, users, matchups, trendingAdds, trendingDrops, players] =
     sleeper.getTrending('add'),
     sleeper.getTrending('drop'),
     sleeper.getPlayers(path.join(dataDir, 'players.json')),
+    sleeper.getSchedule(state.season),
   ]);
+
+// Bye weeks come from the schedule, never from the players dump — Sleeper's
+// player objects carry no bye field, so reading one there silently yields null
+// and invites guessing from memory. Team code -> bye week.
+const byes = sleeper.byeWeeks(schedule);
 
 const txWeeks = week > 1 ? [week - 1, week] : [week];
 const transactionsRaw = (
@@ -38,7 +44,8 @@ function resolve(id) {
   const p = players[id];
   if (!p) {
     // Team defenses are keyed by team code ("BUF") but may be absent from old dumps.
-    if (/^[A-Z]{2,3}$/.test(id)) return { id, name: `${id} DEF`, position: 'DEF', team: id };
+    if (/^[A-Z]{2,3}$/.test(id))
+      return { id, name: `${id} DEF`, position: 'DEF', team: id, bye_week: byes.get(id) ?? null };
     return { id, name: `unknown(${id})`, position: null, team: null };
   }
   return {
@@ -46,7 +53,7 @@ function resolve(id) {
     name: p.full_name ?? [p.first_name, p.last_name].filter(Boolean).join(' ') ?? id,
     position: p.position ?? null,
     team: p.team ?? null,
-    bye_week: p.bye_week ?? null,
+    bye_week: byes.get(p.team) ?? null,
     injury_status: p.injury_status ?? null,
   };
 }
@@ -101,7 +108,11 @@ const snapshot = {
   fetched_at: new Date().toISOString(),
   season: state.season,
   season_start_date: state.season_start_date ?? null,
-  games_have_started: state.season_start_date ? new Date() >= new Date(state.season_start_date) : null,
+  // True only once a real game has kicked off, per the schedule's game statuses.
+  // The old date comparison flipped at 00:00 UTC on season_start_date — the
+  // evening BEFORE the opener in US time — which would switch the skills out of
+  // pre-season (free-agent) mode while adds were still first-come-first-serve.
+  games_have_started: sleeper.kickoffHasHappened(schedule),
   week,
   league: {
     name: league.name,
@@ -131,7 +142,8 @@ await mkdir(path.join(dataDir, 'league'), { recursive: true });
 await writeFile(path.join(dataDir, 'league', 'snapshot.json'), JSON.stringify(snapshot, null, 2));
 
 // Human-readable summary
-const slot = (positions, list) => positions.map((pos, i) => `  ${pos.padEnd(11)} ${list[i] ? `${list[i].name} (${list[i].position ?? '?'} ${list[i].team ?? '-'})` : '—'}`);
+const byeWeek = (p) => (p?.bye_week ? `, bye W${p.bye_week}` : '');
+const slot = (positions, list) => positions.map((pos, i) => `  ${pos.padEnd(11)} ${list[i] ? `${list[i].name} (${list[i].position ?? '?'} ${list[i].team ?? '-'}${byeWeek(list[i])})` : '—'}`);
 const startingSlots = (league.roster_positions ?? []).filter((p) => p !== 'BN');
 
 console.log(`# ${league.name} — Week ${week} (${state.season})`);
@@ -146,6 +158,19 @@ const hurt = [...myTeam.starters, ...myTeam.bench, ...myTeam.reserve].filter((p)
 if (hurt.length) {
   console.log(`\nInjury flags on my roster:`);
   for (const p of hurt) console.log(`  ${p.name} (${p.position}) — ${p.injury_status}`);
+}
+// Bye weeks on my roster, grouped — the weeks that need a plan, from data.
+const myByes = new Map();
+for (const p of [...myTeam.starters, ...myTeam.bench, ...myTeam.reserve].filter(Boolean)) {
+  if (!p.bye_week) continue;
+  if (!myByes.has(p.bye_week)) myByes.set(p.bye_week, []);
+  myByes.get(p.bye_week).push(`${p.name} (${p.position ?? '?'})`);
+}
+if (myByes.size) {
+  console.log(`\nMy bye weeks (from the ${state.season} schedule):`);
+  for (const w of [...myByes.keys()].sort((a, b) => a - b)) {
+    console.log(`  W${String(w).padEnd(2)} ${myByes.get(w).join(', ')}`);
+  }
 }
 const freeAdds = snapshot.trending.adds.filter((t) => !t.rostered_in_league).slice(0, 10);
 console.log(`\nTop trending adds NOT rostered in this league:`);

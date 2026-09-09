@@ -21,7 +21,7 @@ then read `data/league/snapshot.json`. That file is the only truth about who is 
 
 ## Calendar calibration (check EVERY run)
 
-The snapshot carries `season_start_date` and `games_have_started`. Sleeper labels the league "in_season, week 1" as soon as drafts end — do not trust that label; trust the date.
+The snapshot carries `season_start_date` and `games_have_started` (the latter is true only once a real game has left `pre_game` in the Sleeper schedule — not a date comparison). Sleeper labels the league "in_season, week 1" as soon as drafts end — do not trust that label; trust the date.
 
 **Before `season_start_date`** (pre-season): unrostered players are largely first-come-first-serve — adds are instant and cost $0 FAAB, not Wednesday bids (confirm from the snapshot: `free_agent` transactions completing at creation time = FCFS mode). Recommend "add NOW", never "bid and wait". No games exist yet: no points, no inactives, no start/sit urgency; injury tags are camp designations. A routine that fires when its job doesn't exist yet (e.g. Sunday inactives with no Sunday games) writes a one-paragraph report saying exactly that and stops.
 
