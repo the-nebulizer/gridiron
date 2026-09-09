@@ -170,6 +170,13 @@ async function loadReports(){
   catch{ reportFiles = []; }
 }
 const newestOf = (type)=> reportFiles.filter(f=>f.name.includes('-'+type)).sort((a,b)=>b.name.localeCompare(a.name))[0];
+// Reports are named YYYY-MM-DD-type.md. Ben reads a date, not a filename.
+function reportDate(name){
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(name);
+  if(!m) return name.replace('.md','');
+  return new Date(+m[1], +m[2]-1, +m[3])
+    .toLocaleDateString(undefined,{weekday:'long', month:'short', day:'numeric'});
+}
 
 function settingsPanel(){
   const rows = [...Object.values(ROUTINES), WATCHER];
@@ -186,7 +193,7 @@ async function showBrief(type){
   if(type==='settings'){ $('brief').innerHTML = settingsPanel(); return; }
   const r = ROUTINES[type], f = newestOf(type);
   const meta = `<div class="brief-meta">
-      <span>${f ? esc(f.name.replace('.md','')) : 'no report yet'} · ${esc(r.auto)}</span>
+      <span>${f ? esc(reportDate(f.name)) : 'no report yet'} · ${esc(r.auto)}</span>
       <a class="runlink" href="https://claude.ai/code/routines/${r.id}" target="_blank" rel="noopener">Run fresh ↗</a>
     </div>`;
   const box = $('brief');
@@ -279,7 +286,8 @@ async function load(){
     const initial = newest ? (Object.keys(ROUTINES).find(t=>newest.name.includes('-'+t)) || 'waivers') : 'waivers';
     showBrief(initial);
   }catch(e){
-    $('app').innerHTML = `<div class="error"><b>Couldn't reach the Sleeper API.</b><br><br>${esc(e.message)}<br><br>Check your connection, then refresh.</div>`;
+    // The reason stays on the element for debugging; the copy stays readable.
+    $('app').innerHTML = `<div class="error" title="${esc(e.message)}"><b>Couldn't reach Sleeper.</b><br><br>The league data on this page comes straight from Sleeper, so there's nothing to show until they answer.<br><br>Check your connection, then refresh.</div>`;
   }
 }
 $('refresh').addEventListener('click', load);
