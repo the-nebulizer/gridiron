@@ -89,6 +89,8 @@ const oppTeam = oppMatchup ? teams.find((t) => t.roster_id === oppMatchup.roster
 
 const transactions = transactionsRaw.map((t) => ({
   week: t.leg,
+  // When it actually happened — needed to answer "what changed since I last looked".
+  at: t.status_updated ?? t.created ?? null,
   type: t.type,
   status: t.status,
   by: (t.roster_ids ?? []).map((rid) => teams.find((x) => x.roster_id === rid)?.owner ?? rid),
@@ -134,7 +136,7 @@ const snapshot = {
           : null,
       }
     : null,
-  transactions,
+  transactions: transactions.sort((a, b) => (b.at ?? 0) - (a.at ?? 0)),
   trending: { adds: trendResolve(trendingAdds), drops: trendResolve(trendingDrops) },
 };
 

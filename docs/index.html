@@ -23,7 +23,6 @@
   :focus-visible{outline:2px solid var(--amber);outline-offset:2px}
   .wrap{max-width:960px;margin:0 auto;padding:0 20px 90px}
 
-  /* masthead: the only place the chalk yard-lines live */
   .field{background-image:repeating-linear-gradient(90deg,transparent 0 95px,rgba(242,245,235,.06) 95px 96px);border-bottom:1px solid var(--line)}
   header.masthead{max-width:960px;margin:0 auto;padding:30px 20px 22px;display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap}
   .wordmark{font-family:var(--display);font-size:clamp(24px,4vw,34px);letter-spacing:.04em}
@@ -31,58 +30,80 @@
   .weekchip{font-family:var(--mono);font-size:14px;color:var(--chalk-dim)}
   .weekchip b{color:var(--amber);font-weight:500}
 
-  /* scorebug */
-  .scorebug{margin-top:28px;border:1px solid var(--line);border-top:3px solid var(--amber);background:var(--pitch);display:grid;grid-template-columns:1fr auto 1fr;align-items:center}
-  .side{padding:20px 24px;min-width:0}
-  .side.opp{text-align:right}
-  .side .team{font-size:21px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .side .rec{font-family:var(--mono);font-size:14px;color:var(--chalk-dim);margin-top:2px}
-  .side .pts{font-family:var(--mono);font-size:clamp(32px,6vw,46px);color:var(--amber);line-height:1.15;margin-top:6px}
-  .vs{font-family:var(--display);font-size:14px;color:var(--chalk-dim);padding:0 18px;align-self:stretch;display:flex;align-items:center;border-left:1px solid var(--line);border-right:1px solid var(--line)}
-
-  section{margin-top:56px}
+  section{margin-top:52px}
   h2{font-family:var(--display);font-size:16px;font-weight:400;letter-spacing:.12em;color:var(--chalk);margin:0 0 6px;text-transform:uppercase}
   .sub{font-size:15px;color:var(--chalk-dim);margin:0 0 18px}
 
-  /* the brief: rendered reports + run buttons */
-  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:0}
-  .tab{font-family:var(--mono);font-size:14px;background:none;border:1px solid var(--line);color:var(--chalk-dim);padding:8px 16px;cursor:pointer}
-  .tab[aria-selected="true"]{background:var(--pitch);color:var(--amber);border-color:var(--amber);border-bottom-color:var(--pitch)}
-  .brief{border:1px solid var(--line);background:var(--pitch);padding:8px 28px 24px}
-  .brief-meta{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding:14px 0;font-family:var(--mono);font-size:13px;color:var(--chalk-dim)}
-  .runlink{font-family:var(--mono);font-size:13px;border:1px solid var(--amber);color:var(--amber);padding:6px 14px;white-space:nowrap}
-  .runlink:hover{background:var(--amber);color:var(--turf);text-decoration:none}
-  .report{max-width:70ch}
-  .report h1{font-size:24px;line-height:1.3;margin:22px 0 10px}
-  .report h2,.report h3{font-family:var(--body);font-size:19px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--chalk);margin:26px 0 8px;display:block}
-  .report h2::after{display:none}
-  .report p,.report li{font-size:17px;color:var(--chalk)}
-  .report em{color:var(--chalk-dim)}
-  .report strong{color:var(--amber);font-weight:600}
-  .report table{margin:14px 0}
-  .report code{font-family:var(--mono);font-size:14px;background:var(--pitch-2);padding:1px 5px}
-  .report blockquote{margin:14px 0;padding:2px 18px;border-left:3px solid var(--line);color:var(--chalk-dim)}
-  .empty{padding:26px 0 14px;color:var(--chalk-dim)}
+  /* on the clock — the reason to open the page */
+  .clock{border:1px solid var(--line);border-left:3px solid var(--amber);background:var(--pitch)}
+  .item{padding:15px 20px;border-bottom:1px solid var(--line);display:flex;gap:14px;align-items:baseline}
+  .item:last-child{border-bottom:0}
+  .tag{font-family:var(--mono);font-size:11px;letter-spacing:.08em;padding:2px 7px;border:1px solid;flex-shrink:0;text-transform:uppercase}
+  .tag.now{color:var(--flag);border-color:var(--flag)}
+  .tag.soon{color:var(--amber);border-color:var(--amber)}
+  .tag.watch{color:var(--chalk-dim);border-color:var(--line)}
+  .item .what{min-width:0}
+  .item .what b{color:var(--chalk);font-weight:600}
+  .item .why{color:var(--chalk-dim);font-size:15px;display:block;margin-top:2px}
+  .allclear{padding:22px 20px;color:var(--chalk-dim)}
 
-  /* lineups */
-  .lineup{border:1px solid var(--line);background:var(--pitch)}
+  .scorebug{border:1px solid var(--line);border-top:3px solid var(--amber);background:var(--pitch);display:grid;grid-template-columns:1fr auto 1fr;align-items:center}
+  .side{padding:18px 22px;min-width:0}
+  .side.opp{text-align:right}
+  .side .team{font-size:20px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .side .rec{font-family:var(--mono);font-size:13px;color:var(--chalk-dim);margin-top:2px}
+  .side .pts{font-family:var(--mono);font-size:clamp(30px,6vw,42px);color:var(--amber);line-height:1.15;margin-top:4px}
+  .vs{font-family:var(--display);font-size:13px;color:var(--chalk-dim);padding:0 16px;align-self:stretch;display:flex;align-items:center;border-left:1px solid var(--line);border-right:1px solid var(--line)}
+
+  .lineup{border:1px solid var(--line);background:var(--pitch);margin-top:14px}
   .lineup .head{display:grid;grid-template-columns:1fr 76px 1fr;font-family:var(--mono);font-size:13px;color:var(--chalk-dim);border-bottom:1px solid var(--line)}
   .lineup .head div{padding:10px 16px}
   .lineup .head .r{text-align:right}
   .slotrow{display:grid;grid-template-columns:1fr 76px 1fr}
   .slotrow:nth-child(even){background:var(--pitch-2)}
   .slot{font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--chalk-dim);display:flex;align-items:center;justify-content:center}
-  .pcell{padding:11px 16px;display:flex;align-items:baseline;gap:9px;min-width:0}
-  .pcell.opp{flex-direction:row-reverse;text-align:right}
+  .pcell{padding:10px 16px;min-width:0}
+  .pcell.opp{text-align:right}
+  .pline{display:flex;align-items:baseline;gap:8px;min-width:0}
+  .pcell.opp .pline{flex-direction:row-reverse}
   .pname{font-weight:500;font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .pmeta{font-family:var(--mono);font-size:13px;color:var(--chalk-dim);flex-shrink:0}
   .ppts{font-family:var(--mono);font-size:14px;color:var(--amber);margin-left:auto;flex-shrink:0}
   .pcell.opp .ppts{margin-left:0;margin-right:auto}
+  .kick{font-family:var(--mono);font-size:12px;color:var(--chalk-dim);margin-top:2px}
+  .kick.live{color:var(--amber)}
   .badge{font-family:var(--mono);font-size:11px;padding:1px 6px;border:1px solid;flex-shrink:0}
   .badge.q{color:var(--amber);border-color:var(--amber)}
   .badge.out{color:var(--flag);border-color:var(--flag)}
   .benchnote{padding:12px 16px;font-size:16px;color:var(--chalk-dim);border-top:1px solid var(--line);line-height:1.7}
   .benchnote b{color:var(--chalk);font-weight:500}
+
+  /* league activity */
+  .feed{border:1px solid var(--line);background:var(--pitch)}
+  .move{padding:13px 20px;border-bottom:1px solid var(--line);display:flex;gap:16px;align-items:baseline;flex-wrap:wrap}
+  .move:last-child{border-bottom:0}
+  .move .who{font-weight:600;min-width:150px}
+  .move .did{color:var(--chalk-dim);flex:1;min-width:220px}
+  .move .did .in{color:var(--chalk)}
+  .move .when{font-family:var(--mono);font-size:12px;color:var(--chalk-dim);margin-left:auto}
+  .free{font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--amber);border:1px solid var(--amber);padding:1px 6px}
+
+  .tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .tab{font-family:var(--mono);font-size:14px;background:none;border:1px solid var(--line);color:var(--chalk-dim);padding:8px 16px;cursor:pointer}
+  .tab[aria-selected="true"]{background:var(--pitch);color:var(--amber);border-color:var(--amber);border-bottom-color:var(--pitch)}
+  .brief{border:1px solid var(--line);background:var(--pitch);padding:8px 28px 24px}
+  .brief-meta{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding:14px 0;font-family:var(--mono);font-size:13px;color:var(--chalk-dim)}
+  .runlink{font-family:var(--mono);font-size:13px;border:1px solid var(--amber);color:var(--amber);padding:6px 14px;white-space:nowrap}
+  .runlink:hover{background:var(--amber);color:var(--turf);text-decoration:none}
+  .missed{color:var(--flag)}
+  .report{max-width:70ch}
+  .report h1{font-size:24px;line-height:1.3;margin:22px 0 10px}
+  .report h2,.report h3{font-family:var(--body);font-size:19px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--chalk);margin:26px 0 8px;display:block}
+  .report p,.report li{font-size:17px;color:var(--chalk)}
+  .report em{color:var(--chalk-dim)}
+  .report strong{color:var(--amber);font-weight:600}
+  .report code{font-family:var(--mono);font-size:14px;background:var(--pitch-2);padding:1px 5px}
+  .report blockquote{margin:14px 0;padding:2px 18px;border-left:3px solid var(--line);color:var(--chalk-dim)}
+  .empty{padding:26px 0 14px;color:var(--chalk-dim)}
 
   table{width:100%;border-collapse:collapse;font-size:17px}
   th{font-family:var(--mono);font-size:12px;font-weight:400;letter-spacing:.06em;color:var(--chalk-dim);text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);text-transform:uppercase}
@@ -103,11 +124,11 @@
   @media (max-width:720px){
     .cols{grid-template-columns:1fr}
     .slotrow,.lineup .head{grid-template-columns:1fr 52px 1fr}
-    .pmeta{display:none}
     .brief{padding:6px 16px 18px}
+    .move .when{margin-left:0}
   }
   @media (prefers-reduced-motion:no-preference){
-    .scorebug{animation:drop .35s ease-out}
+    .clock{animation:drop .35s ease-out}
     @keyframes drop{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
   }
 </style>
@@ -122,47 +143,129 @@
 <div class="wrap">
   <main id="app"><div class="loading">Reading the field…</div></main>
   <footer>
-    <span>Live from the Sleeper public API · moves happen in the Sleeper app</span>
+    <span>Live from Sleeper · moves happen in the Sleeper app</span>
     <span><span id="stamp"></span> <button class="refresh" id="refresh">Refresh</button></span>
   </footer>
 </div>
 
 <script>
 const CFG = { league:'1353093442397294592', me:12, repo:'the-nebulizer/gridiron' };
+// day: the weekday each routine runs, so the page can tell when one ran but left nothing.
 const ROUTINES = {
-  waivers:  {label:'Waivers',   id:'trig_018jkMrmz2vDLU6qQdiGeKZE', auto:'auto-runs Tuesdays 7am'},
-  lineup:   {label:'Lineup',    id:'trig_01DxqQ5pTd1sJRc8CSnX4YHy', auto:'auto-runs Thursdays 7am'},
-  trades:   {label:'Trades',    id:'trig_01Jr9ik2fKEiwcs4yaS99ZeQ', auto:'auto-runs Mondays 7am'},
-  inactives:{label:'Inactives', id:'trig_01WEymfugQorRLQeP2YLdvqx', auto:'auto-runs Sundays 10am'},
+  activity: {label:'Activity',  id:'trig_01DTuqiqG69gfwSjFfW65vah', day:null, auto:'checks hourly through the day'},
+  waivers:  {label:'Waivers',   id:'trig_018jkMrmz2vDLU6qQdiGeKZE', day:2,    auto:'runs Tuesdays, ahead of Wednesday claims'},
+  lineup:   {label:'Lineup',    id:'trig_01DxqQ5pTd1sJRc8CSnX4YHy', day:4,    auto:'runs Thursdays'},
+  inactives:{label:'Inactives', id:'trig_01WEymfugQorRLQeP2YLdvqx', day:0,    auto:'runs Sunday mornings'},
+  trades:   {label:'Trades',    id:'trig_01Jr9ik2fKEiwcs4yaS99ZeQ', day:1,    auto:'runs Mondays'},
 };
 const WATCHER = {label:'Roster watcher', id:'trig_01DTuqiqG69gfwSjFfW65vah',
-  auto:'checks hourly 7am–10pm; re-writes all four tabs after any roster move'};
-const API = 'https://api.sleeper.app/v1';
+  auto:'checks hourly, and rewrites the brief after any move you make'};
+const API = 'https://api.sleeper.app';
 const $ = (id)=>document.getElementById(id);
 const esc = (s)=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 async function j(url){ const r = await fetch(url); if(!r.ok) throw new Error(r.status+' '+url); return r.json(); }
 
+/* ——— shaping the raw feeds ——— */
 function resolve(players, id){
   if(!id || id==='0') return null;
   const p = players[id];
-  if(!p) return {name:/^[A-Z]{2,3}$/.test(id)?id+' DEF':'#'+id, pos:/^[A-Z]{2,3}$/.test(id)?'DEF':'?', team:id, inj:null};
-  return { name:p.full_name || ((p.first_name||'')+' '+(p.last_name||'')).trim() || id,
+  if(!p) return {id, name:/^[A-Z]{2,3}$/.test(id)?id+' DEF':'#'+id, pos:/^[A-Z]{2,3}$/.test(id)?'DEF':'?', team:id, inj:null};
+  return { id, name:p.full_name || ((p.first_name||'')+' '+(p.last_name||'')).trim() || id,
            pos:p.position||'?', team:p.team||'—', inj:p.injury_status||null };
 }
-const injBadge = (inj)=>{
-  if(!inj) return '';
-  const out = /out|ir|pup|doubtful/i.test(inj);
-  const label = {Questionable:'Q',Doubtful:'D',Out:'OUT',IR:'IR',PUP:'PUP'}[inj] || inj.slice(0,3).toUpperCase();
-  return `<span class="badge ${out?'out':'q'}" title="${esc(inj)}">${esc(label)}</span>`;
-};
-function playerCell(p, pts, side){
-  if(!p) return `<div class="pcell ${side}"><span class="pmeta">—</span></div>`;
-  return `<div class="pcell ${side}"><span class="pname">${esc(p.name)}</span>${injBadge(p.inj)}
-    <span class="pmeta">${esc(p.pos)} · ${esc(p.team)}</span>
-    <span class="ppts">${pts!=null?pts.toFixed(1):''}</span></div>`;
+// A team's bye is the one week it has no game on the schedule.
+function byeWeeks(schedule){
+  const weeks = [...new Set(schedule.map(g=>g.week))].sort((a,b)=>a-b);
+  const played = {};
+  schedule.forEach(g=>[g.home,g.away].forEach(t=>{ (played[t] = played[t]||new Set()).add(g.week); }));
+  const byes = {};
+  Object.entries(played).forEach(([t,ws])=>{ const b = weeks.filter(w=>!ws.has(w)); if(b.length===1) byes[t]=b[0]; });
+  return byes;
+}
+// team -> this week's game: who, when, on what channel, and whether it's under way.
+function gamesByTeam(scores){
+  const out = {};
+  for(const g of scores){
+    const m = g.metadata || {};
+    if(!m.home_team || !m.away_team) continue;
+    const common = {kick:m.date_time?new Date(m.date_time):null, tv:m.channel||'', live:!!m.is_in_progress,
+                    over:!!m.is_over, started:!!m.has_started, quarter:m.quarter||''};
+    out[m.home_team] = {...common, opp:m.away_team, home:true};
+    out[m.away_team] = {...common, opp:m.home_team, home:false};
+  }
+  return out;
+}
+const dayTime = (d)=> d ? d.toLocaleString(undefined,{weekday:'short',hour:'numeric',minute:'2-digit'}) : '';
+function gameLabel(g){
+  if(!g) return 'on bye';
+  const side = (g.home?'vs ':'@ ')+g.opp;
+  if(g.over) return side+' · final';
+  if(g.live) return side+' · live'+(g.quarter?' '+g.quarter:'');
+  return side+' · '+dayTime(g.kick)+(g.tv?' · '+g.tv:'');
 }
 
-/* ——— reports: newest file per type, rendered inline ——— */
+/* ——— what needs Ben ——— */
+function actionItems({me, players, games, byes, week, txns, rostered, trendAdd, trendDrop}){
+  const items = [];
+  const starters = (me.starters||[]).map(id=>resolve(players,id)).filter(Boolean);
+
+  // A player on IR or PUP can't fill an active roster spot, so he isn't an option.
+  const stashed = (p)=> /ir|pup|^na$|sus/i.test(p.inj||'');
+  const net = (id)=> (trendAdd[id]||0) - (trendDrop[id]||0);
+  const seen = new Set();
+
+  // Players other managers let go who nobody has claimed.
+  for(const t of txns){
+    for(const id of Object.keys(t.drops||{})){
+      if(rostered.has(id) || seen.has(id)) continue;
+      seen.add(id);
+      const p = resolve(players,id); if(!p || stashed(p)) continue;
+      if(net(id) <= 0) continue;                 // the market agrees with the drop; skip
+      items.push({urgency:'soon',
+        what:`${p.name} (${p.pos} ${p.team}) is still unclaimed`,
+        why:`Dropped in your league and nobody took him. ${net(id).toLocaleString()} more managers adding than dropping him across Sleeper.`});
+    }
+  }
+
+  // The best players nobody here has, whether or not they were ever dropped —
+  // the strongest demand across Sleeper, filtered to what's actually available.
+  Object.keys(trendAdd)
+    .filter(id=>!rostered.has(id) && !seen.has(id) && net(id) > 0)
+    .sort((a,b)=>net(b)-net(a))
+    .slice(0,2)
+    .forEach(id=>{
+      const p = resolve(players,id); if(!p || stashed(p)) return;
+      seen.add(id);
+      items.push({urgency:'soon',
+        what:`${p.name} (${p.pos} ${p.team}) is free and in demand`,
+        why:`Nobody in your league has him. ${net(id).toLocaleString()} more managers adding than dropping him across Sleeper — the biggest number on the board that's still available.`});
+    });
+
+  // Starters carrying an injury tag, with the kickoff you have to decide by.
+  for(const p of starters){
+    if(!p.inj) continue;
+    const g = games[p.team];
+    const out = /out|ir|pup|doubtful/i.test(p.inj);
+    items.push({urgency: out?'now':'soon',
+      what:`${p.name} is ${p.inj.toLowerCase()}`,
+      why: g && !g.started ? `Starting at ${p.pos}. Decide before ${dayTime(g.kick)}.` : `Starting at ${p.pos}.`});
+  }
+
+  // Bye trouble in the next three weeks, while there's still time to plan for it.
+  for(let w=week+1; w<=week+3; w++){
+    const outThisWeek = starters.filter(p=>byes[p.team]===w);
+    if(!outThisWeek.length) continue;
+    const thin = outThisWeek.filter(p=>['K','DEF','TE','QB'].includes(p.pos));
+    items.push({urgency: w===week+1?'soon':'watch',
+      what:`Week ${w}: ${outThisWeek.map(p=>p.name).join(', ')} on bye`,
+      why: thin.length ? `${thin.map(p=>p.pos).join(' and ')} can't be covered from your bench — plan a claim.` : 'Covered from the bench.'});
+  }
+
+  const rank = {now:0, soon:1, watch:2};
+  return items.sort((a,b)=>rank[a.urgency]-rank[b.urgency]);
+}
+
+/* ——— the written brief ——— */
 let reportFiles = [];
 async function loadReports(){
   try{ reportFiles = (await j(`https://api.github.com/repos/${CFG.repo}/contents/reports`))
@@ -170,53 +273,72 @@ async function loadReports(){
   catch{ reportFiles = []; }
 }
 const newestOf = (type)=> reportFiles.filter(f=>f.name.includes('-'+type)).sort((a,b)=>b.name.localeCompare(a.name))[0];
-// Reports are named YYYY-MM-DD-type.md. Ben reads a date, not a filename.
 function reportDate(name){
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(name);
-  if(!m) return name.replace('.md','');
-  return new Date(+m[1], +m[2]-1, +m[3])
-    .toLocaleDateString(undefined,{weekday:'long', month:'short', day:'numeric'});
+  if(!m) return null;
+  return new Date(+m[1], +m[2]-1, +m[3]);
+}
+const longDate = (d)=> d ? d.toLocaleDateString(undefined,{weekday:'long', month:'short', day:'numeric'}) : '';
+// Did a routine's scheduled day pass without a report? Silence should be visible.
+function missedRun(type, file){
+  const day = ROUTINES[type].day;
+  if(day===null) return null;
+  const now = new Date();
+  const last = new Date(now); last.setHours(0,0,0,0);
+  last.setDate(last.getDate() - ((now.getDay() - day + 7) % 7));
+  if(now - last < 12*60*60*1000) return null;      // today's run may still be pending
+  const have = file ? reportDate(file.name) : null;
+  return (have && have >= last) ? null : last.toLocaleDateString(undefined,{weekday:'long'});
 }
 
 function settingsPanel(){
-  const rows = [...Object.values(ROUTINES), WATCHER];
-  return `<div class="brief-meta"><span>the cloud routines behind this page</span></div>
+  const rows = [...Object.values(ROUTINES).filter(r=>r.day!==null), WATCHER];
+  return `<div class="brief-meta"><span>what runs on its own, and when</span></div>
     <table style="margin:18px 0"><thead><tr><th>Routine</th><th>Schedule</th><th class="r"></th></tr></thead><tbody>
     ${rows.map(r=>`<tr><td>${esc(r.label)}</td><td>${esc(r.auto)}</td>
-      <td class="num"><a href="https://claude.ai/code/routines/${r.id}" target="_blank" rel="noopener">manage / pause ↗</a></td></tr>`).join('')}
+      <td class="num"><a href="https://claude.ai/code/routines/${r.id}" target="_blank" rel="noopener">open ↗</a></td></tr>`).join('')}
     </tbody></table>
-    <p class="sub">Each link opens the routine on claude.ai — pause/resume is the toggle there, and you can run it immediately or edit its schedule and prompt. The report tabs also have their own "Run fresh" button. Everything else on this page (scorebug, lineups, standings, free agents) is live from the Sleeper API and refreshes itself every 2 minutes.</p>`;
+    <p class="sub">Each link opens that routine, where you can pause it, change when it runs, or start one now. Everything else on this page is live from Sleeper and refreshes itself every two minutes.</p>`;
 }
 
 async function showBrief(type){
   document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected', t.dataset.type===type));
-  if(type==='settings'){ $('brief').innerHTML = settingsPanel(); return; }
-  const r = ROUTINES[type], f = newestOf(type);
+  const box = $('brief');
+  if(type==='settings'){ box.innerHTML = settingsPanel(); return; }
+  const r = ROUTINES[type], f = newestOf(type), missed = missedRun(type, f);
   const meta = `<div class="brief-meta">
-      <span>${f ? esc(reportDate(f.name)) : 'no report yet'} · ${esc(r.auto)}</span>
+      <span>${f ? esc(longDate(reportDate(f.name)) || f.name.replace('.md','')) : 'nothing yet'} · ${esc(r.auto)}${
+        missed ? ` · <span class="missed">${esc(missed)}'s run left nothing here</span>` : ''}</span>
       <a class="runlink" href="https://claude.ai/code/routines/${r.id}" target="_blank" rel="noopener">Run fresh ↗</a>
     </div>`;
-  const box = $('brief');
-  if(!f){ box.innerHTML = meta + `<div class="empty">Nothing here yet. “Run fresh” starts a cloud run — its report lands here a few minutes later (refresh to see it).</div>`; return; }
-  box.innerHTML = meta + `<div class="empty">Loading report…</div>`;
+  if(!f){ box.innerHTML = meta + `<div class="empty">Nothing here yet. “Run fresh” starts one now; the write-up lands here a few minutes later.</div>`; return; }
+  box.innerHTML = meta + `<div class="empty">Loading…</div>`;
   try{
     const md = await (await fetch(f.download_url)).text();
     box.innerHTML = meta + `<article class="report">${marked.parse(md)}</article>`;
-  }catch{ box.innerHTML = meta + `<div class="empty">Couldn't load the report — <a href="https://github.com/${CFG.repo}/tree/main/reports">read it on GitHub</a>.</div>`; }
+  }catch{ box.innerHTML = meta + `<div class="empty">This one wouldn't load — <a href="https://github.com/${CFG.repo}/tree/main/reports">read it on GitHub</a>.</div>`; }
 }
 
+/* ——— page ——— */
 async function load(){
   $('app').innerHTML = '<div class="loading">Reading the field…</div>';
   try{
-    const state = await j(`${API}/state/nfl`);
+    const state = await j(`${API}/v1/state/nfl`);
     const wk = state.week || 1;
     $('weekchip').innerHTML = `${esc(state.season)} SEASON · <b>WEEK ${wk}</b>`;
 
-    const [league, rosters, users, matchups, trending, players] = await Promise.all([
-      j(`${API}/league/${CFG.league}`), j(`${API}/league/${CFG.league}/rosters`),
-      j(`${API}/league/${CFG.league}/users`), j(`${API}/league/${CFG.league}/matchups/${wk}`),
-      j(`${API}/players/nfl/trending/add?lookback_hours=48&limit=40`), j(`${API}/players/nfl`),
-    ]);
+    const [league, rosters, users, matchups, trending, trendingDrops, players, schedule, scores, txnsNow, txnsPrev] =
+      await Promise.all([
+        j(`${API}/v1/league/${CFG.league}`), j(`${API}/v1/league/${CFG.league}/rosters`),
+        j(`${API}/v1/league/${CFG.league}/users`), j(`${API}/v1/league/${CFG.league}/matchups/${wk}`),
+        j(`${API}/v1/players/nfl/trending/add?lookback_hours=48&limit=200`),
+        j(`${API}/v1/players/nfl/trending/drop?lookback_hours=48&limit=200`),
+        j(`${API}/v1/players/nfl`),
+        j(`${API}/schedule/nfl/regular/${state.season}`),
+        j(`${API}/scores/nfl/regular/${state.season}/${wk}`),
+        j(`${API}/v1/league/${CFG.league}/transactions/${wk}`),
+        wk>1 ? j(`${API}/v1/league/${CFG.league}/transactions/${wk-1}`) : Promise.resolve([]),
+      ]);
     await loadReports();
 
     const owner = Object.fromEntries(users.map(u=>[u.user_id,u.display_name]));
@@ -224,70 +346,110 @@ async function load(){
     const name  = (rid)=>owner[byId[rid]?.owner_id] || ('Team '+rid);
     const rec   = (rid)=>{const s=byId[rid]?.settings||{};return `${s.wins||0}–${s.losses||0}`};
     const rostered = new Set(rosters.flatMap(r=>r.players||[]));
+    const trendAdd = Object.fromEntries(trending.map(t=>[t.player_id,t.count]));
+    const trendDrop = Object.fromEntries(trendingDrops.map(t=>[t.player_id,t.count]));
+    const byes = byeWeeks(schedule);
+    const games = gamesByTeam(scores);
+    const txns = [...txnsNow, ...txnsPrev]
+      .filter(t=>t.type!=='commissioner' && t.status==='complete')
+      .sort((a,b)=>(b.status_updated||0)-(a.status_updated||0));
+    const me = byId[CFG.me];
     const mine = matchups.find(m=>m.roster_id===CFG.me);
     const opp  = mine && matchups.find(m=>m.matchup_id===mine.matchup_id && m.roster_id!==CFG.me);
     const slots = (league.roster_positions||[]).filter(s=>s!=='BN');
     const ppts = (m,id)=> m && m.players_points ? m.players_points[id] : null;
 
     let html = '';
-    if(mine && opp){
-      html += `<div class="scorebug">
-        <div class="side"><div class="team">${esc(name(CFG.me))}</div><div class="rec">${rec(CFG.me)}</div><div class="pts">${(mine.points||0).toFixed(1)}</div></div>
-        <div class="vs">VS</div>
-        <div class="side opp"><div class="team">${esc(name(opp.roster_id))}</div><div class="rec">${rec(opp.roster_id)}</div><div class="pts">${(opp.points||0).toFixed(1)}</div></div>
-      </div>`;
-    }
 
-    // The brief — Claude's layer, the reason this page exists
-    html += `<section><h2>The brief</h2>
-      <p class="sub">Claude's analysis of this league, written by the cloud routines. "Run fresh" starts one now (one click on the page that opens); the report lands back here a few minutes later.</p>
-      <div class="tabs" role="tablist">${Object.entries(ROUTINES).map(([t,r])=>`<button class="tab" role="tab" data-type="${t}" aria-selected="false">${r.label}</button>`).join('')}<button class="tab" role="tab" data-type="settings" aria-selected="false">Settings</button></div>
-      <div class="brief" id="brief"></div>
-      <p class="sub" style="margin-top:12px">Something these don't cover — a trade offer to evaluate, a what-if? <a href="https://claude.ai/code" target="_blank" rel="noopener">Open a cloud session</a> on <b>the-nebulizer/gridiron</b> and ask; the skills run there too.</p>
-    </section>`;
+    /* 1 — what needs you */
+    const items = actionItems({me, players, games, byes, week:wk, txns, rostered, trendAdd, trendDrop});
+    html += `<section style="margin-top:32px"><h2>On the clock</h2>
+      <p class="sub">Everything below is decided in the Sleeper app — this page just makes sure you know about it.</p>
+      <div class="clock">${
+        items.length ? items.map(i=>`<div class="item"><span class="tag ${i.urgency}">${i.urgency}</span>
+          <span class="what"><b>${esc(i.what)}</b><span class="why">${esc(i.why)}</span></span></div>`).join('')
+        : `<div class="allclear">Nothing needs you right now. Lineup is set, nobody worth claiming has been dropped, and no bye trouble in the next three weeks.</div>`
+      }</div></section>`;
 
+    /* 2 — this week */
     if(mine && opp){
-      const myRoster = byId[CFG.me];
-      const startSet = new Set(myRoster.starters||[]);
-      const bench = (myRoster.players||[]).filter(id=>!startSet.has(id)&&!(myRoster.reserve||[]).includes(id)).map(id=>resolve(players,id));
-      const reserve = (myRoster.reserve||[]).map(id=>resolve(players,id));
-      html += `<section><h2>This week's lineups</h2>
-        <p class="sub">Slot by slot against ${esc(name(opp.roster_id))}. Points fill in live on game days.</p>
+      const startSet = new Set(me.starters||[]);
+      const bench = (me.players||[]).filter(id=>!startSet.has(id)&&!(me.reserve||[]).includes(id)).map(id=>resolve(players,id));
+      const reserve = (me.reserve||[]).map(id=>resolve(players,id));
+      const cell = (p,pts,side)=>{
+        if(!p) return `<div class="pcell ${side}"><span class="kick">—</span></div>`;
+        const g = games[p.team];
+        const inj = p.inj ? `<span class="badge ${/out|ir|pup|doubtful/i.test(p.inj)?'out':'q'}" title="${esc(p.inj)}">${esc(p.inj.slice(0,3).toUpperCase())}</span>` : '';
+        return `<div class="pcell ${side}"><div class="pline"><span class="pname">${esc(p.name)}</span>${inj}
+          <span class="ppts">${pts!=null?pts.toFixed(1):''}</span></div>
+          <div class="kick ${g&&g.live?'live':''}">${esc(gameLabel(g))}</div></div>`;
+      };
+      html += `<section><h2>This week</h2>
+        <p class="sub">Kickoffs in your local time. Points fill in as games run.</p>
+        <div class="scorebug">
+          <div class="side"><div class="team">${esc(name(CFG.me))}</div><div class="rec">${rec(CFG.me)}</div><div class="pts">${(mine.points||0).toFixed(1)}</div></div>
+          <div class="vs">VS</div>
+          <div class="side opp"><div class="team">${esc(name(opp.roster_id))}</div><div class="rec">${rec(opp.roster_id)}</div><div class="pts">${(opp.points||0).toFixed(1)}</div></div>
+        </div>
         <div class="lineup">
         <div class="head"><div>${esc(name(CFG.me))} (you)</div><div></div><div class="r">${esc(name(opp.roster_id))}</div></div>`;
       slots.forEach((slot,i)=>{
         const a = resolve(players,(mine.starters||[])[i]);
         const b = resolve(players,(opp.starters||[])[i]);
-        html += `<div class="slotrow">${playerCell(a,ppts(mine,(mine.starters||[])[i]),'')}<div class="slot">${esc(slot.replace('SUPER_FLEX','SFLX'))}</div>${playerCell(b,ppts(opp,(opp.starters||[])[i]),'opp')}</div>`;
+        html += `<div class="slotrow">${cell(a,ppts(mine,(mine.starters||[])[i]),'')}<div class="slot">${esc(slot.replace('SUPER_FLEX','SFLX'))}</div>${cell(b,ppts(opp,(opp.starters||[])[i]),'opp')}</div>`;
       });
-      html += `<div class="benchnote"><b>Bench:</b> ${bench.map(p=>esc(p.name)+' '+injBadge(p.inj)).join(' · ')||'—'}<br><b>IR:</b> ${reserve.length?reserve.map(p=>esc(p.name)+' '+injBadge(p.inj)).join(' · '):'empty'}</div>
+      html += `<div class="benchnote"><b>Bench:</b> ${bench.map(p=>esc(p.name)).join(' · ')||'—'}<br><b>IR:</b> ${reserve.length?reserve.map(p=>esc(p.name)).join(' · '):'empty'}</div>
       </div></section>`;
     }
 
+    /* 3 — league activity */
+    const movesHtml = txns.slice(0,12).map(t=>{
+      const who = (t.roster_ids||[]).map(name).join(', ');
+      const adds = Object.keys(t.adds||{}).map(id=>resolve(players,id)).filter(Boolean);
+      const drops = Object.keys(t.drops||{}).map(id=>resolve(players,id)).filter(Boolean);
+      const free = drops.filter(p=>!rostered.has(p.id));
+      const bid = t.settings&&t.settings.waiver_bid!=null ? ` for $${t.settings.waiver_bid}` : '';
+      return `<div class="move"><span class="who">${esc(who)}</span>
+        <span class="did">${adds.length?`took <span class="in">${adds.map(p=>esc(p.name)).join(', ')}</span>${esc(bid)}`:''}${
+          drops.length?`${adds.length?', let go of ':'let go of '}${drops.map(p=>esc(p.name)).join(', ')}`:''}
+          ${free.length?` <span class="free">still free: ${free.map(p=>esc(p.name)).join(', ')}</span>`:''}</span>
+        <span class="when">${t.status_updated?new Date(t.status_updated).toLocaleDateString(undefined,{month:'short',day:'numeric'}):''}</span></div>`;
+    }).join('');
+    html += `<section><h2>League activity</h2>
+      <p class="sub">Every move the other eleven managers have made, newest first. Anyone marked still free is claimable.</p>
+      <div class="feed">${movesHtml || '<div class="allclear">Nobody has made a move yet.</div>'}</div></section>`;
+
+    /* 4 — the brief */
+    html += `<section><h2>The brief</h2>
+      <p class="sub">The written analysis behind all of this. “Run fresh” starts a new one; it lands here a few minutes later.</p>
+      <div class="tabs" role="tablist">${Object.entries(ROUTINES).map(([t,r])=>`<button class="tab" role="tab" data-type="${t}" aria-selected="false">${r.label}</button>`).join('')}<button class="tab" role="tab" data-type="settings" aria-selected="false">Routines</button></div>
+      <div class="brief" id="brief"></div>
+      <p class="sub" style="margin-top:12px">Something these don't cover — a trade offer to weigh, a what-if? <a href="https://claude.ai/code" target="_blank" rel="noopener">Open a session</a> on <b>the-nebulizer/gridiron</b> and ask.</p>
+    </section>`;
+
+    /* 5 — the season */
     const standings = rosters.slice().sort((x,y)=>(y.settings?.wins||0)-(x.settings?.wins||0) || (y.settings?.fpts||0)-(x.settings?.fpts||0));
     const budget = league.settings?.waiver_budget||0;
-    const adds = trending.map(t=>({...resolve(players,t.player_id), n:t.count, taken:rostered.has(t.player_id)}));
-    const free = adds.filter(a=>!a.taken).slice(0,10);
+    const myPlayers = [...(me.starters||[]), ...(me.players||[])].filter((v,i,a)=>a.indexOf(v)===i).map(id=>resolve(players,id)).filter(Boolean);
+    const byeRows = {};
+    myPlayers.forEach(p=>{ const w=byes[p.team]; if(w && w>=wk) (byeRows[w]=byeRows[w]||[]).push(p); });
     html += `<div class="cols">
-      <section><h2>Standings</h2><p class="sub">FAAB = what each manager can still bid.</p>
+      <section><h2>Standings</h2><p class="sub">FAAB is what each manager can still spend.</p>
       <table><thead><tr><th>Team</th><th class="r">Rec</th><th class="r">PF</th><th class="r">FAAB</th></tr></thead><tbody>
       ${standings.map(r=>`<tr class="${r.roster_id===CFG.me?'me':''}"><td>${esc(name(r.roster_id))}</td><td class="num">${rec(r.roster_id)}</td><td class="num">${(r.settings?.fpts||0)}</td><td class="num">$${budget-(r.settings?.waiver_budget_used||0)}</td></tr>`).join('')}
       </tbody></table></section>
-      <section><h2>Free agents rising</h2><p class="sub">Hot adds across Sleeper, filtered to players nobody in this league rosters.</p>
-      <table><thead><tr><th>Player</th><th></th><th class="r">Adds 48h</th></tr></thead><tbody>
-      ${free.map(a=>`<tr><td>${esc(a.name)} ${injBadge(a.inj)}</td><td class="num">${esc(a.pos)} · ${esc(a.team)}</td><td class="num" style="color:var(--amber)">+${a.n.toLocaleString()}</td></tr>`).join('')}
+      <section><h2>Byes ahead</h2><p class="sub">Weeks where you'll be short-handed, and who's out.</p>
+      <table><thead><tr><th>Week</th><th>Out</th></tr></thead><tbody>
+      ${Object.keys(byeRows).map(Number).sort((a,b)=>a-b).map(w=>`<tr><td class="num" style="text-align:left">W${w}</td><td>${byeRows[w].map(p=>esc(p.name)+' <span style="color:var(--chalk-dim)">'+esc(p.pos)+'</span>').join(', ')}</td></tr>`).join('') || '<tr><td colspan="2">No byes left this season.</td></tr>'}
       </tbody></table></section></div>`;
 
     $('app').innerHTML = html;
     $('stamp').textContent = 'updated '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
     document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>showBrief(t.dataset.type)));
-    // open on the freshest report
     const newest = reportFiles.slice().sort((a,b)=>b.name.localeCompare(a.name))[0];
-    const initial = newest ? (Object.keys(ROUTINES).find(t=>newest.name.includes('-'+t)) || 'waivers') : 'waivers';
-    showBrief(initial);
+    showBrief(newest ? (Object.keys(ROUTINES).find(t=>newest.name.includes('-'+t)) || 'waivers') : 'waivers');
   }catch(e){
-    // The reason stays on the element for debugging; the copy stays readable.
-    $('app').innerHTML = `<div class="error" title="${esc(e.message)}"><b>Couldn't reach Sleeper.</b><br><br>The league data on this page comes straight from Sleeper, so there's nothing to show until they answer.<br><br>Check your connection, then refresh.</div>`;
+    $('app').innerHTML = `<div class="error" title="${esc(e.message)}"><b>Couldn't reach Sleeper.</b><br><br>Everything on this page comes from them, so there's nothing to show until they answer.<br><br>Check your connection, then refresh.</div>`;
   }
 }
 $('refresh').addEventListener('click', load);

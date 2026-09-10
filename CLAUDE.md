@@ -35,6 +35,7 @@ Reports in `reports/` and the dashboard's own copy are written for Ben, not for 
 
 - `config.json` — league/user IDs (public data, committed)
 - `scripts/sleeper.mjs` — API client; `scripts/sync.mjs` — snapshot builder
+- `scripts/league-activity.mjs` — what the other 11 managers have done, and who they dropped that's still claimable
 - `data/` — gitignored cache (`players.json` refreshed when >24h old; `league/snapshot.json` per sync)
 - `.claude/skills/` — `/lineup`, `/waivers`, `/trade`
 - `docs/` — league facts, season plan, resume doc
