@@ -348,11 +348,15 @@ function missedRun(type, file){
   const due = last.toISOString().slice(0,10);
   return (have && have >= due) ? null : last.toLocaleDateString(undefined,{weekday:'long', timeZone:'UTC'});
 }
-// Markdown from the repo is trusted-ish, but it goes through innerHTML, so strip anything that could run.
-function safeHtml(md){
+// Markdown from the repo is trusted-ish, but it renders as HTML, so strip anything that could run. This hands back
+// the sanitized nodes themselves, never a string: serializing clean markup and parsing it again is exactly how
+// mutation XSS gets through (e.g. a <noscript> whose attribute text turns into live elements on the second parse).
+function safeFragment(md){
   const t = document.createElement('template');
   t.innerHTML = marked.parse(md);
-  t.content.querySelectorAll('script,style,iframe,object,embed,form,input,link,meta,base').forEach(n=>n.remove());
+  // <noscript> and <template> go too: their contents parse differently depending on context, and nothing
+  // in a report needs them.
+  t.content.querySelectorAll('script,style,iframe,object,embed,form,input,link,meta,base,noscript,template').forEach(n=>n.remove());
   const okUrl = (v)=>{ const u = String(v).replace(/[\x00-\x20]/g,'').toLowerCase();
                        return /^(https?:|mailto:)/.test(u) || !/^[a-z][a-z0-9+.-]*:/.test(u); };
   t.content.querySelectorAll('*').forEach(el=>{
@@ -362,7 +366,15 @@ function safeHtml(md){
       else if((n==='href' || n==='src' || n==='xlink:href' || n==='action' || n==='data') && !okUrl(a.value)) el.removeAttribute(a.name);
     }
   });
-  return t.innerHTML;
+  return t.content;
+}
+// Put the meta line and a sanitized write-up into the brief, moving the clean nodes in directly.
+function renderReport(box, metaHtml, md){
+  box.innerHTML = metaHtml;
+  const article = document.createElement('article');
+  article.className = 'report';
+  article.append(safeFragment(md));
+  box.append(article);
 }
 
 function settingsPanel(){
@@ -376,7 +388,7 @@ function settingsPanel(){
 }
 
 let currentBrief = null;                 // the tab the reader has open; survives refreshes
-let articleCache = {key:null, html:''};  // the rendered write-up, refetched only when GitHub says it changed
+let articleCache = {key:null, md:''};    // the write-up's markdown, refetched only when GitHub says it changed
 async function showBrief(type){
   currentBrief = type;
   document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected', t.dataset.type===type));
@@ -401,11 +413,11 @@ async function showBrief(type){
     box.innerHTML = meta + `<div class="empty">Loading…</div>`;
     try{
       const res = await fetch(f.download_url); if(!res.ok) throw new Error(res.status);
-      articleCache = {key, html:safeHtml(await res.text())};
+      articleCache = {key, md:await res.text()};
     }catch{ box.innerHTML = meta + `<div class="empty">This one wouldn't load — ${ghLink}.</div>`; return; }
     if(currentBrief !== type) return;      // the reader moved on while it was loading
   }
-  box.innerHTML = meta + `<article class="report">${articleCache.html}</article>`;
+  renderReport(box, meta, articleCache.md);
 }
 
 /* ——— page ——— */
