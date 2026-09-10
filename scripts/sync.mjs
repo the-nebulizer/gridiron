@@ -3,7 +3,7 @@
 // of truth about rosters and availability — never reason from memory.
 //
 // Usage: node scripts/sync.mjs [week]
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as sleeper from './sleeper.mjs';
@@ -15,7 +15,7 @@ const dataDir = path.join(root, 'data');
 const state = await sleeper.getState();
 const week = Number(process.argv[2]) || state.week || 1;
 
-const [league, rosters, users, matchups, trendingAdds, trendingDrops, players] =
+const [league, rosters, users, matchups, trendingAdds, trendingDrops, players, schedule] =
   await Promise.all([
     sleeper.getLeague(config.league_id),
     sleeper.getRosters(config.league_id),
@@ -24,7 +24,18 @@ const [league, rosters, users, matchups, trendingAdds, trendingDrops, players] =
     sleeper.getTrending('add'),
     sleeper.getTrending('drop'),
     sleeper.getPlayers(path.join(dataDir, 'players.json')),
+    sleeper.getSchedule(state.season),
   ]);
+
+// The players dump is refreshed at most daily, so its injury tags can lag by up
+// to 24h. Record when it was actually fetched so a skill can weigh that.
+const playersCachedAt = (await stat(path.join(dataDir, 'players.json'))).mtime.toISOString();
+
+// Bye weeks come from the schedule, never from the players dump — Sleeper's
+// player objects carry no bye field, so reading one there silently yields null
+// and invites guessing from memory. Team code -> bye week.
+const byes = sleeper.byeWeeks(schedule);
+const scheduleTeams = new Set(schedule.flatMap((g) => [g.home, g.away]));
 
 const txWeeks = week > 1 ? [week - 1, week] : [week];
 const transactionsRaw = (
@@ -38,15 +49,16 @@ function resolve(id) {
   const p = players[id];
   if (!p) {
     // Team defenses are keyed by team code ("BUF") but may be absent from old dumps.
-    if (/^[A-Z]{2,3}$/.test(id)) return { id, name: `${id} DEF`, position: 'DEF', team: id };
+    if (/^[A-Z]{2,3}$/.test(id))
+      return { id, name: `${id} DEF`, position: 'DEF', team: id, bye_week: byes.get(id) ?? null };
     return { id, name: `unknown(${id})`, position: null, team: null };
   }
   return {
     id,
-    name: p.full_name ?? [p.first_name, p.last_name].filter(Boolean).join(' ') ?? id,
+    name: p.full_name || [p.first_name, p.last_name].filter(Boolean).join(' ') || id,
     position: p.position ?? null,
     team: p.team ?? null,
-    bye_week: p.bye_week ?? null,
+    bye_week: byes.get(p.team) ?? null,
     injury_status: p.injury_status ?? null,
   };
 }
@@ -64,8 +76,10 @@ const teams = rosters.map((r) => {
   return {
     roster_id: r.roster_id,
     owner: ownerName.get(r.owner_id) ?? r.owner_id,
-    record: `${r.settings?.wins ?? 0}-${r.settings?.losses ?? 0}`,
-    fpts: r.settings?.fpts ?? 0,
+    record: `${r.settings?.wins ?? 0}-${r.settings?.losses ?? 0}${r.settings?.ties ? `-${r.settings.ties}` : ''}`,
+    // Sleeper splits points into whole + hundredths; ignoring the decimal
+    // part shaves up to 0.99 off every team.
+    fpts: (r.settings?.fpts ?? 0) + (r.settings?.fpts_decimal ?? 0) / 100,
     faab_remaining: (league.settings?.waiver_budget ?? 0) - (r.settings?.waiver_budget_used ?? 0),
     starters,
     bench,
@@ -75,13 +89,19 @@ const teams = rosters.map((r) => {
 
 const myTeam = teams.find((t) => t.roster_id === config.roster_id);
 const myMatchup = matchups.find((m) => m.roster_id === config.roster_id);
-const oppMatchup = myMatchup
-  ? matchups.find((m) => m.matchup_id === myMatchup.matchup_id && m.roster_id !== config.roster_id)
-  : null;
+// A null matchup_id means no game this week (playoff bye, eliminated, week 18).
+// Matching on it would pair us with whichever other idle roster comes first —
+// a fabricated opponent. No id, no opponent.
+const oppMatchup =
+  myMatchup && myMatchup.matchup_id != null
+    ? matchups.find((m) => m.matchup_id === myMatchup.matchup_id && m.roster_id !== config.roster_id)
+    : null;
 const oppTeam = oppMatchup ? teams.find((t) => t.roster_id === oppMatchup.roster_id) : null;
 
 const transactions = transactionsRaw.map((t) => ({
   week: t.leg,
+  // When it actually happened — needed to answer "what changed since I last looked".
+  at: t.status_updated ?? t.created ?? null,
   type: t.type,
   status: t.status,
   by: (t.roster_ids ?? []).map((rid) => teams.find((x) => x.roster_id === rid)?.owner ?? rid),
@@ -99,9 +119,14 @@ const trendResolve = (list) =>
 
 const snapshot = {
   fetched_at: new Date().toISOString(),
+  players_cached_at: playersCachedAt,
   season: state.season,
   season_start_date: state.season_start_date ?? null,
-  games_have_started: state.season_start_date ? new Date() >= new Date(state.season_start_date) : null,
+  // True only once a real game has kicked off, per the schedule's game statuses.
+  // The old date comparison flipped at 00:00 UTC on season_start_date — the
+  // evening BEFORE the opener in US time — which would switch the skills out of
+  // pre-season (free-agent) mode while adds were still first-come-first-serve.
+  games_have_started: sleeper.kickoffHasHappened(schedule),
   week,
   league: {
     name: league.name,
@@ -123,7 +148,7 @@ const snapshot = {
           : null,
       }
     : null,
-  transactions,
+  transactions: transactions.sort((a, b) => (b.at ?? 0) - (a.at ?? 0)),
   trending: { adds: trendResolve(trendingAdds), drops: trendResolve(trendingDrops) },
 };
 
@@ -131,7 +156,8 @@ await mkdir(path.join(dataDir, 'league'), { recursive: true });
 await writeFile(path.join(dataDir, 'league', 'snapshot.json'), JSON.stringify(snapshot, null, 2));
 
 // Human-readable summary
-const slot = (positions, list) => positions.map((pos, i) => `  ${pos.padEnd(11)} ${list[i] ? `${list[i].name} (${list[i].position ?? '?'} ${list[i].team ?? '-'})` : '—'}`);
+const byeWeek = (p) => (p?.bye_week ? `, bye W${p.bye_week}` : '');
+const slot = (positions, list) => positions.map((pos, i) => `  ${pos.padEnd(11)} ${list[i] ? `${list[i].name} (${list[i].position ?? '?'} ${list[i].team ?? '-'}${byeWeek(list[i])})` : '—'}`);
 const startingSlots = (league.roster_positions ?? []).filter((p) => p !== 'BN');
 
 console.log(`# ${league.name} — Week ${week} (${state.season})`);
@@ -141,11 +167,35 @@ console.log(slot(startingSlots, myTeam.starters).join('\n'));
 if (oppTeam) {
   console.log(`\nOpponent: ${oppTeam.owner} (${oppTeam.record})`);
   console.log(slot(startingSlots, oppTeam.starters).join('\n'));
+} else {
+  console.log(`\nNo matchup this week (bye or not scheduled).`);
 }
+// A rostered player on a real team with no bye resolved means byeWeeks() gave
+// up on that team (see its warning) — never let that pass as a quiet null.
+const noBye = new Set();
+for (const t of teams) {
+  for (const p of [...t.starters, ...t.bench, ...t.reserve].filter(Boolean)) {
+    if (p.team && p.bye_week == null && scheduleTeams.has(p.team)) noBye.add(p.team);
+  }
+}
+for (const team of [...noBye].sort()) console.log(`WARNING: no bye week resolved for ${team} — rostered ${team} players carry bye_week null; check the schedule before trusting any bye plan.`);
 const hurt = [...myTeam.starters, ...myTeam.bench, ...myTeam.reserve].filter((p) => p?.injury_status);
 if (hurt.length) {
   console.log(`\nInjury flags on my roster:`);
   for (const p of hurt) console.log(`  ${p.name} (${p.position}) — ${p.injury_status}`);
+}
+// Bye weeks on my roster, grouped — the weeks that need a plan, from data.
+const myByes = new Map();
+for (const p of [...myTeam.starters, ...myTeam.bench, ...myTeam.reserve].filter(Boolean)) {
+  if (!p.bye_week) continue;
+  if (!myByes.has(p.bye_week)) myByes.set(p.bye_week, []);
+  myByes.get(p.bye_week).push(`${p.name} (${p.position ?? '?'})`);
+}
+if (myByes.size) {
+  console.log(`\nMy bye weeks (from the ${state.season} schedule):`);
+  for (const w of [...myByes.keys()].sort((a, b) => a - b)) {
+    console.log(`  W${String(w).padEnd(2)} ${myByes.get(w).join(', ')}`);
+  }
 }
 const freeAdds = snapshot.trending.adds.filter((t) => !t.rostered_in_league).slice(0, 10);
 console.log(`\nTop trending adds NOT rostered in this league:`);

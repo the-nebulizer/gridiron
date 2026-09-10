@@ -21,16 +21,33 @@ then read `data/league/snapshot.json`. That file is the only truth about who is 
 
 ## Calendar calibration (check EVERY run)
 
-The snapshot carries `season_start_date` and `games_have_started`. Sleeper labels the league "in_season, week 1" as soon as drafts end — do not trust that label; trust the date.
+The snapshot carries `season_start_date` and `games_have_started` (the latter is true only once a real game has left `pre_game` in the Sleeper schedule — not a date comparison). Sleeper labels the league "in_season, week 1" as soon as drafts end — do not trust that label; trust the date.
 
 **Before `season_start_date`** (pre-season): unrostered players are largely first-come-first-serve — adds are instant and cost $0 FAAB, not Wednesday bids (confirm from the snapshot: `free_agent` transactions completing at creation time = FCFS mode). Recommend "add NOW", never "bid and wait". No games exist yet: no points, no inactives, no start/sit urgency; injury tags are camp designations. A routine that fires when its job doesn't exist yet (e.g. Sunday inactives with no Sunday games) writes a one-paragraph report saying exactly that and stops.
 
 **After kickoff**: players lock to waivers per league rules (Wednesday processing, FAAB bids) and the skills' normal guidance applies.
 
+## Publishing a report (every scheduled run, without exception)
+
+The dashboard reads `reports/` from **`main` only**. Scheduled runs happen on their own session branch, so an ordinary `git commit` + `git push` leaves the report where nobody will ever see it — the same as not writing it. Four reports were lost this way between Sep 3 and Sep 8, including a time-critical waiver call.
+
+So finish every run with:
+
+```
+node scripts/publish-report.mjs reports/<file>.md "report: week <N> <type>"
+```
+
+It commits, pushes `HEAD:main`, rebases once if main moved, and if it still can't get there, pushes a branch and tells you to open a PR. **Never end a run with the report only on a session branch, and never end one silently — the final message must say where the report landed.**
+
+## Report voice
+
+Reports in `reports/` and the dashboard's own copy are written for Ben, not for the machine. Say what's true in plain English; keep the plumbing out of the copy — no command lines, no snapshot field names (`games_have_started`, `season_start_date`, `faab_bid`), no "scanned `data/league/snapshot.json`". The prime directive still requires the sync, and the report should still say the data is fresh and where the calendar stands — as a sentence a manager would read ("Read off a fresh sync; Week 1 hasn't kicked off yet"), not as evidence of compliance. Naming a slash command Ben can run (`/lineup`) or a doc he can open (`docs/LEAGUE.md`) is fine; those are for him. Same on the dashboard: show a date, not a report filename; show a reason, not an exception string.
+
 ## Layout
 
 - `config.json` — league/user IDs (public data, committed)
 - `scripts/sleeper.mjs` — API client; `scripts/sync.mjs` — snapshot builder
+- `scripts/league-activity.mjs` — what the other 11 managers have done, and who they dropped that's still claimable
 - `data/` — gitignored cache (`players.json` refreshed when >24h old; `league/snapshot.json` per sync)
 - `.claude/skills/` — `/lineup`, `/waivers`, `/trade`
 - `docs/` — league facts, season plan, resume doc

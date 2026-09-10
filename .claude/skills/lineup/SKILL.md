@@ -13,3 +13,5 @@ description: Build this week's start/sit recommendation for Ben's team from a fr
 6. Output: the full legal 10-slot lineup (QB, RB, RB, WR, WR, TE, FLEX, SUPER_FLEX, K, DEF); for every change from current starters, one sentence of reasoning; flag any Questionable/Doubtful starter with the bench pivot to make before kickoff (lineup changes are manual in the Sleeper app).
 
 Never: name a player without confirming their roster slot in the snapshot; carry availability claims from search snippets; leave a slot empty when a legal option exists.
+
+**Publishing.** A report that isn't on `main` never reaches the dashboard. Finish with `node scripts/publish-report.mjs reports/<file>.md "report: week <N> lineup"` and say where it landed — see CLAUDE.md.
