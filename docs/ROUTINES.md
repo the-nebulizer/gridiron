@@ -1,70 +1,128 @@
 # Routines — owner's runbook
 
-The scheduled routines live in the claude.ai routines UI, not in this repo. As of Sep 10 there are **two sets of five**: the originals, created by hand and untouchable by the agent (the API refuses to edit or disable them), and a **v2 set** the agent created with corrected prompts and better schedules. The v2 set is live and enabled. The originals are still on too, and only Ben can turn them off — that is the one action this page asks for.
+The five scheduled routines live in the claude.ai routines UI, not in this repo. Their prompts were created outside agent control and the API refuses to edit them, so every change below is something **Ben pastes in by hand**. This page is the checklist for that.
 
 Times: Central is CDT (UTC-5) until clocks fall back on **Sunday Nov 1, 2026**, then CST (UTC-6). Cron is evaluated in UTC, so every routine drifts an hour earlier in local time on Nov 1 unless its cron is changed.
 
-## The five v2 routines (current)
+## The five routines
 
-All five: fresh session per run, `claude-sonnet-5 (the watcher runs on claude-haiku-4-5 — its usual job is two scripts and a stop)`, email notifications **on**, enabled.
+| Routine | Trigger id | Cron (UTC) | Central now (CDT) | Central from Nov 1 (CST) | Purpose | Verdict |
+|---|---|---|---|---|---|---|
+| Waivers | `trig_018jkMrmz2vDLU6qQdiGeKZE` | `0 12 * * 2` | Tue 7:00am | Tue 6:00am | FAAB report before Wednesday processing | Keep. Paste in new step 5 + bye phrase. |
+| Lineup | `trig_01DxqQ5pTd1sJRc8CSnX4YHy` | `0 12 * * 4` | Thu 7:00am | Thu 6:00am | Start/sit before Thursday night | Keep. Paste in new step 5. |
+| Inactives | `trig_01WEymfugQorRLQeP2YLdvqx` | `0 15 * * 0` | Sun 10:00am (fires ~10:06) | Sun 9:00am | Game-day inactives before the early slate | **Move later** — see below. Paste in new step 5 + opening sentence. |
+| Trades | `trig_01Jr9ik2fKEiwcs4yaS99ZeQ` | `0 12 * * 1` | Mon 7:00am | Mon 6:00am | Weekly trade hunt through the W11 deadline | Keep. Paste in new step 5 + bye phrase. |
+| Roster watcher | `trig_01DTuqiqG69gfwSjFfW65vah` | `0 0-3,12-23 * * *` | hourly 7pm–10pm and 7am–6pm (fires ~:02) | hourly 6pm–9pm and 6am–5pm | Re-run the four reports when the roster changes | **Cut frequency or shift off the hour** — see below. Paste in new steps 4, 5, 7. |
 
-| Routine | Trigger id | Cron (UTC) | Central now (CDT) | Central from Nov 1 (CST) | Purpose |
-|---|---|---|---|---|---|
-| Gridiron · Tuesday waivers (v2) | `trig_01Trg3Y2E7KekK96P5YRbMPj` | `50 11 * * 2` | Tue 6:50am | Tue 5:50am | FAAB report before Wednesday processing |
-| Gridiron · Thursday lineup (v2) | `trig_012wLdkGSPX1aJqMRfLJsLkr` | `50 11 * * 4` | Thu 6:50am | Thu 5:50am | Start/sit before Thursday night |
-| Gridiron · Monday trade hunt (v2) | `trig_0178fSEQwNLokG5GEkXfF3WT` | `50 11 * * 1` | Mon 6:50am | Mon 5:50am | Weekly trade hunt through the W11 deadline |
-| Gridiron · Sunday inactives (v2) | `trig_01RfeuBVHsB7bQaXfdULQjrJ` | `40 15 * * 0` | Sun 10:40am | Sun 9:40am — **must move to `40 16 * * 0`** | Game-day inactives, ten minutes after the early-slate list posts |
-| Gridiron · roster-change watcher (v2) | `trig_013F1F8HFMJTYYAD1gEhJ6PF` | `30 12,22 * * *` | 7:30am and 5:30pm | 6:30am and 4:30pm | Re-run the four reports when the roster changes — two runs a day instead of sixteen |
+**Turn on email notifications for all five.** They are all off right now, which is how four (then five) reports went missing for a week without anyone noticing. Push is fine too, but email leaves a trail.
 
-The v2 prompts already carry everything the old paste-in sections used to ask for: the publish step (`scripts/publish-report.mjs ... --replace`), the "read byes from the snapshot" wording, the inactives-timing sentence, and the watcher's report-header and one-commit rules. Nothing needs pasting into them.
+## Problem 1 — Sunday inactives fires before inactives exist
 
-## Switch off the originals
+The routine fires at about 10:06am Central. Official inactives post **90 minutes before each kickoff** — 11:30am ET / 10:30am CT for the 1pm ET slate. So the run wakes up 25 minutes before the first real information of the day exists and can only repeat Friday's injury designations, which Ben already has.
 
-In the claude.ai routines UI, **disable** (or delete) each of these. Reason, the same for all five: both would run, and the old one strands or duplicates its report until it's off.
+Fix the schedule:
 
-- [ ] Waivers — `trig_018jkMrmz2vDLU6qQdiGeKZE` (`0 12 * * 2`, Tue 7:00am)
-- [ ] Lineup — `trig_01DxqQ5pTd1sJRc8CSnX4YHy` (`0 12 * * 4`, Thu 7:00am)
-- [ ] Inactives — `trig_01WEymfugQorRLQeP2YLdvqx` (`0 15 * * 0`, Sun 10:00am)
-- [ ] Trades — `trig_01Jr9ik2fKEiwcs4yaS99ZeQ` (`0 12 * * 1`, Mon 7:00am)
-- [ ] Roster watcher — `trig_01DTuqiqG69gfwSjFfW65vah` (`0 0-3,12-23 * * *`, hourly)
+- Through Oct 25: `40 15 * * 0` (10:40am CDT — ten minutes after the early-slate inactives post)
+- From Nov 1: `40 16 * * 0` (10:40am CST)
 
-### What happens while both sets are on
+Late-slate and Sunday-night inactives still post after the report runs; the report should say so and tell Ben which of his starters are in later games, rather than pretending it has covered them.
 
-The v2 runs are scheduled ten minutes ahead of the old ones, so the v2 report normally lands on `main` first. When the old run then tries to publish the same day's file, it either pushes to its own session branch (the old prompt's broken step) or, if it follows `CLAUDE.md`, runs `publish-report.mjs` without `--replace`, hits a conflict on the report it can't reconcile, and falls back to pushing a branch and saying so. If the v2 run takes longer than ten minutes the two race, but the result is the same: the v2 run's `--replace` keeps its version, the old run ends up on a branch. Noisy — an extra session, an extra email, a stray `reports-fallback-*` branch — but not harmful: the dashboard keeps showing the v2 report.
+## Problem 2 — the hourly watcher
 
-The exception is **inactives**, where the old run fires at 10:00am, *before* the v2 run at 10:40am. The old report lands first (it's the one built before inactives exist), and the v2 run's `--replace` then supersedes it on main. Again correct in the end, just wasteful.
+Sixteen runs a day, 112 sessions a week, and in nine days it has detected **zero** roster changes. Worse, it fires at :02 in the same hours the weekly routines fire (12 and 15 UTC), so on Tuesday, Thursday, Sunday and Monday mornings two sessions are on the repo at once — that is exactly how a same-day file conflict on a report happens.
 
-The old hourly watcher is the expensive one to leave on (see costs below) and the most likely to collide with a weekly run, since it fires at :02 in the same hours.
+Pick one:
 
-## Nov 1 — clocks fall back
+- **Preferred:** 2–3 runs a day, e.g. `30 12,17,23 * * *` (7:30am, 12:30pm, 6:30pm CDT). Roster moves are manual in the Sleeper app, and the dashboard already shows league activity live, so hourly polling buys almost nothing.
+- **Minimum:** keep the hours but move it off the hour: `30 0-3,12-23 * * *`. That alone stops it colliding with the weekly runs.
 
-- [ ] Inactives (v2) cron → `40 16 * * 0` so it keeps firing 10:40am local, after the early-slate inactives post. At `40 15` it would run at 9:40am CST, before the list exists.
-- [ ] Decide whether the three 6:50am runs (waivers, lineup, trades) should move to `50 12 * * *`-style crons to stay 6:50am local, or are fine drifting to 5:50am. Nothing downstream depends on the exact hour; the reports just need to land before Ben looks at them.
-- [ ] Watcher: `30 12,22` becomes 6:30am / 4:30pm local. Fine as is unless Ben wants the evening check later.
+## Problem 3 — reports were being stranded (partly fixed)
 
-## Weekly cost
+Every routine session runs on its own branch. The old step 5 — "commit only that report file to main and push" — pushed to that branch, and the dashboard only reads `main`. Five reports were lost this way between Sep 3 and Sep 10.
 
-- **Old set:** about **$19.60/week**, and roughly 88% of that is the hourly watcher — 112 sessions a week that in nine days detected zero roster changes.
-- **v2 set:** about **$4.70/week**. The watcher drops to 14 sessions a week; the four weekly reports are unchanged.
+The repo-side fix is in PR #1: `scripts/publish-report.mjs`, the "Publishing a report" section in `CLAUDE.md`, and a publish line at the end of each skill. The routines will pick that up because their prompts say "read CLAUDE.md" / "follow SKILL.md" — but the prompts themselves still carry the old step 5, and a prompt instruction beats a doc the model may skim. So paste the text below in as well.
 
-Until the originals are off, both bills are running.
+**Until PR #1 merges, every scheduled run clones `main`, finds none of the fix, and strands its report on a session branch the same way as before. The next fire is the Sunday inactives run.** Merging PR #1 first is the single highest-leverage action on this page.
 
-## What the v2 routines fix
+## Paste-in text — the four weekly routines
 
-Kept here so the history makes sense; each of these still applies to the originals until they're disabled.
+In each of the Waivers, Lineup, Trades and Inactives prompts, **replace step 5** ("Commit only that report file to main ... and push") with the block for that routine.
 
-**Problem 1 — Sunday inactives fired before inactives existed.** The old run wakes at ~10:06am Central; official inactives post 90 minutes before kickoff, 10:30am Central for the early slate. So it could only repeat Friday's injury designations. The v2 run fires at 10:40am and its prompt says outright that a report repeating Friday's designations is worthless. Late-slate and Sunday-night inactives still post after the run; the report names which starters are in later games instead of pretending to cover them.
-
-**Problem 2 — the hourly watcher.** Sixteen runs a day for nothing, and it fired at :02 in the same hours as the weekly routines, putting two sessions on the repo at once — the recipe for a same-day file conflict on a report. The v2 watcher runs twice a day, off the hour, and its prompt requires the four reports and the roster fingerprint to go up in one commit.
-
-**Problem 3 — reports were being stranded.** Every routine session runs on its own branch, and the old step 5 ("commit only that report file to main and push") pushed to that branch while the dashboard reads `main` only. Five reports were lost between Sep 3 and Sep 10. The repo-side fix is `scripts/publish-report.mjs` plus the "Publishing a report" section in `CLAUDE.md`; the v2 prompts call the script directly instead of relying on the model to find it in the docs. The old prompts still carry the broken step and lean on CLAUDE.md to override it.
-
-## If you ever need to hand-edit a prompt
-
-The publish step every report routine should end with, in case a v2 prompt is ever cloned or rewritten by hand:
+### Waivers — step 5
 
 ```
-Publish, or the dashboard never sees it. This session runs on its own branch, so a plain git push strands the report. Run: node scripts/publish-report.mjs reports/<YYYY-MM-DD>-<type>.md "report: week <N> <type>" --replace — it pushes to main, replaces any earlier same-day version of this report, and verifies the report is actually there. If it reports failure, it will have pushed a fallback branch: say so and say the report is NOT on the dashboard. Finish with one plain sentence stating whether origin/main contains the report. Never end the run without that sentence.
+5. Publish, or the dashboard never sees it. This session runs on its own branch, so a plain git push strands the report. Run: node scripts/publish-report.mjs reports/<YYYY-MM-DD>-waivers.md "report: week <N> waivers" — it pushes to main and verifies the report is actually there. If it reports failure, it will have pushed a fallback branch: say so and say the report is NOT on the dashboard. Finish with one plain sentence stating whether origin/main contains the report. Never end the run without that sentence.
 ```
 
-For the watcher, the equivalent rule is: publish all four reports **and** `reports/.roster-fingerprint.json` in one commit (a missing fingerprint makes the next run think everything changed), push `HEAD:main`, rebase once keeping this session's version of any conflicting report, fall back to a `reports-fallback-<date>` branch if that fails, and end with a sentence saying whether main has the reports.
+Also in the Waivers prompt, replace the phrase
+
+> (reserve budget for W6/W13 QB streaming)
+
+with
+
+> (reserve budget per the bye table in docs/SEASON-PLAN.md — read byes from the snapshot, not memory)
+
+### Lineup — step 5
+
+```
+5. Publish, or the dashboard never sees it. This session runs on its own branch, so a plain git push strands the report. Run: node scripts/publish-report.mjs reports/<YYYY-MM-DD>-lineup.md "report: week <N> lineup" — it pushes to main and verifies the report is actually there. If it reports failure, it will have pushed a fallback branch: say so and say the report is NOT on the dashboard. Finish with one plain sentence stating whether origin/main contains the report. Never end the run without that sentence.
+```
+
+### Trades — step 5
+
+```
+5. Publish, or the dashboard never sees it. This session runs on its own branch, so a plain git push strands the report. Run: node scripts/publish-report.mjs reports/<YYYY-MM-DD>-trades.md "report: week <N> trades" — it pushes to main and verifies the report is actually there. If it reports failure, it will have pushed a fallback branch: say so and say the report is NOT on the dashboard. Finish with one plain sentence stating whether origin/main contains the report. Never end the run without that sentence.
+```
+
+Also in the Trades prompt, replace the phrase
+
+> weigh bye coverage (my QBs: Goff out W6, Lamar out W13)
+
+with
+
+> weigh bye coverage — read every player's bye week from the snapshot, never from memory (W13 is the crunch: Lamar, Cousins, Jeanty and Allen are all out)
+
+### Inactives — step 5
+
+```
+5. Publish, or the dashboard never sees it. This session runs on its own branch, so a plain git push strands the report. Run: node scripts/publish-report.mjs reports/<YYYY-MM-DD>-inactives.md "report: week <N> inactives" — it pushes to main and verifies the report is actually there. If it reports failure, it will have pushed a fallback branch: say so and say the report is NOT on the dashboard. Finish with one plain sentence stating whether origin/main contains the report. Never end the run without that sentence.
+```
+
+Also in the Inactives prompt, add this sentence to the opening paragraph:
+
+> Official inactives post 90 minutes before each kickoff (11:30am ET for 1pm games); the report is worthless if it only repeats Friday's injury designations.
+
+## Paste-in text — the roster watcher
+
+Three edits to the watcher prompt.
+
+### Step 4 — two phrase substitutions
+
+- Delete `(my_roster_id = 12)`.
+- Replace `(see season_start_date / games_have_started in the snapshot, per CLAUDE.md)` with `(the snapshot says whether real games have started; per CLAUDE.md)`.
+
+### Step 5 — replace the report header spec with
+
+```
+Each report opens with a single quoted line written for Ben: "> Refreshed <Month D> after a roster change: <diff in player names>" (for example "> Refreshed Sep 14 after a roster change: added Michael Mayer, dropped Malik Davis"). On the first run, when there is no previous fingerprint, the line is "> Refreshed <Month D>: baseline". No ISO timestamps, no snapshot field names, no file paths anywhere in the report body — plain English a fantasy manager would read.
+```
+
+### Step 7 — replace entirely with
+
+```
+7. Publish all four reports in ONE commit together with reports/.roster-fingerprint.json — never the reports without the fingerprint (a missing fingerprint makes the next hourly run think everything changed and regenerate all four again), and never a plain git push (this session runs on its own branch; the dashboard reads main only). Run:
+   git add reports/*.md reports/.roster-fingerprint.json
+   git commit -m "reports: refresh after roster change (week <N>)"
+   git push origin HEAD:main
+   If the push is rejected because main moved: git pull --rebase origin main, keeping THIS session's version of any conflicting report file (git checkout --theirs <file> during the rebase, then git add and git rebase --continue), and push HEAD:main again. If the rebase fails or the second push is refused: git rebase --abort, push to a fallback branch (git push origin HEAD:refs/heads/reports-fallback-<YYYY-MM-DD-HHMM>), and finish with an explicit sentence saying the reports are NOT on the dashboard and naming that branch. Otherwise finish with one plain sentence confirming origin/main contains the four reports and the fingerprint. Never end the run without that sentence.
+```
+
+## Checklist
+
+- [ ] Merge PR #1 (unblocks every routine's publish step)
+- [ ] Inactives cron → `40 15 * * 0` now, `40 16 * * 0` from Nov 1
+- [ ] Watcher cron → `30 12,17,23 * * *` (or at least `30 0-3,12-23 * * *`)
+- [ ] Email notifications on, all five
+- [ ] Paste step 5 into Waivers, Lineup, Trades, Inactives; plus the bye/inactives phrase edits
+- [ ] Paste steps 4, 5, 7 into the watcher
+- [ ] On Nov 1: decide whether the Tue/Thu/Mon 7am runs should stay 7am local (`0 13 * * 2`, etc.) or are fine at 6am

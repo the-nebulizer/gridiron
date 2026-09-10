@@ -159,13 +159,13 @@ const CFG = { league:'1353093442397294592', me:12, repo:'the-nebulizer/gridiron'
 // The activity note is written by hand, not by a routine, so it has no schedule and no "Run fresh".
 const ROUTINES = {
   activity: {label:'Activity',  id:null, day:null, hour:null, auto:''},
-  waivers:  {label:'Waivers',   id:'trig_01Trg3Y2E7KekK96P5YRbMPj', day:2, hour:11, auto:'runs Tuesdays 6:50am, ahead of Wednesday claims'},
-  lineup:   {label:'Lineup',    id:'trig_012wLdkGSPX1aJqMRfLJsLkr', day:4, hour:11, auto:'runs Thursdays 6:50am, before the Thursday night game'},
-  inactives:{label:'Inactives', id:'trig_01RfeuBVHsB7bQaXfdULQjrJ', day:0, hour:15, auto:'runs Sunday 10:40am, once the early inactives are posted'},
-  trades:   {label:'Trades',    id:'trig_0178fSEQwNLokG5GEkXfF3WT', day:1, hour:11, auto:'runs Mondays 6:50am'},
+  waivers:  {label:'Waivers',   id:'trig_018jkMrmz2vDLU6qQdiGeKZE', day:2, hour:12, auto:'runs Tuesdays, ahead of Wednesday claims'},
+  lineup:   {label:'Lineup',    id:'trig_01DxqQ5pTd1sJRc8CSnX4YHy', day:4, hour:12, auto:'runs Thursdays'},
+  inactives:{label:'Inactives', id:'trig_01WEymfugQorRLQeP2YLdvqx', day:0, hour:15, auto:'runs Sunday mornings'},
+  trades:   {label:'Trades',    id:'trig_01Jr9ik2fKEiwcs4yaS99ZeQ', day:1, hour:12, auto:'runs Mondays'},
 };
-const WATCHER = {label:'Roster watcher', id:'trig_013F1F8HFMJTYYAD1gEhJ6PF',
-  auto:'checks twice a day, and rewrites the brief after any move you make'};
+const WATCHER = {label:'Roster watcher', id:'trig_01DTuqiqG69gfwSjFfW65vah',
+  auto:'checks hourly, and rewrites the brief after any move you make'};
 const API = 'https://api.sleeper.app';
 const MIN = 60*1000, HOUR = 60*MIN, DAY = 24*HOUR;
 const $ = (id)=>document.getElementById(id);
