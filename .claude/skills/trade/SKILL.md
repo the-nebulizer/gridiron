@@ -11,3 +11,5 @@ description: Evaluate a trade offer or hunt for trades across all 12 rosters, va
 4. From W9 on, remind that the trade deadline is **W11**; 7 of 12 make playoffs, so value wins-now accordingly.
 
 Never: value a QB off a standard-scoring trade chart; propose a player the snapshot shows on a different roster than assumed; ignore what the OTHER manager needs (a trade they won't accept is worth nothing).
+
+**Publishing.** A report that isn't on `main` never reaches the dashboard. Finish with `node scripts/publish-report.mjs reports/<file>.md "report: week <N> trades"` and say where it landed — see CLAUDE.md.

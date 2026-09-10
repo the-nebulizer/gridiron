@@ -27,6 +27,18 @@ The snapshot carries `season_start_date` and `games_have_started` (the latter is
 
 **After kickoff**: players lock to waivers per league rules (Wednesday processing, FAAB bids) and the skills' normal guidance applies.
 
+## Publishing a report (every scheduled run, without exception)
+
+The dashboard reads `reports/` from **`main` only**. Scheduled runs happen on their own session branch, so an ordinary `git commit` + `git push` leaves the report where nobody will ever see it — the same as not writing it. Four reports were lost this way between Sep 3 and Sep 8, including a time-critical waiver call.
+
+So finish every run with:
+
+```
+node scripts/publish-report.mjs reports/<file>.md "report: week <N> <type>"
+```
+
+It commits, pushes `HEAD:main`, rebases once if main moved, and if it still can't get there, pushes a branch and tells you to open a PR. **Never end a run with the report only on a session branch, and never end one silently — the final message must say where the report landed.**
+
 ## Report voice
 
 Reports in `reports/` and the dashboard's own copy are written for Ben, not for the machine. Say what's true in plain English; keep the plumbing out of the copy — no command lines, no snapshot field names (`games_have_started`, `season_start_date`, `faab_bid`), no "scanned `data/league/snapshot.json`". The prime directive still requires the sync, and the report should still say the data is fresh and where the calendar stands — as a sentence a manager would read ("Read off a fresh sync; Week 1 hasn't kicked off yet"), not as evidence of compliance. Naming a slash command Ben can run (`/lineup`) or a doc he can open (`docs/LEAGUE.md`) is fine; those are for him. Same on the dashboard: show a date, not a report filename; show a reason, not an exception string.

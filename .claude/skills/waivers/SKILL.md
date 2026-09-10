@@ -23,3 +23,5 @@ Not every question is the Tuesday report. When Ben asks about a single player, o
 5. **Is he actually rosterable?** A player on IR or PUP can't fill an active spot.
 
 Never: recommend a player without `rostered_in_league: false` in the current snapshot; spend below $1 on a player worth rostering; forget IR/PUP eligibility as a way to free a bench spot.
+
+**Publishing.** A report that isn't on `main` never reaches the dashboard. Finish with `node scripts/publish-report.mjs reports/<file>.md "report: week <N> waivers"` and say where it landed — see CLAUDE.md.
