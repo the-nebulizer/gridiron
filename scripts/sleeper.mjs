@@ -19,7 +19,10 @@ export const getRosters = (leagueId) => get(`/league/${leagueId}/rosters`);
 export const getUsers = (leagueId) => get(`/league/${leagueId}/users`);
 export const getMatchups = (leagueId, week) => get(`/league/${leagueId}/matchups/${week}`);
 export const getTransactions = (leagueId, week) => get(`/league/${leagueId}/transactions/${week}`);
-export const getTrending = (type) => get(`/players/nfl/trending/${type}?lookback_hours=48&limit=50`);
+// Ask for 200 (Sleeper actually caps at 100): a player outside the list reads
+// as "nobody is adding him", which is a claim, and at limit=50 it was false
+// for real waiver targets.
+export const getTrending = (type) => get(`/players/nfl/trending/${type}?lookback_hours=48&limit=200`);
 
 // Season schedule: one entry per game ({week, date, home, away, status}).
 // NOT under /v1 — this is the path Sleeper's own clients use. It is the only
@@ -34,14 +37,18 @@ export function byeWeeks(schedule) {
   for (const g of schedule) {
     for (const team of [g.home, g.away]) {
       if (!played.has(team)) played.set(team, new Set());
-      played.get(team).add(g.week);
+      // A canceled game is a week with no game, whatever the schedule once said.
+      if (g.status !== 'canceled') played.get(team).add(g.week);
     }
   }
   const byes = new Map();
   for (const [team, weeksPlayed] of played) {
     const bye = weeks.filter((w) => !weeksPlayed.has(w));
-    // A single missed week is a bye; anything else means an incomplete schedule.
+    // A single missed week is a bye. Anything else is a schedule we don't
+    // understand (canceled game, partial dump) — say so and record nothing,
+    // rather than let a wrong bye ride into a lineup call unnoticed.
     if (bye.length === 1) byes.set(team, bye[0]);
+    else console.warn(`WARNING: ${team} has ${bye.length} weeks with no game (${bye.join(', ') || 'none'}) — bye week unknown, not guessing.`);
   }
   return byes;
 }

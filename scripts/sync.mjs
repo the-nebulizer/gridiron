@@ -3,7 +3,7 @@
 // of truth about rosters and availability — never reason from memory.
 //
 // Usage: node scripts/sync.mjs [week]
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as sleeper from './sleeper.mjs';
@@ -27,10 +27,15 @@ const [league, rosters, users, matchups, trendingAdds, trendingDrops, players, s
     sleeper.getSchedule(state.season),
   ]);
 
+// The players dump is refreshed at most daily, so its injury tags can lag by up
+// to 24h. Record when it was actually fetched so a skill can weigh that.
+const playersCachedAt = (await stat(path.join(dataDir, 'players.json'))).mtime.toISOString();
+
 // Bye weeks come from the schedule, never from the players dump — Sleeper's
 // player objects carry no bye field, so reading one there silently yields null
 // and invites guessing from memory. Team code -> bye week.
 const byes = sleeper.byeWeeks(schedule);
+const scheduleTeams = new Set(schedule.flatMap((g) => [g.home, g.away]));
 
 const txWeeks = week > 1 ? [week - 1, week] : [week];
 const transactionsRaw = (
@@ -50,7 +55,7 @@ function resolve(id) {
   }
   return {
     id,
-    name: p.full_name ?? [p.first_name, p.last_name].filter(Boolean).join(' ') ?? id,
+    name: p.full_name || [p.first_name, p.last_name].filter(Boolean).join(' ') || id,
     position: p.position ?? null,
     team: p.team ?? null,
     bye_week: byes.get(p.team) ?? null,
@@ -71,8 +76,10 @@ const teams = rosters.map((r) => {
   return {
     roster_id: r.roster_id,
     owner: ownerName.get(r.owner_id) ?? r.owner_id,
-    record: `${r.settings?.wins ?? 0}-${r.settings?.losses ?? 0}`,
-    fpts: r.settings?.fpts ?? 0,
+    record: `${r.settings?.wins ?? 0}-${r.settings?.losses ?? 0}${r.settings?.ties ? `-${r.settings.ties}` : ''}`,
+    // Sleeper splits points into whole + hundredths; ignoring the decimal
+    // part shaves up to 0.99 off every team.
+    fpts: (r.settings?.fpts ?? 0) + (r.settings?.fpts_decimal ?? 0) / 100,
     faab_remaining: (league.settings?.waiver_budget ?? 0) - (r.settings?.waiver_budget_used ?? 0),
     starters,
     bench,
@@ -82,9 +89,13 @@ const teams = rosters.map((r) => {
 
 const myTeam = teams.find((t) => t.roster_id === config.roster_id);
 const myMatchup = matchups.find((m) => m.roster_id === config.roster_id);
-const oppMatchup = myMatchup
-  ? matchups.find((m) => m.matchup_id === myMatchup.matchup_id && m.roster_id !== config.roster_id)
-  : null;
+// A null matchup_id means no game this week (playoff bye, eliminated, week 18).
+// Matching on it would pair us with whichever other idle roster comes first —
+// a fabricated opponent. No id, no opponent.
+const oppMatchup =
+  myMatchup && myMatchup.matchup_id != null
+    ? matchups.find((m) => m.matchup_id === myMatchup.matchup_id && m.roster_id !== config.roster_id)
+    : null;
 const oppTeam = oppMatchup ? teams.find((t) => t.roster_id === oppMatchup.roster_id) : null;
 
 const transactions = transactionsRaw.map((t) => ({
@@ -108,6 +119,7 @@ const trendResolve = (list) =>
 
 const snapshot = {
   fetched_at: new Date().toISOString(),
+  players_cached_at: playersCachedAt,
   season: state.season,
   season_start_date: state.season_start_date ?? null,
   // True only once a real game has kicked off, per the schedule's game statuses.
@@ -155,7 +167,18 @@ console.log(slot(startingSlots, myTeam.starters).join('\n'));
 if (oppTeam) {
   console.log(`\nOpponent: ${oppTeam.owner} (${oppTeam.record})`);
   console.log(slot(startingSlots, oppTeam.starters).join('\n'));
+} else {
+  console.log(`\nNo matchup this week (bye or not scheduled).`);
 }
+// A rostered player on a real team with no bye resolved means byeWeeks() gave
+// up on that team (see its warning) — never let that pass as a quiet null.
+const noBye = new Set();
+for (const t of teams) {
+  for (const p of [...t.starters, ...t.bench, ...t.reserve].filter(Boolean)) {
+    if (p.team && p.bye_week == null && scheduleTeams.has(p.team)) noBye.add(p.team);
+  }
+}
+for (const team of [...noBye].sort()) console.log(`WARNING: no bye week resolved for ${team} — rostered ${team} players carry bye_week null; check the schedule before trusting any bye plan.`);
 const hurt = [...myTeam.starters, ...myTeam.bench, ...myTeam.reserve].filter((p) => p?.injury_status);
 if (hurt.length) {
   console.log(`\nInjury flags on my roster:`);

@@ -25,6 +25,22 @@ if (since !== null && Number.isNaN(since)) {
   process.exit(1);
 }
 
+// The snapshot only carries the current and previous week's transactions. A
+// --since further back than that can't be answered from it — say so up front
+// instead of quietly reporting fewer moves than actually happened.
+if (since !== null) {
+  const earliestWeek = snapshot.week > 1 ? snapshot.week - 1 : snapshot.week;
+  const stamps = snapshot.transactions.map((t) => t.at).filter(Boolean);
+  const earliestAt = stamps.length ? Math.min(...stamps) : null;
+  if (earliestAt === null || since < earliestAt) {
+    console.warn(
+      `WARNING: the snapshot only holds moves from ${earliestWeek === snapshot.week ? `week ${snapshot.week}` : `weeks ${earliestWeek}–${snapshot.week}`}` +
+        (earliestAt === null ? ' (none recorded)' : ` (earliest ${new Date(earliestAt).toISOString().slice(0, 10)})`) +
+        `; anything before that is not in it, so this window is incomplete.`
+    );
+  }
+}
+
 const me = snapshot.teams.find((t) => t.roster_id === snapshot.my_roster_id);
 const rosteredBy = new Map();
 for (const team of snapshot.teams) {
