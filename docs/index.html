@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Graduate&family=Barlow+Semi+Condensed:wght@400;500;600&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script src="marked.min.js"></script>
 <style>
   :root{
     --turf:#0C1D12; --pitch:#15291C; --pitch-2:#182F20; --line:#24422F;
@@ -74,6 +74,8 @@
   .badge{font-family:var(--mono);font-size:11px;padding:1px 6px;border:1px solid;flex-shrink:0}
   .badge.q{color:var(--amber);border-color:var(--amber)}
   .badge.out{color:var(--flag);border-color:var(--flag)}
+  .lineup.solo .head,.lineup.solo .slotrow{grid-template-columns:76px 1fr}
+  .nogame{padding:12px 16px;color:var(--chalk-dim);border-bottom:1px solid var(--line)}
   .benchnote{padding:12px 16px;font-size:16px;color:var(--chalk-dim);border-top:1px solid var(--line);line-height:1.7}
   .benchnote b{color:var(--chalk);font-weight:500}
 
@@ -118,12 +120,14 @@
   footer{margin-top:70px;padding-top:18px;border-top:1px solid var(--line);font-family:var(--mono);font-size:13px;color:var(--chalk-dim);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
   button.refresh{font-family:var(--mono);font-size:13px;background:none;border:1px solid var(--line);color:var(--chalk);padding:5px 14px;cursor:pointer}
   button.refresh:hover{border-color:var(--amber);color:var(--amber)}
+  .notice{font-family:var(--mono);font-size:13px;color:var(--chalk-dim);border:1px solid var(--line);padding:8px 14px;margin:20px 0 -12px}
   .loading,.error{padding:70px 0;text-align:center;color:var(--chalk-dim);font-family:var(--mono);font-size:15px}
   .error b{color:var(--flag)}
 
   @media (max-width:720px){
     .cols{grid-template-columns:1fr}
     .slotrow,.lineup .head{grid-template-columns:1fr 52px 1fr}
+    .lineup.solo .head,.lineup.solo .slotrow{grid-template-columns:52px 1fr}
     .brief{padding:6px 16px 18px}
     .move .when{margin-left:0}
   }
@@ -141,6 +145,7 @@
   </header>
 </div>
 <div class="wrap">
+  <p class="notice" id="notice" hidden></p>
   <main id="app"><div class="loading">Reading the field…</div></main>
   <footer>
     <span>Live from Sleeper · moves happen in the Sleeper app</span>
@@ -150,28 +155,66 @@
 
 <script>
 const CFG = { league:'1353093442397294592', me:12, repo:'the-nebulizer/gridiron' };
-// day: the weekday each routine runs, so the page can tell when one ran but left nothing.
+// day/hour: when each routine fires (UTC), so the page can tell when one ran but left nothing.
+// The activity note is written by hand, not by a routine, so it has no schedule and no "Run fresh".
 const ROUTINES = {
-  activity: {label:'Activity',  id:'trig_01DTuqiqG69gfwSjFfW65vah', day:null, auto:'checks hourly through the day'},
-  waivers:  {label:'Waivers',   id:'trig_018jkMrmz2vDLU6qQdiGeKZE', day:2,    auto:'runs Tuesdays, ahead of Wednesday claims'},
-  lineup:   {label:'Lineup',    id:'trig_01DxqQ5pTd1sJRc8CSnX4YHy', day:4,    auto:'runs Thursdays'},
-  inactives:{label:'Inactives', id:'trig_01WEymfugQorRLQeP2YLdvqx', day:0,    auto:'runs Sunday mornings'},
-  trades:   {label:'Trades',    id:'trig_01Jr9ik2fKEiwcs4yaS99ZeQ', day:1,    auto:'runs Mondays'},
+  activity: {label:'Activity',  id:null, day:null, hour:null, auto:''},
+  waivers:  {label:'Waivers',   id:'trig_018jkMrmz2vDLU6qQdiGeKZE', day:2, hour:12, auto:'runs Tuesdays, ahead of Wednesday claims'},
+  lineup:   {label:'Lineup',    id:'trig_01DxqQ5pTd1sJRc8CSnX4YHy', day:4, hour:12, auto:'runs Thursdays'},
+  inactives:{label:'Inactives', id:'trig_01WEymfugQorRLQeP2YLdvqx', day:0, hour:15, auto:'runs Sunday mornings'},
+  trades:   {label:'Trades',    id:'trig_01Jr9ik2fKEiwcs4yaS99ZeQ', day:1, hour:12, auto:'runs Mondays'},
 };
 const WATCHER = {label:'Roster watcher', id:'trig_01DTuqiqG69gfwSjFfW65vah',
   auto:'checks hourly, and rewrites the brief after any move you make'};
 const API = 'https://api.sleeper.app';
+const MIN = 60*1000, HOUR = 60*MIN, DAY = 24*HOUR;
 const $ = (id)=>document.getElementById(id);
-const esc = (s)=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const esc = (s)=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 async function j(url){ const r = await fetch(url); if(!r.ok) throw new Error(r.status+' '+url); return r.json(); }
+
+/* ——— caching: the big feeds barely change, so don't pull them every two minutes ——— */
+const mem = {};
+const store = {
+  get(k){ try{ const s = localStorage.getItem('gt:'+k); return s ? JSON.parse(s) : null; }catch{ return null; } },
+  set(k,v){ try{ localStorage.setItem('gt:'+k, JSON.stringify(v)); }catch{} },
+};
+// Serve from memory (or localStorage when persist is set) while fresh; on a failed refetch, fall back to the stale copy.
+async function cached(key, ttlMs, fetcher, {persist=false}={}){
+  const now = Date.now();
+  const hit = mem[key] || (persist ? store.get(key) : null);
+  if(hit && hit.v && now - hit.t < ttlMs){ mem[key] = hit; return hit.v; }
+  try{
+    const v = await fetcher();
+    const rec = {t:now, v};
+    mem[key] = rec;
+    if(persist) store.set(key, rec);
+    return v;
+  }catch(e){
+    if(hit && hit.v){ mem[key] = hit; return hit.v; }
+    throw e;
+  }
+}
+// The full player file is 12,000 players × 50 fields; we need four fields, and mostly for a few hundred of them.
+function trimPlayers(raw){
+  const out = {};
+  for(const id in raw){
+    const p = raw[id] || {}, o = {};
+    const n = p.full_name || ((p.first_name||'')+' '+(p.last_name||'')).trim();
+    if(n) o.n = n;
+    if(p.position) o.p = p.position;
+    if(p.team) o.t = p.team;
+    if(p.injury_status) o.i = p.injury_status;
+    out[id] = o;
+  }
+  return out;
+}
 
 /* ——— shaping the raw feeds ——— */
 function resolve(players, id){
   if(!id || id==='0') return null;
   const p = players[id];
   if(!p) return {id, name:/^[A-Z]{2,3}$/.test(id)?id+' DEF':'#'+id, pos:/^[A-Z]{2,3}$/.test(id)?'DEF':'?', team:id, inj:null};
-  return { id, name:p.full_name || ((p.first_name||'')+' '+(p.last_name||'')).trim() || id,
-           pos:p.position||'?', team:p.team||'—', inj:p.injury_status||null };
+  return { id, name:p.n || id, pos:p.p||'?', team:p.t||'—', inj:p.i||null };
 }
 // A team's bye is the one week it has no game on the schedule.
 function byeWeeks(schedule){
@@ -196,8 +239,12 @@ function gamesByTeam(scores){
   return out;
 }
 const dayTime = (d)=> d ? d.toLocaleString(undefined,{weekday:'short',hour:'numeric',minute:'2-digit'}) : '';
-function gameLabel(g){
-  if(!g) return 'on bye';
+// games is null when the scores feed didn't load; byes is null when the schedule didn't.
+function gameLabel(games, byes, team, week){
+  const onBye = !!byes && byes[team]===week;
+  if(!games) return onBye ? 'on bye' : '';
+  const g = games[team];
+  if(!g) return onBye ? 'on bye' : 'no game listed';
   const side = (g.home?'vs ':'@ ')+g.opp;
   if(g.over) return side+' · final';
   if(g.live) return side+' · live'+(g.quarter?' '+g.quarter:'');
@@ -211,48 +258,53 @@ function actionItems({me, players, games, byes, week, txns, rostered, trendAdd, 
 
   // A player on IR or PUP can't fill an active roster spot, so he isn't an option.
   const stashed = (p)=> /ir|pup|^na$|sus/i.test(p.inj||'');
-  const net = (id)=> (trendAdd[id]||0) - (trendDrop[id]||0);
   const seen = new Set();
 
-  // Players other managers let go who nobody has claimed.
-  for(const t of txns){
-    for(const id of Object.keys(t.drops||{})){
-      if(rostered.has(id) || seen.has(id)) continue;
-      seen.add(id);
-      const p = resolve(players,id); if(!p || stashed(p)) continue;
-      if(net(id) <= 0) continue;                 // the market agrees with the drop; skip
-      items.push({urgency:'soon',
-        what:`${p.name} (${p.pos} ${p.team}) is still unclaimed`,
-        why:`Dropped in your league and nobody took him. ${net(id).toLocaleString()} more managers adding than dropping him across Sleeper.`});
-    }
-  }
+  // Free-agent items need the trending feeds; without them there's no way to size demand.
+  if(trendAdd && trendDrop){
+    const net = (id)=> (trendAdd[id]||0) - (trendDrop[id]||0);
 
-  // The best players nobody here has, whether or not they were ever dropped —
-  // the strongest demand across Sleeper, filtered to what's actually available.
-  Object.keys(trendAdd)
-    .filter(id=>!rostered.has(id) && !seen.has(id) && net(id) > 0)
-    .sort((a,b)=>net(b)-net(a))
-    .slice(0,2)
-    .forEach(id=>{
-      const p = resolve(players,id); if(!p || stashed(p)) return;
-      seen.add(id);
-      items.push({urgency:'soon',
-        what:`${p.name} (${p.pos} ${p.team}) is free and in demand`,
-        why:`Nobody in your league has him. ${net(id).toLocaleString()} more managers adding than dropping him across Sleeper — the biggest number on the board that's still available.`});
-    });
+    // Players other managers let go who nobody has claimed.
+    for(const t of (txns||[])){
+      for(const id of Object.keys(t.drops||{})){
+        if(rostered.has(id) || seen.has(id)) continue;
+        seen.add(id);
+        const p = resolve(players,id); if(!p || stashed(p)) continue;
+        if(net(id) <= 0) continue;                 // the market agrees with the drop; skip
+        items.push({urgency:'soon',
+          what:`${p.name} (${p.pos} ${p.team}) is still unclaimed`,
+          why:`Dropped in your league and nobody took him. ${net(id).toLocaleString()} more managers adding than dropping him across Sleeper.`});
+      }
+    }
+
+    // The best players nobody here has, whether or not they were ever dropped —
+    // the strongest demand across Sleeper, filtered to what's actually available.
+    Object.keys(trendAdd)
+      .filter(id=>!rostered.has(id) && !seen.has(id) && net(id) > 0)
+      .map(id=>({id, p:resolve(players,id)}))
+      .filter(x=>x.p && !stashed(x.p))
+      .sort((a,b)=>net(b.id)-net(a.id))
+      .slice(0,2)
+      .forEach(({id,p})=>{
+        seen.add(id);
+        items.push({urgency:'soon',
+          what:`${p.name} (${p.pos} ${p.team}) is free and in demand`,
+          why:`Nobody in your league has him. ${net(id).toLocaleString()} more managers adding than dropping him across Sleeper — the biggest number on the board that's still available.`});
+      });
+  }
 
   // Starters carrying an injury tag, with the kickoff you have to decide by.
   for(const p of starters){
     if(!p.inj) continue;
-    const g = games[p.team];
+    const g = games ? games[p.team] : null;
     const out = /out|ir|pup|doubtful/i.test(p.inj);
     items.push({urgency: out?'now':'soon',
       what:`${p.name} is ${p.inj.toLowerCase()}`,
-      why: g && !g.started ? `Starting at ${p.pos}. Decide before ${dayTime(g.kick)}.` : `Starting at ${p.pos}.`});
+      why: g && !g.started && g.kick ? `Starting at ${p.pos}. Decide before ${dayTime(g.kick)}.` : `Starting at ${p.pos}.`});
   }
 
   // Bye trouble in the next three weeks, while there's still time to plan for it.
-  for(let w=week+1; w<=week+3; w++){
+  if(byes) for(let w=week+1; w<=week+3; w++){
     const outThisWeek = starters.filter(p=>byes[p.team]===w);
     if(!outThisWeek.length) continue;
     const thin = outThisWeek.filter(p=>['K','DEF','TE','QB'].includes(p.pos));
@@ -266,127 +318,189 @@ function actionItems({me, players, games, byes, week, txns, rostered, trendAdd, 
 }
 
 /* ——— the written brief ——— */
-let reportFiles = [];
+let reportFiles = null;          // null until GitHub has answered at least once; then the last good listing
+let reportsCheckedAt = 0;
 async function loadReports(){
+  if(Date.now() - reportsCheckedAt < 10*MIN) return;   // GitHub rate-limits anonymous callers; ten minutes is plenty
+  reportsCheckedAt = Date.now();
   try{ reportFiles = (await j(`https://api.github.com/repos/${CFG.repo}/contents/reports`))
         .filter(f=>f.name.endsWith('.md')); }
-  catch{ reportFiles = []; }
+  catch{ /* keep the last good listing, if there is one */ }
 }
-const newestOf = (type)=> reportFiles.filter(f=>f.name.includes('-'+type)).sort((a,b)=>b.name.localeCompare(a.name))[0];
+const newestOf = (type)=> (reportFiles||[]).filter(f=>f.name.includes('-'+type)).sort((a,b)=>b.name.localeCompare(a.name))[0];
 function reportDate(name){
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(name);
   if(!m) return null;
   return new Date(+m[1], +m[2]-1, +m[3]);
 }
 const longDate = (d)=> d ? d.toLocaleDateString(undefined,{weekday:'long', month:'short', day:'numeric'}) : '';
-// Did a routine's scheduled day pass without a report? Silence should be visible.
+// Did a routine's scheduled fire pass without a report? Silence should be visible — but only when we could
+// actually check. The fire time is fixed in UTC, so work in UTC rather than the reader's local midnight.
 function missedRun(type, file){
-  const day = ROUTINES[type].day;
-  if(day===null) return null;
+  const r = ROUTINES[type];
+  if(r.day===null || !reportFiles) return null;
   const now = new Date();
-  const last = new Date(now); last.setHours(0,0,0,0);
-  last.setDate(last.getDate() - ((now.getDay() - day + 7) % 7));
-  if(now - last < 12*60*60*1000) return null;      // today's run may still be pending
-  const have = file ? reportDate(file.name) : null;
-  return (have && have >= last) ? null : last.toLocaleDateString(undefined,{weekday:'long'});
+  const last = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), r.hour));
+  last.setUTCDate(last.getUTCDate() - ((now.getUTCDay() - r.day + 7) % 7));
+  if(last > now) last.setUTCDate(last.getUTCDate() - 7);   // today is its day, but it hasn't fired yet
+  if(now - last < 12*HOUR) return null;                    // give the run time to land
+  const have = file ? (/^(\d{4}-\d{2}-\d{2})/.exec(file.name)||[])[1] : null;
+  const due = last.toISOString().slice(0,10);
+  return (have && have >= due) ? null : last.toLocaleDateString(undefined,{weekday:'long', timeZone:'UTC'});
+}
+// Markdown from the repo is trusted-ish, but it goes through innerHTML, so strip anything that could run.
+function safeHtml(md){
+  const t = document.createElement('template');
+  t.innerHTML = marked.parse(md);
+  t.content.querySelectorAll('script,style,iframe,object,embed,form,input,link,meta,base').forEach(n=>n.remove());
+  const okUrl = (v)=>{ const u = String(v).replace(/[\x00-\x20]/g,'').toLowerCase();
+                       return /^(https?:|mailto:)/.test(u) || !/^[a-z][a-z0-9+.-]*:/.test(u); };
+  t.content.querySelectorAll('*').forEach(el=>{
+    for(const a of [...el.attributes]){
+      const n = a.name.toLowerCase();
+      if(n.startsWith('on') || n==='srcdoc' || n==='formaction') el.removeAttribute(a.name);
+      else if((n==='href' || n==='src' || n==='xlink:href' || n==='action' || n==='data') && !okUrl(a.value)) el.removeAttribute(a.name);
+    }
+  });
+  return t.innerHTML;
 }
 
 function settingsPanel(){
-  const rows = [...Object.values(ROUTINES).filter(r=>r.day!==null), WATCHER];
+  const rows = [...Object.values(ROUTINES).filter(r=>r.id), WATCHER];
   return `<div class="brief-meta"><span>what runs on its own, and when</span></div>
     <table style="margin:18px 0"><thead><tr><th>Routine</th><th>Schedule</th><th class="r"></th></tr></thead><tbody>
     ${rows.map(r=>`<tr><td>${esc(r.label)}</td><td>${esc(r.auto)}</td>
-      <td class="num"><a href="https://claude.ai/code/routines/${r.id}" target="_blank" rel="noopener">open ↗</a></td></tr>`).join('')}
+      <td class="num"><a href="https://claude.ai/code/routines/${esc(r.id)}" target="_blank" rel="noopener">open ↗</a></td></tr>`).join('')}
     </tbody></table>
     <p class="sub">Each link opens that routine, where you can pause it, change when it runs, or start one now. Everything else on this page is live from Sleeper and refreshes itself every two minutes.</p>`;
 }
 
+let currentBrief = null;                 // the tab the reader has open; survives refreshes
+let articleCache = {key:null, html:''};  // the rendered write-up, refetched only when GitHub says it changed
 async function showBrief(type){
+  currentBrief = type;
   document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected', t.dataset.type===type));
   const box = $('brief');
   if(type==='settings'){ box.innerHTML = settingsPanel(); return; }
   const r = ROUTINES[type], f = newestOf(type), missed = missedRun(type, f);
+  const ghLink = `<a href="https://github.com/${CFG.repo}/tree/main/reports">read them on GitHub</a>`;
+  const when = f ? esc(longDate(reportDate(f.name)) || f.name.replace('.md','')) : (reportFiles ? 'nothing yet' : 'couldn’t check for new write-ups');
   const meta = `<div class="brief-meta">
-      <span>${f ? esc(longDate(reportDate(f.name)) || f.name.replace('.md','')) : 'nothing yet'} · ${esc(r.auto)}${
+      <span>${when}${r.auto ? ' · '+esc(r.auto) : ''}${
         missed ? ` · <span class="missed">${esc(missed)}'s run left nothing here</span>` : ''}</span>
-      <a class="runlink" href="https://claude.ai/code/routines/${r.id}" target="_blank" rel="noopener">Run fresh ↗</a>
+      ${r.id ? `<a class="runlink" href="https://claude.ai/code/routines/${esc(r.id)}" target="_blank" rel="noopener">Run fresh ↗</a>` : ''}
     </div>`;
-  if(!f){ box.innerHTML = meta + `<div class="empty">Nothing here yet. “Run fresh” starts one now; the write-up lands here a few minutes later.</div>`; return; }
-  box.innerHTML = meta + `<div class="empty">Loading…</div>`;
-  try{
-    const md = await (await fetch(f.download_url)).text();
-    box.innerHTML = meta + `<article class="report">${marked.parse(md)}</article>`;
-  }catch{ box.innerHTML = meta + `<div class="empty">This one wouldn't load — <a href="https://github.com/${CFG.repo}/tree/main/reports">read it on GitHub</a>.</div>`; }
+  if(!f){
+    box.innerHTML = meta + (reportFiles
+      ? `<div class="empty">Nothing here yet.${r.id ? ' “Run fresh” starts one now; the write-up lands here a few minutes later.' : ''}</div>`
+      : `<div class="empty">GitHub didn't answer, so this may be out of date — ${ghLink}.</div>`);
+    return;
+  }
+  const key = f.sha || f.name;
+  if(articleCache.key !== key){
+    box.innerHTML = meta + `<div class="empty">Loading…</div>`;
+    try{
+      const res = await fetch(f.download_url); if(!res.ok) throw new Error(res.status);
+      articleCache = {key, html:safeHtml(await res.text())};
+    }catch{ box.innerHTML = meta + `<div class="empty">This one wouldn't load — ${ghLink}.</div>`; return; }
+    if(currentBrief !== type) return;      // the reader moved on while it was loading
+  }
+  box.innerHTML = meta + `<article class="report">${articleCache.html}</article>`;
 }
 
 /* ——— page ——— */
-async function load(){
-  $('app').innerHTML = '<div class="loading">Reading the field…</div>';
-  try{
-    const state = await j(`${API}/v1/state/nfl`);
-    const wk = state.week || 1;
-    $('weekchip').innerHTML = `${esc(state.season)} SEASON · <b>WEEK ${wk}</b>`;
+const FEED_NAMES = {matchups:'this week’s matchup', trendAdd:'who’s trending', trendDrop:'who’s trending',
+                    schedule:'the NFL schedule (byes)', scores:'kickoff times', txnsNow:'league moves', txnsPrev:'last week’s moves'};
+const ESSENTIAL = ['league','rosters','users','players'];
+let rendered = false, inflight = null, lastLoad = 0;
 
-    const [league, rosters, users, matchups, trending, trendingDrops, players, schedule, scores, txnsNow, txnsPrev] =
-      await Promise.all([
-        j(`${API}/v1/league/${CFG.league}`), j(`${API}/v1/league/${CFG.league}/rosters`),
-        j(`${API}/v1/league/${CFG.league}/users`), j(`${API}/v1/league/${CFG.league}/matchups/${wk}`),
-        j(`${API}/v1/players/nfl/trending/add?lookback_hours=48&limit=200`),
-        j(`${API}/v1/players/nfl/trending/drop?lookback_hours=48&limit=200`),
-        j(`${API}/v1/players/nfl`),
-        j(`${API}/schedule/nfl/regular/${state.season}`),
-        j(`${API}/scores/nfl/regular/${state.season}/${wk}`),
-        j(`${API}/v1/league/${CFG.league}/transactions/${wk}`),
-        wk>1 ? j(`${API}/v1/league/${CFG.league}/transactions/${wk-1}`) : Promise.resolve([]),
-      ]);
-    await loadReports();
+function notice(text, detail){
+  const n = $('notice');
+  n.hidden = !text;
+  n.textContent = text || '';
+  if(detail) n.title = detail; else n.removeAttribute('title');
+}
 
-    const owner = Object.fromEntries(users.map(u=>[u.user_id,u.display_name]));
-    const byId  = Object.fromEntries(rosters.map(r=>[r.roster_id,r]));
-    const name  = (rid)=>owner[byId[rid]?.owner_id] || ('Team '+rid);
-    const rec   = (rid)=>{const s=byId[rid]?.settings||{};return `${s.wins||0}–${s.losses||0}`};
-    const rostered = new Set(rosters.flatMap(r=>r.players||[]));
-    const trendAdd = Object.fromEntries(trending.map(t=>[t.player_id,t.count]));
-    const trendDrop = Object.fromEntries(trendingDrops.map(t=>[t.player_id,t.count]));
-    const byes = byeWeeks(schedule);
-    const games = gamesByTeam(scores);
-    const txns = [...txnsNow, ...txnsPrev]
+async function fetchAll(state){
+  const wk = state.week || 1, L = `${API}/v1/league/${CFG.league}`;
+  const feeds = {
+    league:    cached('league', DAY, ()=>j(L), {persist:true}),
+    rosters:   j(`${L}/rosters`),
+    users:     cached('users', DAY, ()=>j(`${L}/users`), {persist:true}),
+    matchups:  j(`${L}/matchups/${wk}`),
+    trendAdd:  cached('trendAdd', 10*MIN, ()=>j(`${API}/v1/players/nfl/trending/add?lookback_hours=48&limit=200`)),
+    trendDrop: cached('trendDrop', 10*MIN, ()=>j(`${API}/v1/players/nfl/trending/drop?lookback_hours=48&limit=200`)),
+    players:   cached('players', HOUR, async()=>trimPlayers(await j(`${API}/v1/players/nfl`)), {persist:true}),
+    schedule:  cached('schedule:'+state.season, 7*DAY, ()=>j(`${API}/schedule/nfl/regular/${state.season}`), {persist:true}),
+    scores:    j(`${API}/scores/nfl/regular/${state.season}/${wk}`),
+    txnsNow:   j(`${L}/transactions/${wk}`),
+    txnsPrev:  wk>1 ? cached('txns:'+wk, Infinity, ()=>j(`${L}/transactions/${wk-1}`)) : Promise.resolve([]),
+  };
+  const keys = Object.keys(feeds);
+  const settled = await Promise.allSettled(keys.map(k=>feeds[k]));
+  const got = {}, failed = {};
+  keys.forEach((k,i)=>{ if(settled[i].status==='fulfilled') got[k] = settled[i].value; else failed[k] = settled[i].reason; });
+  const dead = ESSENTIAL.filter(k=>failed[k]);
+  if(dead.length) throw failed[dead[0]];
+  return {got, failed};
+}
+
+function render(state, got, failed){
+  const wk = state.week || 1;
+  const {league, rosters, users, players} = got;
+  const owner = Object.fromEntries(users.map(u=>[u.user_id,u.display_name]));
+  const byId  = Object.fromEntries(rosters.map(r=>[r.roster_id,r]));
+  const name  = (rid)=>owner[byId[rid]?.owner_id] || ('Team '+rid);
+  const rec   = (rid)=>{const s=byId[rid]?.settings||{};return `${s.wins||0}–${s.losses||0}${s.ties?'–'+s.ties:''}`};
+  const pf    = (r)=>(r.settings?.fpts||0) + (r.settings?.fpts_decimal||0)/100;
+  const rostered = new Set(rosters.flatMap(r=>r.players||[]));
+  const trendAdd  = got.trendAdd  ? Object.fromEntries(got.trendAdd.map(t=>[t.player_id,t.count]))  : null;
+  const trendDrop = got.trendDrop ? Object.fromEntries(got.trendDrop.map(t=>[t.player_id,t.count])) : null;
+  const byes  = got.schedule ? byeWeeks(got.schedule) : null;
+  const games = got.scores ? gamesByTeam(got.scores) : null;
+  const txns  = got.txnsNow ? [...got.txnsNow, ...(got.txnsPrev||[])]
       .filter(t=>t.type!=='commissioner' && t.status==='complete')
-      .sort((a,b)=>(b.status_updated||0)-(a.status_updated||0));
-    const me = byId[CFG.me];
-    const mine = matchups.find(m=>m.roster_id===CFG.me);
-    const opp  = mine && matchups.find(m=>m.matchup_id===mine.matchup_id && m.roster_id!==CFG.me);
-    const slots = (league.roster_positions||[]).filter(s=>s!=='BN');
-    const ppts = (m,id)=> m && m.players_points ? m.players_points[id] : null;
+      .sort((a,b)=>(b.status_updated||0)-(a.status_updated||0)) : null;
+  const me = byId[CFG.me];
+  if(!me) throw new Error('roster '+CFG.me+' missing');
+  const matchups = got.matchups || null;
+  const mine = matchups ? matchups.find(m=>m.roster_id===CFG.me) : null;
+  // A null matchup_id is a week with no game (playoff bye, eliminated, week 18) — not an opponent to go looking for.
+  const opp  = mine && mine.matchup_id!=null ? matchups.find(m=>m.matchup_id===mine.matchup_id && m.roster_id!==CFG.me) : null;
+  const slots = (league.roster_positions||[]).filter(s=>s!=='BN');
+  const ppts = (m,id)=> m && m.players_points ? m.players_points[id] : null;
+  const label = (p)=> gameLabel(games, byes, p.team, wk);
 
-    let html = '';
+  let html = '';
 
-    /* 1 — what needs you */
-    const items = actionItems({me, players, games, byes, week:wk, txns, rostered, trendAdd, trendDrop});
-    html += `<section style="margin-top:32px"><h2>On the clock</h2>
-      <p class="sub">Everything below is decided in the Sleeper app — this page just makes sure you know about it.</p>
-      <div class="clock">${
-        items.length ? items.map(i=>`<div class="item"><span class="tag ${i.urgency}">${i.urgency}</span>
-          <span class="what"><b>${esc(i.what)}</b><span class="why">${esc(i.why)}</span></span></div>`).join('')
-        : `<div class="allclear">Nothing needs you right now. Lineup is set, nobody worth claiming has been dropped, and no bye trouble in the next three weeks.</div>`
-      }</div></section>`;
+  /* 1 — what needs you */
+  const items = actionItems({me, players, games, byes, week:wk, txns, rostered, trendAdd, trendDrop});
+  html += `<section style="margin-top:32px"><h2>On the clock</h2>
+    <p class="sub">Everything below is decided in the Sleeper app — this page just makes sure you know about it.</p>
+    <div class="clock">${
+      items.length ? items.map(i=>`<div class="item"><span class="tag ${i.urgency}">${i.urgency}</span>
+        <span class="what"><b>${esc(i.what)}</b><span class="why">${esc(i.why)}</span></span></div>`).join('')
+      : `<div class="allclear">Nothing needs you right now. Lineup is set, nobody worth claiming has been dropped, and no bye trouble in the next three weeks.</div>`
+    }</div></section>`;
 
-    /* 2 — this week */
-    if(mine && opp){
-      const startSet = new Set(me.starters||[]);
-      const bench = (me.players||[]).filter(id=>!startSet.has(id)&&!(me.reserve||[]).includes(id)).map(id=>resolve(players,id));
-      const reserve = (me.reserve||[]).map(id=>resolve(players,id));
-      const cell = (p,pts,side)=>{
-        if(!p) return `<div class="pcell ${side}"><span class="kick">—</span></div>`;
-        const g = games[p.team];
-        const inj = p.inj ? `<span class="badge ${/out|ir|pup|doubtful/i.test(p.inj)?'out':'q'}" title="${esc(p.inj)}">${esc(p.inj.slice(0,3).toUpperCase())}</span>` : '';
-        return `<div class="pcell ${side}"><div class="pline"><span class="pname">${esc(p.name)}</span>${inj}
-          <span class="ppts">${pts!=null?pts.toFixed(1):''}</span></div>
-          <div class="kick ${g&&g.live?'live':''}">${esc(gameLabel(g))}</div></div>`;
-      };
-      html += `<section><h2>This week</h2>
-        <p class="sub">Kickoffs in your local time. Points fill in as games run.</p>
-        <div class="scorebug">
+  /* 2 — this week */
+  if(matchups){
+    const myStarters = (mine && mine.starters) || me.starters || [];
+    const startSet = new Set(myStarters);
+    const bench = (me.players||[]).filter(id=>!startSet.has(id)&&!(me.reserve||[]).includes(id)).map(id=>resolve(players,id)).filter(Boolean);
+    const reserve = (me.reserve||[]).map(id=>resolve(players,id)).filter(Boolean);
+    const cell = (p,pts,side)=>{
+      if(!p) return `<div class="pcell ${side}"><span class="kick">—</span></div>`;
+      const g = games ? games[p.team] : null;
+      const inj = p.inj ? `<span class="badge ${/out|ir|pup|doubtful/i.test(p.inj)?'out':'q'}" title="${esc(p.inj)}">${esc(p.inj.slice(0,3).toUpperCase())}</span>` : '';
+      return `<div class="pcell ${side}"><div class="pline"><span class="pname">${esc(p.name)}</span>${inj}
+        <span class="ppts">${pts!=null?pts.toFixed(1):''}</span></div>
+        <div class="kick ${g&&g.live?'live':''}">${esc(label(p))}</div></div>`;
+    };
+    html += `<section><h2>This week</h2>
+      <p class="sub">${games ? 'Kickoffs in your local time. ' : ''}Points fill in as games run.</p>`;
+    if(opp){
+      html += `<div class="scorebug">
           <div class="side"><div class="team">${esc(name(CFG.me))}</div><div class="rec">${rec(CFG.me)}</div><div class="pts">${(mine.points||0).toFixed(1)}</div></div>
           <div class="vs">VS</div>
           <div class="side opp"><div class="team">${esc(name(opp.roster_id))}</div><div class="rec">${rec(opp.roster_id)}</div><div class="pts">${(opp.points||0).toFixed(1)}</div></div>
@@ -394,66 +508,100 @@ async function load(){
         <div class="lineup">
         <div class="head"><div>${esc(name(CFG.me))} (you)</div><div></div><div class="r">${esc(name(opp.roster_id))}</div></div>`;
       slots.forEach((slot,i)=>{
-        const a = resolve(players,(mine.starters||[])[i]);
+        const a = resolve(players,myStarters[i]);
         const b = resolve(players,(opp.starters||[])[i]);
-        html += `<div class="slotrow">${cell(a,ppts(mine,(mine.starters||[])[i]),'')}<div class="slot">${esc(slot.replace('SUPER_FLEX','SFLX'))}</div>${cell(b,ppts(opp,(opp.starters||[])[i]),'opp')}</div>`;
+        html += `<div class="slotrow">${cell(a,ppts(mine,myStarters[i]),'')}<div class="slot">${esc(slot.replace('SUPER_FLEX','SFLX'))}</div>${cell(b,ppts(opp,(opp.starters||[])[i]),'opp')}</div>`;
       });
-      html += `<div class="benchnote"><b>Bench:</b> ${bench.map(p=>esc(p.name)).join(' · ')||'—'}<br><b>IR:</b> ${reserve.length?reserve.map(p=>esc(p.name)).join(' · '):'empty'}</div>
-      </div></section>`;
+    }else{
+      html += `<div class="lineup solo">
+        <div class="nogame">No matchup this week.</div>
+        <div class="head"><div></div><div>${esc(name(CFG.me))} (you)</div></div>`;
+      slots.forEach((slot,i)=>{
+        const a = resolve(players,myStarters[i]);
+        html += `<div class="slotrow"><div class="slot">${esc(slot.replace('SUPER_FLEX','SFLX'))}</div>${cell(a,ppts(mine,myStarters[i]),'')}</div>`;
+      });
     }
-
-    /* 3 — league activity */
-    const movesHtml = txns.slice(0,12).map(t=>{
-      const who = (t.roster_ids||[]).map(name).join(', ');
-      const adds = Object.keys(t.adds||{}).map(id=>resolve(players,id)).filter(Boolean);
-      const drops = Object.keys(t.drops||{}).map(id=>resolve(players,id)).filter(Boolean);
-      const free = drops.filter(p=>!rostered.has(p.id));
-      const bid = t.settings&&t.settings.waiver_bid!=null ? ` for $${t.settings.waiver_bid}` : '';
-      return `<div class="move"><span class="who">${esc(who)}</span>
-        <span class="did">${adds.length?`took <span class="in">${adds.map(p=>esc(p.name)).join(', ')}</span>${esc(bid)}`:''}${
-          drops.length?`${adds.length?', let go of ':'let go of '}${drops.map(p=>esc(p.name)).join(', ')}`:''}
-          ${free.length?` <span class="free">still free: ${free.map(p=>esc(p.name)).join(', ')}</span>`:''}</span>
-        <span class="when">${t.status_updated?new Date(t.status_updated).toLocaleDateString(undefined,{month:'short',day:'numeric'}):''}</span></div>`;
-    }).join('');
-    html += `<section><h2>League activity</h2>
-      <p class="sub">Every move the other eleven managers have made, newest first. Anyone marked still free is claimable.</p>
-      <div class="feed">${movesHtml || '<div class="allclear">Nobody has made a move yet.</div>'}</div></section>`;
-
-    /* 4 — the brief */
-    html += `<section><h2>The brief</h2>
-      <p class="sub">The written analysis behind all of this. “Run fresh” starts a new one; it lands here a few minutes later.</p>
-      <div class="tabs" role="tablist">${Object.entries(ROUTINES).map(([t,r])=>`<button class="tab" role="tab" data-type="${t}" aria-selected="false">${r.label}</button>`).join('')}<button class="tab" role="tab" data-type="settings" aria-selected="false">Routines</button></div>
-      <div class="brief" id="brief"></div>
-      <p class="sub" style="margin-top:12px">Something these don't cover — a trade offer to weigh, a what-if? <a href="https://claude.ai/code" target="_blank" rel="noopener">Open a session</a> on <b>the-nebulizer/gridiron</b> and ask.</p>
-    </section>`;
-
-    /* 5 — the season */
-    const standings = rosters.slice().sort((x,y)=>(y.settings?.wins||0)-(x.settings?.wins||0) || (y.settings?.fpts||0)-(x.settings?.fpts||0));
-    const budget = league.settings?.waiver_budget||0;
-    const myPlayers = [...(me.starters||[]), ...(me.players||[])].filter((v,i,a)=>a.indexOf(v)===i).map(id=>resolve(players,id)).filter(Boolean);
-    const byeRows = {};
-    myPlayers.forEach(p=>{ const w=byes[p.team]; if(w && w>=wk) (byeRows[w]=byeRows[w]||[]).push(p); });
-    html += `<div class="cols">
-      <section><h2>Standings</h2><p class="sub">FAAB is what each manager can still spend.</p>
-      <table><thead><tr><th>Team</th><th class="r">Rec</th><th class="r">PF</th><th class="r">FAAB</th></tr></thead><tbody>
-      ${standings.map(r=>`<tr class="${r.roster_id===CFG.me?'me':''}"><td>${esc(name(r.roster_id))}</td><td class="num">${rec(r.roster_id)}</td><td class="num">${(r.settings?.fpts||0)}</td><td class="num">$${budget-(r.settings?.waiver_budget_used||0)}</td></tr>`).join('')}
-      </tbody></table></section>
-      <section><h2>Byes ahead</h2><p class="sub">Weeks where you'll be short-handed, and who's out.</p>
-      <table><thead><tr><th>Week</th><th>Out</th></tr></thead><tbody>
-      ${Object.keys(byeRows).map(Number).sort((a,b)=>a-b).map(w=>`<tr><td class="num" style="text-align:left">W${w}</td><td>${byeRows[w].map(p=>esc(p.name)+' <span style="color:var(--chalk-dim)">'+esc(p.pos)+'</span>').join(', ')}</td></tr>`).join('') || '<tr><td colspan="2">No byes left this season.</td></tr>'}
-      </tbody></table></section></div>`;
-
-    $('app').innerHTML = html;
-    $('stamp').textContent = 'updated '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-    document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>showBrief(t.dataset.type)));
-    const newest = reportFiles.slice().sort((a,b)=>b.name.localeCompare(a.name))[0];
-    showBrief(newest ? (Object.keys(ROUTINES).find(t=>newest.name.includes('-'+t)) || 'waivers') : 'waivers');
-  }catch(e){
-    $('app').innerHTML = `<div class="error" title="${esc(e.message)}"><b>Couldn't reach Sleeper.</b><br><br>Everything on this page comes from them, so there's nothing to show until they answer.<br><br>Check your connection, then refresh.</div>`;
+    html += `<div class="benchnote"><b>Bench:</b> ${bench.map(p=>esc(p.name)).join(' · ')||'—'}<br><b>IR:</b> ${reserve.length?reserve.map(p=>esc(p.name)).join(' · '):'empty'}</div>
+    </div></section>`;
   }
+
+  /* 3 — league activity */
+  const movesHtml = (txns||[]).slice(0,12).map(t=>{
+    const who = (t.roster_ids||[]).map(name).join(', ');
+    const adds = Object.keys(t.adds||{}).map(id=>resolve(players,id)).filter(Boolean);
+    const drops = Object.keys(t.drops||{}).map(id=>resolve(players,id)).filter(Boolean);
+    const free = drops.filter(p=>!rostered.has(p.id));
+    const bid = t.settings&&t.settings.waiver_bid!=null ? ` for $${t.settings.waiver_bid}` : '';
+    return `<div class="move"><span class="who">${esc(who)}</span>
+      <span class="did">${adds.length?`took <span class="in">${adds.map(p=>esc(p.name)).join(', ')}</span>${esc(bid)}`:''}${
+        drops.length?`${adds.length?', let go of ':'let go of '}${drops.map(p=>esc(p.name)).join(', ')}`:''}
+        ${free.length?` <span class="free">still free: ${free.map(p=>esc(p.name)).join(', ')}</span>`:''}</span>
+      <span class="when">${t.status_updated?new Date(t.status_updated).toLocaleDateString(undefined,{month:'short',day:'numeric'}):''}</span></div>`;
+  }).join('');
+  html += `<section><h2>League activity</h2>
+    <p class="sub">Every move the other eleven managers have made, newest first. Anyone marked still free is claimable.</p>
+    <div class="feed">${txns ? (movesHtml || '<div class="allclear">Nobody has made a move yet.</div>')
+                            : '<div class="allclear">Couldn’t load league moves just now.</div>'}</div></section>`;
+
+  /* 4 — the brief */
+  html += `<section><h2>The brief</h2>
+    <p class="sub">The written analysis behind all of this. “Run fresh” starts a new one; it lands here a few minutes later.</p>
+    <div class="tabs" role="tablist">${Object.entries(ROUTINES).map(([t,r])=>`<button class="tab" role="tab" data-type="${t}" aria-selected="false">${r.label}</button>`).join('')}<button class="tab" role="tab" data-type="settings" aria-selected="false">Routines</button></div>
+    <div class="brief" id="brief"></div>
+    <p class="sub" style="margin-top:12px">Something these don't cover — a trade offer to weigh, a what-if? <a href="https://claude.ai/code" target="_blank" rel="noopener">Open a session</a> on <b>the-nebulizer/gridiron</b> and ask.</p>
+  </section>`;
+
+  /* 5 — the season */
+  const standings = rosters.slice().sort((x,y)=>(y.settings?.wins||0)-(x.settings?.wins||0) || pf(y)-pf(x));
+  const budget = league.settings?.waiver_budget||0;
+  const myPlayers = [...(me.starters||[]), ...(me.players||[])].filter((v,i,a)=>a.indexOf(v)===i).map(id=>resolve(players,id)).filter(Boolean);
+  const byeRows = {};
+  if(byes) myPlayers.forEach(p=>{ const w=byes[p.team]; if(w && w>=wk) (byeRows[w]=byeRows[w]||[]).push(p); });
+  html += `<div class="cols">
+    <section><h2>Standings</h2><p class="sub">FAAB is what each manager can still spend.</p>
+    <table><thead><tr><th>Team</th><th class="r">Rec</th><th class="r">PF</th><th class="r">FAAB</th></tr></thead><tbody>
+    ${standings.map(r=>`<tr class="${r.roster_id===CFG.me?'me':''}"><td>${esc(name(r.roster_id))}</td><td class="num">${rec(r.roster_id)}</td><td class="num">${pf(r).toFixed(2)}</td><td class="num">$${budget-(r.settings?.waiver_budget_used||0)}</td></tr>`).join('')}
+    </tbody></table></section>
+    <section><h2>Byes ahead</h2><p class="sub">Weeks where you'll be short-handed, and who's out.</p>
+    <table><thead><tr><th>Week</th><th>Out</th></tr></thead><tbody>
+    ${!byes ? '<tr><td colspan="2">The NFL schedule didn’t load, so byes are unknown right now.</td></tr>'
+      : Object.keys(byeRows).map(Number).sort((a,b)=>a-b).map(w=>`<tr><td class="num" style="text-align:left">W${w}</td><td>${byeRows[w].map(p=>esc(p.name)+' <span style="color:var(--chalk-dim)">'+esc(p.pos)+'</span>').join(', ')}</td></tr>`).join('') || '<tr><td colspan="2">No byes left this season.</td></tr>'}
+    </tbody></table></section></div>`;
+
+  $('app').innerHTML = html;
+  rendered = true;
+  document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>showBrief(t.dataset.type)));
+  const newest = (reportFiles||[]).slice().sort((a,b)=>b.name.localeCompare(a.name))[0];
+  showBrief(currentBrief || (newest ? (Object.keys(ROUTINES).find(t=>newest.name.includes('-'+t)) || 'waivers') : 'waivers'));
+
+  // One plain line for whatever didn't come through; the exception text stays in the tooltip.
+  const missing = [...new Set(Object.keys(failed).map(k=>FEED_NAMES[k]||k))];
+  notice(missing.length ? `Some of Sleeper didn’t answer: ${missing.join(', ')}. Showing the rest.` : '',
+         Object.values(failed).map(e=>e && e.message).join('\n'));
 }
+
+async function doLoad(){
+  if(!rendered) $('app').innerHTML = '<div class="loading">Reading the field…</div>';
+  try{
+    const state = await cached('state', 15*MIN, ()=>j(`${API}/v1/state/nfl`));
+    $('weekchip').innerHTML = `${esc(state.season)} SEASON · <b>WEEK ${state.week || 1}</b>`;
+    const [{got, failed}] = await Promise.all([fetchAll(state), loadReports()]);
+    render(state, got, failed);
+    $('stamp').textContent = 'updated '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  }catch(e){
+    if(!rendered){
+      $('app').innerHTML = `<div class="error" title="${esc(e.message)}"><b>Couldn't reach Sleeper.</b><br><br>Everything on this page comes from them, so there's nothing to show until they answer.<br><br>Check your connection, then refresh.</div>`;
+    }else{
+      // Keep the last good page; just say the refresh didn't take.
+      notice(`Couldn’t refresh at ${new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})} — showing the last good read.`, e.message);
+    }
+  }finally{ lastLoad = Date.now(); }
+}
+// One load at a time: the button, the timer and a tab coming back into view can't pile up.
+function load(){ if(!inflight) inflight = doLoad().finally(()=>{ inflight = null; }); return inflight; }
 $('refresh').addEventListener('click', load);
-setInterval(()=>{ if(!document.hidden) load(); }, 120000);
+setInterval(()=>{ if(!document.hidden) load(); }, 2*MIN);
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden && Date.now()-lastLoad > 2*MIN) load(); });
 load();
 </script>
 </body>
