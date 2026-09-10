@@ -10,7 +10,12 @@
 // looked at origin/main and seen this exact report there. Everything else is
 // a failure, said out loud.
 //
-// Usage: node scripts/publish-report.mjs <file> "<commit message>" [--dry-run]
+// `--replace` declares this version of the report authoritative: if main
+// already holds a different same-name report (an earlier run of the same day,
+// say), the rebase keeps ours instead of stopping on the conflict. A conflict
+// on any other file still fails the same way as before.
+//
+// Usage: node scripts/publish-report.mjs <file> "<commit message>" [--dry-run] [--replace]
 import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
@@ -19,10 +24,11 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
 const dryRun = args.includes('--dry-run');
-const [file, message] = args.filter((a) => a !== '--dry-run');
+const replace = args.includes('--replace');
+const [file, message] = args.filter((a) => a !== '--dry-run' && a !== '--replace');
 
 if (!file || !message) {
-  console.error('Usage: node scripts/publish-report.mjs <file> "<commit message>" [--dry-run]');
+  console.error('Usage: node scripts/publish-report.mjs <file> "<commit message>" [--dry-run] [--replace]');
   process.exit(2);
 }
 if (!existsSync(path.resolve(root, file))) {
@@ -57,7 +63,9 @@ if (dryRun) {
   const changed = !inHead || !tryGit('diff', '--quiet', 'HEAD', '--', file).ok;
   const working = git('hash-object', '--', file);
   console.log(changed ? `[dry run] would commit ${file} as "${message}"` : `[dry run] ${file} is already committed on this branch; nothing to commit`);
-  if (blobOnMain() === working) console.log(`[dry run] ${file} is already on main as-is; would exit without pushing`);
+  const onMain = blobOnMain();
+  if (onMain === working) console.log(`[dry run] ${file} is already on main as-is; would exit without pushing`);
+  else if (replace && onMain !== null) console.log(`[dry run] main has a different ${file}; would replace it with this version (--replace), then confirm the report is on origin/main`);
   else console.log('[dry run] would run: git push origin HEAD:main, then confirm the report is on origin/main');
   process.exit(0);
 }
@@ -85,10 +93,28 @@ if (blobOnMain() === local) {
   process.exit(0);
 }
 
+// --replace: rebase onto main, and if the only thing in conflict is the report
+// itself, keep this branch's version. During a rebase "theirs" is the commit
+// being replayed — ours. A conflict on anything else is left for the caller to
+// abort, exactly as without the flag.
+function rebaseReplacing() {
+  const fetch = tryGit('fetch', 'origin', 'main');
+  if (!fetch.ok) return fetch;
+  let rebase = tryGit('rebase', 'origin/main');
+  while (!rebase.ok) {
+    const conflicted = tryGit('diff', '--name-only', '--diff-filter=U').out.split('\n').filter(Boolean);
+    if (conflicted.length !== 1 || conflicted[0] !== file) return rebase;
+    git('checkout', '--theirs', '--', file);
+    git('add', '--', file);
+    rebase = tryGit('-c', 'core.editor=true', 'rebase', '--continue');
+  }
+  return rebase;
+}
+
 let push = tryGit('push', 'origin', 'HEAD:main');
 if (!push.ok) {
-  console.log('Push rejected; rebasing on main and retrying.');
-  const rebase = tryGit('pull', '--rebase', 'origin', 'main');
+  console.log(replace ? 'Push rejected; rebasing on main (keeping this version of the report) and retrying.' : 'Push rejected; rebasing on main and retrying.');
+  const rebase = replace ? rebaseReplacing() : tryGit('pull', '--rebase', 'origin', 'main');
   if (rebase.ok) {
     push = tryGit('push', 'origin', 'HEAD:main');
   } else {
