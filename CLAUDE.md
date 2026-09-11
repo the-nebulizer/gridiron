@@ -39,6 +39,10 @@ node scripts/publish-report.mjs reports/<file>.md "report: week <N> <type>"
 
 It commits, pushes `HEAD:main`, rebases once if main moved, and if it still can't get there, pushes a branch and tells you to open a PR. **Never end a run with the report only on a session branch, and never end one silently — the final message must say where the report landed.**
 
+## Usage discipline
+
+Ben is on a usage-metered plan. The dashboard costs nothing; every scheduled run costs tokens. Read only what the task needs (the watcher runs its two scripts before reading anything else and stops on UNCHANGED); web-research only the handful of candidates a decision turns on, never the whole trending list; and mechanical jobs — the inactives lookup, the roster watcher — belong on Haiku, judgment jobs on Sonnet, nothing on Opus. Model choice lives in each routine's settings (`docs/ROUTINES.md`).
+
 ## Report voice
 
 Reports in `reports/` and the dashboard's own copy are written for Ben, not for the machine. Say what's true in plain English; keep the plumbing out of the copy — no command lines, no snapshot field names (`games_have_started`, `season_start_date`, `faab_bid`), no "scanned `data/league/snapshot.json`". The prime directive still requires the sync, and the report should still say the data is fresh and where the calendar stands — as a sentence a manager would read ("Read off a fresh sync; Week 1 hasn't kicked off yet"), not as evidence of compliance. Naming a slash command Ben can run (`/lineup`) or a doc he can open (`docs/LEAGUE.md`) is fine; those are for him. Same on the dashboard: show a date, not a report filename; show a reason, not an exception string.
