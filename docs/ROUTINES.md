@@ -10,9 +10,23 @@ Replacement routines created by the agent (`create_trigger`) spawn sessions **wi
 
 ## Three edits that need no pasting (do these first)
 
-1. **Sunday inactives cron → `40 15 * * 0`** (10:40am CDT; `40 16 * * 0` from Nov 1). It currently fires at 10:06am, before inactives post at 10:30.
+1. **Sunday inactives cron → `40 15 * * 0`** (10:40am CDT; `40 16 * * 0` from Nov 1), **and model → Haiku 4.5.** It currently fires at 10:06am, before inactives post at 10:30. The job is a lookup — "is this starter inactive today?" — not a judgment call.
 2. **Roster watcher: cron → `30 12,22 * * *`** (7:30am and 5:30pm, two runs a day instead of sixteen) **and model → Haiku 4.5.** Its normal run is two scripts and a stop; it doesn't need Sonnet. This one change removes ~85% of the weekly spend.
 3. **Email notifications on, all five.** They're all off, which is how five reports went missing without anyone noticing.
+
+## Which model, and why
+
+The dashboard uses no tokens at all — it's a static page reading Sleeper directly. Only the routines spend usage, and only three of them do work that needs a strong model.
+
+| Routine | Model | Why |
+|---|---|---|
+| Waivers | Sonnet 4.5 / 5 | Web research on candidates plus a valuation call in this league's scoring — judgment |
+| Lineup | Sonnet | Start/sit with injury research and floor-vs-ceiling framing — judgment |
+| Trades | Sonnet | Valuing both sides of an offer across 12 rosters — judgment |
+| Inactives | **Haiku 4.5** | Look up each starter's status, list OUT/ACTIVE, name the pivot — mechanical |
+| Roster watcher | **Haiku 4.5** | Sync, fingerprint, stop — mechanical; on the rare CHANGED day it regenerates the four reports at Haiku quality, and the next Sonnet run refreshes each within days |
+
+Never Opus for any of these. Measured per-run usage on Sonnet: waivers ≈ 2.1M tokens, trades ≈ 1.0M, lineup ≈ 1.0M, inactives ≈ 0.8M, watcher no-op ≈ 0.2–0.4M — nearly all cheap cache reads. With the two Haiku switches and the watcher at twice a day, the whole set is roughly **6M tokens a week**, spread across four mornings; no single Max-plan window comes near a limit. The old setup was ≈ 31M a week, and the old watcher's own session log carried a seven-day rate-limit warning.
 
 ## The five routines
 
@@ -106,6 +120,16 @@ Also in the Inactives prompt, add this sentence to the opening paragraph:
 
 Three edits to the watcher prompt.
 
+### Step 1–3 — run the scripts before reading anything
+
+Replace the opening of the steps so the no-op path costs almost nothing:
+
+```
+1. Run `node scripts/sync.mjs`. If it fails, stop — commit nothing.
+2. Run `node scripts/roster-changed.mjs`. If it prints UNCHANGED: stop here. Do not read anything else, do not write anything.
+3. Only if CHANGED: read CLAUDE.md (prime directive, calendar calibration, and "Report voice") — everything below follows it.
+```
+
 ### Step 4 — two phrase substitutions
 
 - Delete `(my_roster_id = 12)`.
@@ -130,7 +154,8 @@ Each report opens with a single quoted line written for Ben: "> Refreshed <Month
 ## Checklist
 
 - [x] Merge PR #1 (done Sep 10 — every routine's publish step now works via CLAUDE.md)
-- [ ] Watcher model → Haiku 4.5
+- [ ] Watcher model → Haiku 4.5; inactives model → Haiku 4.5
+- [ ] Watcher steps 1–3 reordered so UNCHANGED runs read nothing
 - [ ] Inactives cron → `40 15 * * 0` now, `40 16 * * 0` from Nov 1
 - [ ] Watcher cron → `30 12,17,23 * * *` (or at least `30 0-3,12-23 * * *`)
 - [ ] Email notifications on, all five
