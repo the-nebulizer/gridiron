@@ -303,6 +303,22 @@ function actionItems({me, players, games, byes, week, txns, rostered, trendAdd, 
       why: g && !g.started && g.kick ? `Starting at ${p.pos}. Decide before ${dayTime(g.kick)}.` : `Starting at ${p.pos}.`});
   }
 
+  // A benched player who is out for the season is the one status change nothing
+  // else here would catch: he isn't starting, so the starter checks skip him, and
+  // he quietly occupies a roster spot.
+  const startSet = new Set(me.starters||[]);
+  const benched = (me.players||[]).filter(id=>!startSet.has(id) && !(me.reserve||[]).includes(id))
+    .map(id=>resolve(players,id)).filter(Boolean);
+  for(const p of benched){
+    if(!/ir|out|pup|^na$|sus/i.test(p.inj||'')) continue;
+    const irFree = !(me.reserve||[]).length;
+    items.push({urgency:'soon',
+      what:`${p.name} (${p.pos}) is ${p.inj.toLowerCase()} on your bench`,
+      why: irFree
+        ? `He can't be started. Your IR slot is free — move him there and you get the bench spot back.`
+        : `He can't be started and your IR slot is taken, so he's a roster spot doing nothing.`});
+  }
+
   // Bye trouble in the next three weeks, while there's still time to plan for it.
   if(byes) for(let w=week+1; w<=week+3; w++){
     const outThisWeek = starters.filter(p=>byes[p.team]===w);
