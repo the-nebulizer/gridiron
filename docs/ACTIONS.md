@@ -45,7 +45,7 @@ Every id in a block comes from the snapshot you just synced; never type one from
 |---|---|---|
 | `week` | integer | The NFL week the report is about. Required. Sleeper flips its week number on Tuesday, so only `start` actions expire by week (see "stale" below); every other kind stays open until it is done or a newer report of the same type replaces it. |
 | `verdict` | string | One sentence a human reads first. Required, non-empty. |
-| `next_check` | string | When the next relevant routine runs, e.g. `"Lineup, Thu 7am"`. Shown in the card's empty state. Required. |
+| `next_check` | string | The next routine due to run after this one, whatever its type — the weekly cycle is trades Mon 7am → waivers Tue 7am → lineup Thu 7am → inactives Sun 10am → trades. So a waivers report says `"Lineup, Thu 7am"` and a lineup report says `"Inactives, Sun 10am"`. Shown in the card's empty state. Required. |
 | `actions` | array | Zero or more action objects. Required. |
 
 ### Action object
@@ -117,19 +117,21 @@ Behaviour:
 Sits above the scorebug. Reads `reports/actions.json` from raw.githubusercontent.com with a cache-buster on every refresh. Then, per action, against the **live** Sleeper rosters just fetched:
 
 - `open` — the move is still valid and not yet made. Sorted by urgency, then by report date (newest first).
-- `done` — the live test in the table above passes. Collapsed under a "Done" toggle.
-- `gone` — an `add` whose player is now on someone else's roster. Shown with the owner's name, not as an instruction.
+- `done` — the live test in the table above passes. Collapsed under a "Done" toggle, together with `gone` (below).
+- `gone` — the move is no longer possible: an `add` whose player is now on someone else's roster (shown with the owner's name), or a `start` / `ir` / `activate` / `drop` whose player has left my roster. Shelved under the same toggle as `done`, counted separately, never shown as an instruction.
 - `stale` — a `start` action whose `week` is behind the live NFL week. Hidden. Other kinds never go stale by week.
-- `dismissed` — trades only, via a button; stored in `localStorage` keyed by action id + `compiled_at`, wrapped in try/catch.
+- `dismissed` — trades only, via a button; stored in `localStorage` keyed by action id + the source report filename, wrapped in try/catch. A dismissed trade stays hidden until a newer trades report replaces it.
 
-Each open item shows, in order: the move in one bold line with player names, the deadline chip (mono, right-aligned), the `why` sentence, and a source line ("Waivers · 2026-09-15 · verified live 14:02"). One "Open Sleeper ↗" link in the card header, not per item.
+Each open item shows, in order: the move in one bold line with player names, the deadline chip (mono, right-aligned), the `why` sentence, for a trade its `message` under a collapsed "Offer message" toggle, and a source line ("Waivers · 2026-09-15 · verified live 14:02"). One "Open Sleeper ↗" link in the card header, not per item.
 
-**Mechanical alerts** the page computes itself from live data and shows under the actions as "Heads up" (they need no judgment and never go stale):
+**Mechanical alerts** the page computes itself from live data and shows under the actions as "Heads up" (they need no judgment and never go stale). A heads-up whose player already has an open action in the card above is suppressed — the routines have already turned it into an instruction, so it isn't also raised as a separate alert:
 
-- a starter tagged Out, Doubtful, IR or PUP (red);
+- a starter carrying any injury tag, with the kickoff to decide by (Out/Doubtful/IR/PUP red; Questionable amber);
 - an empty starting slot (red);
 - a player in the IR slot with no injury designation (amber);
-- a starter tagged Questionable, only once `games_have_started` (amber; before kickoff these are camp tags and are ignored).
+- the page's existing items: a claimable player another manager just dropped, a hot free agent nobody rosters, a bench player out for the season, byes within three weeks.
+
+Before `season_start_date` an injury tag is a camp designation, so the routines' action blocks should not turn one into a `start` action; the page still shows the tag.
 
 **Empty state**: "Nothing to do." followed by the `next_check` of the freshest non-stale source, plus any heads-up alerts. Never a blank card.
 

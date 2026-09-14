@@ -139,10 +139,18 @@ async function resolvePlayer(index, id) {
 
 async function loadReportBlock(filePath) {
   const raw = await readFile(filePath, 'utf8');
-  const match = raw.match(/```actions[ \t]*\r?\n([\s\S]*?)\r?\n```/);
-  if (!match) return { error: 'no fenced ```actions``` block found' };
+  const re = /```actions[ \t]*\r?\n([\s\S]*?)\r?\n```/g;
+  const first = re.exec(raw);
+  if (!first) return { error: 'no fenced ```actions``` block found' };
+  if (re.exec(raw)) {
+    // The contract allows exactly one ```actions block per report. Two is
+    // always a mistake (a leftover draft, a bad merge) and guessing which one
+    // is "real" is exactly the kind of silent judgment call this file exists
+    // to refuse — so it's a hard error, not a first-wins-and-hope.
+    return { error: 'found more than one ```actions``` block; a report must have exactly one' };
+  }
   try {
-    return { block: JSON.parse(match[1]) };
+    return { block: JSON.parse(first[1]) };
   } catch (e) {
     return { error: `invalid JSON in actions block: ${e.message}` };
   }
@@ -548,11 +556,28 @@ async function compile() {
   }
 
   // Dedupe across sources by kind+player (kind+with for trade); keep the newest report file.
+  // Filenames are `YYYY-MM-DD-<type>.md`, so comparing them as strings orders
+  // by date correctly — but two different types published on the same date
+  // compare by type name instead, which is an accident of alphabetization,
+  // not a real recency signal. That can't be resolved from filenames alone,
+  // so at least say it happened instead of picking one in silence.
   const byKey = new Map();
   for (const entry of collected) {
     const key = entry.action.kind === 'trade' ? `trade:${entry.action.with}` : `${entry.action.kind}:${entry.action.player}`;
     const existing = byKey.get(key);
-    if (!existing || entry.report > existing.report) byKey.set(key, entry);
+    if (!existing) {
+      byKey.set(key, entry);
+    } else if (entry.report !== existing.report) {
+      const sameDay = entry.report.slice(0, 10) === existing.report.slice(0, 10);
+      const winner = entry.report > existing.report ? entry : existing;
+      const loser = winner === entry ? existing : entry;
+      if (sameDay) {
+        console.error(
+          `actions.mjs: warning — same-day duplicate action (${key}) in ${existing.report} and ${entry.report}; keeping ${winner.report} (alphabetical tie-break, not true recency), dropping ${loser.report}`
+        );
+      }
+      byKey.set(key, winner);
+    }
   }
   const finalActions = [...byKey.values()].map((e) => finalizeAction(e.action, e.source, e.report, e.week));
 
@@ -596,6 +621,11 @@ async function check(fileArg) {
         for (const p of r.problems) console.log(`  ${p}`);
       }
     }
+  } else if (result.problems) {
+    // Block-level failures (bad week/verdict/next_check/actions, or a block
+    // that isn't even an object) never reach the per-action loop above — say
+    // what's wrong instead of just how many things are wrong.
+    for (const p of result.problems) console.log(`  ${p}`);
   }
 
   if (result.problems) {

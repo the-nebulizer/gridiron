@@ -2,6 +2,8 @@
 
 **Update (2026-09-14)**: the prompts can in fact be updated through Claude Code's `RemoteTrigger` tool — verified today on the watcher (`trig_01DTuqiqG69gfwSjFfW65vah`). So the checklist below can be run from a Claude Code session instead of pasted in by hand. The paste-in text remains the source of truth for what each prompt should say.
 
+**Update (2026-09-14, later)**: the paste-ins are done — step 5 (plus the bye/inactives phrasing) is live in all four weekly routines, and steps 1–3, 4, 5, 7 are live in the watcher. Still pending: both model changes (watcher and inactives → Haiku 4.5), both cron changes (inactives and watcher schedules), and turning on email notifications for all five. The live prompts were written from the corrected text below, so every routine now also compiles `reports/actions.json` before publishing.
+
 The five scheduled routines live in the claude.ai routines UI, not in this repo. Their prompts were created outside agent control and the API refuses to edit them, so every change below is something **Ben pastes in by hand**. This page is the checklist for that.
 
 Times: Central is CDT (UTC-5) until clocks fall back on **Sunday Nov 1, 2026**, then CST (UTC-6). Cron is evaluated in UTC, so every routine drifts an hour earlier in local time on Nov 1 unless its cron is changed.
@@ -34,11 +36,11 @@ Never Opus for any of these. Measured per-run usage on Sonnet: waivers ≈ 2.1M 
 
 | Routine | Trigger id | Cron (UTC) | Central now (CDT) | Central from Nov 1 (CST) | Purpose | Verdict |
 |---|---|---|---|---|---|---|
-| Waivers | `trig_018jkMrmz2vDLU6qQdiGeKZE` | `0 12 * * 2` | Tue 7:00am | Tue 6:00am | FAAB report before Wednesday processing | Keep. Paste in new step 5 + bye phrase. |
-| Lineup | `trig_01DxqQ5pTd1sJRc8CSnX4YHy` | `0 12 * * 4` | Thu 7:00am | Thu 6:00am | Start/sit before Thursday night | Keep. Paste in new step 5. |
-| Inactives | `trig_01WEymfugQorRLQeP2YLdvqx` | `0 15 * * 0` | Sun 10:00am (fires ~10:06) | Sun 9:00am | Game-day inactives before the early slate | **Move later** — see below. Paste in new step 5 + opening sentence. |
-| Trades | `trig_01Jr9ik2fKEiwcs4yaS99ZeQ` | `0 12 * * 1` | Mon 7:00am | Mon 6:00am | Weekly trade hunt through the W11 deadline | Keep. Paste in new step 5 + bye phrase. |
-| Roster watcher | `trig_01DTuqiqG69gfwSjFfW65vah` | `0 0-3,12-23 * * *` | hourly 7pm–10pm and 7am–6pm (fires ~:02) | hourly 6pm–9pm and 6am–5pm | Re-run the four reports when the roster changes | **Cut frequency or shift off the hour** — see below. Paste in new steps 4, 5, 7. |
+| Waivers | `trig_018jkMrmz2vDLU6qQdiGeKZE` | `0 12 * * 2` | Tue 7:00am | Tue 6:00am | FAAB report before Wednesday processing | Keep. Step 5 + bye phrase pasted in 2026-09-14. |
+| Lineup | `trig_01DxqQ5pTd1sJRc8CSnX4YHy` | `0 12 * * 4` | Thu 7:00am | Thu 6:00am | Start/sit before Thursday night | Keep. Step 5 pasted in 2026-09-14. |
+| Inactives | `trig_01WEymfugQorRLQeP2YLdvqx` | `0 15 * * 0` | Sun 10:00am (fires ~10:06) | Sun 9:00am | Game-day inactives before the early slate | **Move later** — cron still pending. Step 5 + opening sentence pasted in 2026-09-14. |
+| Trades | `trig_01Jr9ik2fKEiwcs4yaS99ZeQ` | `0 12 * * 1` | Mon 7:00am | Mon 6:00am | Weekly trade hunt through the W11 deadline | Keep. Step 5 + bye phrase pasted in 2026-09-14. |
+| Roster watcher | `trig_01DTuqiqG69gfwSjFfW65vah` | `0 0-3,12-23 * * *` | hourly 7pm–10pm and 7am–6pm (fires ~:02) | hourly 6pm–9pm and 6am–5pm | Re-run the four reports when the roster changes | **Cut frequency or shift off the hour** — cron/model still pending. Steps 1–3, 4, 5, 7 pasted in 2026-09-14. |
 
 **Turn on email notifications for all five.** They are all off right now, which is how four (then five) reports went missing for a week without anyone noticing. Push is fine too, but email leaves a trail.
 
@@ -145,22 +147,24 @@ Each report opens with a single quoted line written for Ben: "> Refreshed <Month
 
 ### Step 7 — replace entirely with
 
+**Note (2026-09-14):** the live watcher prompt matches this block — it compiles `reports/actions.json` with `node scripts/actions.mjs` after writing the four reports and commits it alongside them and the fingerprint (see `docs/ACTIONS.md`).
+
 ```
-7. Publish all four reports in ONE commit together with reports/.roster-fingerprint.json — never the reports without the fingerprint (a missing fingerprint makes the next hourly run think everything changed and regenerate all four again), and never a plain git push (this session runs on its own branch; the dashboard reads main only). Run:
-   git add reports/*.md reports/.roster-fingerprint.json
+7. Run `node scripts/actions.mjs`; STOP on failure — fix whichever report's block is wrong, never bypass (see docs/ACTIONS.md). Then publish all four reports in ONE commit together with reports/actions.json and reports/.roster-fingerprint.json — never the reports without the fingerprint (a missing fingerprint makes the next hourly run think everything changed and regenerate all four again), and never a plain git push (this session runs on its own branch; the dashboard reads main only). Run:
+   git add reports/*.md reports/actions.json reports/.roster-fingerprint.json
    git commit -m "reports: refresh after roster change (week <N>)"
    git push origin HEAD:main
-   If the push is rejected because main moved: git pull --rebase origin main, keeping THIS session's version of any conflicting report file (git checkout --theirs <file> during the rebase, then git add and git rebase --continue), and push HEAD:main again. If the rebase fails or the second push is refused: git rebase --abort, push to a fallback branch (git push origin HEAD:refs/heads/reports-fallback-<YYYY-MM-DD-HHMM>), and finish with an explicit sentence saying the reports are NOT on the dashboard and naming that branch. Otherwise finish with one plain sentence confirming origin/main contains the four reports and the fingerprint. Never end the run without that sentence.
+   If the push is rejected because main moved: git pull --rebase origin main, keeping THIS session's version of any conflicting report file (git checkout --theirs <file> during the rebase, then git add and git rebase --continue), and push HEAD:main again. If the rebase fails or the second push is refused: git rebase --abort, push to a fallback branch (git push origin HEAD:refs/heads/reports-fallback-<YYYY-MM-DD-HHMM>), and finish with an explicit sentence saying the reports are NOT on the dashboard and naming that branch. Otherwise finish with one plain sentence confirming origin/main contains the four reports, reports/actions.json, and the fingerprint. Never end the run without that sentence.
 ```
 
 ## Checklist
 
 - [x] Merge PR #1 (done Sep 10 — every routine's publish step now works via CLAUDE.md)
 - [ ] Watcher model → Haiku 4.5; inactives model → Haiku 4.5
-- [ ] Watcher steps 1–3 reordered so UNCHANGED runs read nothing
+- [x] Watcher steps 1–3 reordered so UNCHANGED runs read nothing (pasted in 2026-09-14)
 - [ ] Inactives cron → `40 15 * * 0` now, `40 16 * * 0` from Nov 1
 - [ ] Watcher cron → `30 12,17,23 * * *` (or at least `30 0-3,12-23 * * *`)
 - [ ] Email notifications on, all five
-- [ ] Paste step 5 into Waivers, Lineup, Trades, Inactives; plus the bye/inactives phrase edits
-- [ ] Paste steps 4, 5, 7 into the watcher
+- [x] Paste step 5 into Waivers, Lineup, Trades, Inactives; plus the bye/inactives phrase edits (done 2026-09-14)
+- [x] Paste steps 4, 5, 7 into the watcher (done 2026-09-14, including the `actions.mjs` compile step)
 - [ ] On Nov 1: decide whether the Tue/Thu/Mon 7am runs should stay 7am local (`0 13 * * 2`, etc.) or are fine at 6am

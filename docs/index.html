@@ -64,6 +64,16 @@
   .act .chip{font-family:var(--mono);font-size:12px;color:var(--amber);border:1px solid var(--line);padding:2px 9px;white-space:nowrap;align-self:start;justify-self:end}
   .act.done .chip,.act.gone .chip{color:var(--chalk-dim)}
   .act .why{grid-column:2/-1;font-size:16px;color:var(--chalk-dim)}
+  /* the sendable offer text, folded away until Ben wants to copy it */
+  .act .offer{grid-column:2/-1;margin-top:5px}
+  .act .offer summary{font-family:var(--mono);font-size:12px;color:var(--chalk-dim);cursor:pointer;list-style:none}
+  .act .offer summary::-webkit-details-marker{display:none}
+  .act .offer summary::before{content:'▸ '}
+  .act .offer[open] summary::before{content:'▾ '}
+  .act .offer summary:hover{color:var(--amber)}
+  .act .offer pre{font-family:var(--mono);font-size:13px;line-height:1.55;color:var(--chalk);
+    background:var(--pitch-2);border:1px solid var(--line);padding:11px 13px;margin:7px 0 0;
+    white-space:pre-wrap;overflow-wrap:anywhere}
   .act .src{grid-column:2/-1;display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-family:var(--mono);font-size:12px;color:var(--chalk-dim);margin-top:2px}
   .act .dismiss{font-family:var(--mono);font-size:12px;background:none;border:1px solid var(--line);color:var(--chalk-dim);padding:2px 9px;cursor:pointer}
   .act .dismiss:hover{border-color:var(--amber);color:var(--amber)}
@@ -354,7 +364,8 @@ function actionItems({me, players, games, byes, week, txns, rostered, trendAdd, 
     if(!p.inj) continue;
     const g = games ? games[p.team] : null;
     const out = /out|ir|pup|doubtful/i.test(p.inj);
-    items.push({urgency: out?'now':'soon', id:p.id,
+    // keep: an injured man in the lineup is the one alert no routine instruction may hide.
+    items.push({urgency: out?'now':'soon', id:p.id, keep:true,
       what:`${p.name} is ${p.inj.toLowerCase()}`,
       why: g && !g.started && g.kick ? `Starting at ${p.pos}. Decide before ${dayTime(g.kick)}.` : `Starting at ${p.pos}.`});
   }
@@ -394,33 +405,48 @@ const URGENCY = ['now','before_kickoff','by_tuesday','this_week','optional'];
 const DEADLINE = {now:'now', before_kickoff:'before kickoff', by_tuesday:'by Tue night',
                   this_week:'this week', optional:'optional'};
 const urgRank = (u)=>{ const i = URGENCY.indexOf(u); return i<0 ? URGENCY.length : i; };
-const dismissKey = (a, compiledAt)=> `${a.id||''}|${compiledAt||''}`;
+// Keyed by the report that proposed the trade, not by compiled_at: the watcher recompiles after
+// any move, so a compiled_at key made Dismiss a one-hour snooze. A dismissal now lasts until a
+// NEWER report of that type supersedes it — a new filename is a new key, so the offer comes back.
+const dismissKey = (a)=> `${a.id||''}|${a.report||''}`;
 const titleCase = (s)=> String(s||'').charAt(0).toUpperCase()+String(s||'').slice(1);
 const prettySlot = (s)=> String(s||'').replace('SUPER_FLEX','SUPERFLEX');
 
-/* live = {week, compiled_at, players:Set(my ids), starters:[], reserve:[],
+/* live = {week, players:Set(my ids), starters:[], reserve:[],
            ownerOf(id)->name|null, dismissed:Set(keys)} */
 function actionState(a, live){
-  const has = (id)=> !!id && live.players.has(id);
-  const starters = live.starters||[], reserve = live.reserve||[];
+  // Ids come out of JSON, so one arriving as a number would silently miss a Set of strings —
+  // and a missed `drop` reads as "done", i.e. the card claiming a move Ben never made.
+  const S = (x)=> x==null ? '' : String(x);
+  const starters = (live.starters||[]).map(S), reserve = (live.reserve||[]).map(S);
+  // Sleeper puts IR players in `players` too, but don't rely on it: starters and reserve count.
+  const has = (id)=>{ const s = S(id);
+    return !!s && (live.players.has(s) || starters.includes(s) || reserve.includes(s)); };
+  const player = S(a.player);
   // Sleeper flips its week number on Tuesday, so only a start/sit instruction expires with the week.
   // An add, a drop, an IR move or a trade is still the right move on Wednesday.
   const wk = a.week==null ? live.week : a.week;
   if(a.kind==='start' && wk < live.week) return {state:'stale'};
-  const dismissed = live.dismissed && live.dismissed.has(dismissKey(a, live.compiled_at));
+  const dismissed = live.dismissed && live.dismissed.has(dismissKey(a));
+  // A start/IR/activate instruction about a player who has since left the roster can't be carried
+  // out at all. Shelve it as gone rather than leaving an impossible move in the open list.
+  const lost = ()=> ({state:'gone', owner: (live.ownerOf && live.ownerOf(player)) || null});
   switch(a.kind){
     case 'add': {
-      if(has(a.player)) return {state:'done'};
-      const o = live.ownerOf ? live.ownerOf(a.player) : null;
+      if(has(player)) return {state:'done'};
+      const o = live.ownerOf ? live.ownerOf(player) : null;
       if(o) return {state:'gone', owner:o};
       return {state:'open'};
     }
-    case 'drop':     return {state: has(a.player) ? 'open' : 'done'};
-    case 'start':    return {state: starters.includes(a.player) && (!a.for || !starters.includes(a.for)) ? 'done' : 'open'};
-    case 'ir':       return {state: reserve.includes(a.player) ? 'done' : 'open'};
-    case 'activate': return {state: has(a.player) && !reserve.includes(a.player) ? 'done' : 'open'};
+    case 'drop':     return {state: has(player) ? 'open' : 'done'};
+    case 'start':    return starters.includes(player) && (!a.for || !starters.includes(S(a.for)))
+                       ? {state:'done'} : has(player) ? {state:'open'} : lost();
+    case 'ir':       return reserve.includes(player) ? {state:'done'}
+                       : has(player) ? {state:'open'} : lost();
+    case 'activate': return has(player) && !reserve.includes(player) ? {state:'done'}
+                       : has(player) ? {state:'open'} : lost();
     case 'trade': {
-      const get = a.get||[];
+      const get = Array.isArray(a.get) ? a.get : [];
       if(get.length && get.every(has)) return {state:'done'};
       return {state: dismissed ? 'dismissed' : 'open'};
     }
@@ -430,9 +456,12 @@ function actionState(a, live){
 
 function actionHeadline(i){
   const nm = (n,pos,team)=> `${esc(n||'?')}${pos?` <span class="meta">(${esc(pos)} · ${esc(team||'—')})</span>`:''}`;
+  const list = (v)=> (Array.isArray(v)?v:[]).map(esc).join(', ');
+  // Gone is a statement of fact, never an instruction: say who has him, or that he's off the roster.
+  if(i.state==='gone' && i.kind!=='trade')
+    return `${nm(i.name,i.pos,i.team)} — ${i.owner ? `taken by ${esc(i.owner)}` : 'no longer on your roster'}`;
   switch(i.kind){
     case 'add': {
-      if(i.state==='gone') return `${nm(i.name,i.pos,i.team)} — taken by ${esc(i.owner)}`;
       const bid = (i.mode==='waiver' && i.faab!=null) ? `, bid $${esc(i.faab)}` : '';
       return `Add ${nm(i.name,i.pos,i.team)}${i.drop_name?`, drop ${esc(i.drop_name)}`:''}${bid}`;
     }
@@ -440,9 +469,10 @@ function actionHeadline(i){
     case 'start':    return `Start ${nm(i.name,i.pos,i.team)} at ${esc(prettySlot(i.slot))}${i.for_name?`, bench ${esc(i.for_name)}`:''}`;
     case 'ir':       return `Move ${nm(i.name,i.pos,i.team)} to IR`;
     case 'activate': return `Activate ${nm(i.name,i.pos,i.team)} from IR`;
-    case 'trade':    return `Offer ${(i.give_names||[]).map(esc).join(', ')||'—'} to ${esc(i.with_owner||('roster '+i.with))} for ${(i.get_names||[]).map(esc).join(', ')||'—'}`;
+    case 'trade':    return `Offer ${list(i.give_names)||'—'} to ${esc(i.with_owner||('roster '+i.with))} for ${list(i.get_names)||'—'}`;
   }
-  return esc(i.kind||'');
+  // A kind the compiler shouldn't emit: still name the player rather than printing a bare verb.
+  return `${esc(titleCase(i.kind||'—'))} ${nm(i.name,i.pos,i.team)}`.trim();
 }
 
 function actionRow(i, m){
@@ -450,17 +480,24 @@ function actionRow(i, m){
   const chip = i.deadline_label || DEADLINE[i.urgency] || 'when you can';
   const date = (String(i.report||'').match(/^\d{4}-\d{2}-\d{2}/)||[String(i.report||'').replace(/\.md$/,'')])[0];
   const dism = (i.kind==='trade' && i.state==='open')
-    ? `<button class="dismiss" data-dismiss="${esc(dismissKey(i, m.compiled_at))}">Dismiss</button>` : '';
+    ? `<button class="dismiss" data-dismiss="${esc(dismissKey(i))}">Dismiss</button>` : '';
+  // Drop the parts that aren't there rather than printing " · · ".
+  const src = [titleCase(i.source), date, `verified live ${m.now}`].filter(Boolean).map(esc).join(' · ');
+  // The offer text the routine wrote for Ben to paste into Sleeper. Only worth showing while
+  // the trade is still his to send, so it's folded away on a live open trade and nowhere else.
+  const offer = (i.kind==='trade' && i.state==='open' && typeof i.message==='string' && i.message.trim())
+    ? `<details class="offer"><summary>Offer message</summary><pre>${esc(i.message)}</pre></details>` : '';
   return `<div class="act ${esc(i.state)}">
       <div class="glyph" aria-hidden="true">${glyph}</div>
       <div class="move">${actionHeadline(i)}</div>
       <div class="chip">${esc(chip)}</div>
-      <div class="why">${esc(i.why||'')}</div>
-      <div class="src"><span>${esc(titleCase(i.source))} · ${esc(date)} · verified live ${esc(m.now)}</span>${dism}</div>
+      ${i.why ? `<div class="why">${esc(i.why)}</div>` : ''}
+      ${offer}
+      <div class="src"><span>${src}</span>${dism}</div>
     </div>`;
 }
 
-/* m = {ok, week, now, compiled_at, league, items:[action+state],
+/* m = {ok, week, now, league, items:[action+state],
         alerts:[actionItems() output], nextCheck, drift} */
 function renderDoNow(m){
   const items = (m.items||[]).filter(i=>i.state!=='stale' && i.state!=='dismissed');
@@ -475,7 +512,12 @@ function renderDoNow(m){
         ? 'No actions compiled yet — the next routine run writes them.'
         : `<b>Nothing to do.</b> <span class="next">Next: ${esc(m.nextCheck||'Waivers run Tue 7am')}</span>` }</div>`;
 
-  if(shelved.length) body += `<details class="donedrop"><summary>Done (${shelved.length})</summary>${shelved.map(i=>actionRow(i,m)).join('')}</details>`;
+  // "Done" and "gone" are not the same news: a move you made vs one you can no longer make.
+  if(shelved.length){
+    const nDone = shelved.filter(i=>i.state==='done').length, nGone = shelved.length - nDone;
+    const label = [nDone?`Done (${nDone})`:'', nGone?`no longer possible (${nGone})`:''].filter(Boolean).join(' · ');
+    body += `<details class="donedrop"><summary>${label}</summary>${shelved.map(i=>actionRow(i,m)).join('')}</details>`;
+  }
 
   // Heads up: what the page works out for itself from live Sleeper data. No judgment, never stale.
   if(alerts.length) body += `<div class="heads"><div class="htitle">Heads up</div>${
@@ -501,9 +543,17 @@ function dismissedSet(){
 function rememberDismiss(key){
   try{ const s = dismissedSet(); s.add(key); localStorage.setItem(DISMISS_KEY, JSON.stringify([...s])); }catch{}
 }
-// actions.json is absent until the first routine run writes it, so a 404 is normal, not a failure.
-async function jSoft(url){
-  try{ const r = await fetch(url); return r.ok ? await r.json() : null; }catch{ return null; }
+// actions.json is absent until the first routine run writes it, so a 404 is normal, not a failure —
+// but a blip at GitHub is not the same thing as "no actions". Only a real 404 clears the card;
+// anything else keeps the last good copy, so a two-minute refresh can't blank Ben's moves.
+let lastActions = null;
+async function fetchActions(url){
+  try{
+    const r = await fetch(url);
+    if(r.status===404){ lastActions = null; return null; }
+    if(!r.ok) return lastActions;
+    return (lastActions = await r.json());
+  }catch{ return lastActions; }
 }
 function pickNextCheck(sources){
   const all = Object.values(sources||{}).filter(s=>s && s.next_check);
@@ -513,13 +563,17 @@ function pickNextCheck(sources){
 }
 function rosterDrifted(doc, myR){
   const r = doc && doc.roster;
-  if(!r) return false;
-  const starters = (myR.starters||[]).map(String);
+  // No usable fingerprint is "can't tell", which is not the same as "it moved" — say nothing.
+  if(!r || typeof r!=='object'
+     || !(Array.isArray(r.starters) && Array.isArray(r.bench) && Array.isArray(r.reserve))) return false;
+  // An empty starting slot is "0" live and null in the fingerprint; same fact, two spellings.
+  const slot = (x)=> (x==null || x==='' || x==='0' || x===0) ? '—' : String(x);
+  const starters = (myR.starters||[]).map(slot);
   const reserve  = (myR.reserve||[]).map(String);
   const rSet = new Set(reserve), sSet = new Set(starters);
   const bench = (myR.players||[]).map(String).filter(id=>!sSet.has(id) && !rSet.has(id)).sort();
   const same = (a,b)=> JSON.stringify(a||[]) === JSON.stringify(b||[]);
-  return !(same(starters,(r.starters||[]).map(String))
+  return !(same(starters,(r.starters||[]).map(slot))
         && same(bench,(r.bench||[]).map(String).sort())
         && same(reserve.slice().sort(),(r.reserve||[]).map(String).sort()));
 }
@@ -527,7 +581,7 @@ function wireDismiss(m){
   document.querySelectorAll('[data-dismiss]').forEach(b=>b.addEventListener('click', ()=>{
     const key = b.dataset.dismiss;
     rememberDismiss(key);
-    m.items = m.items.map(i=> dismissKey(i, m.compiled_at)===key ? {...i, state:'dismissed'} : i);
+    m.items = m.items.map(i=> dismissKey(i)===key ? {...i, state:'dismissed'} : i);
     const el = $('donow');
     if(el){ el.outerHTML = renderDoNow(m); wireDismiss(m); }
   }));
@@ -665,7 +719,7 @@ async function fetchAll(state){
     txnsNow:   j(`${L}/transactions/${wk}`),
     txnsPrev:  wk>1 ? cached('txns:'+wk, Infinity, ()=>j(`${L}/transactions/${wk-1}`)) : Promise.resolve([]),
     // The compiled actions. Soft: no file yet is the normal state, and never a notice.
-    actions:   jSoft(`https://raw.githubusercontent.com/${CFG.repo}/main/reports/actions.json?t=${Date.now()}`),
+    actions:   fetchActions(`https://raw.githubusercontent.com/${CFG.repo}/main/reports/actions.json?t=${Date.now()}`),
   };
   const keys = Object.keys(feeds);
   const settled = await Promise.allSettled(keys.map(k=>feeds[k]));
@@ -709,23 +763,26 @@ function render(state, got, failed){
     const r = rosters.find(x=>x.roster_id!==CFG.me && (x.players||[]).some(q=>String(q)===String(pid)));
     return r ? name(r.roster_id) : null;
   };
-  const live = { week:wk, compiled_at: actionsDoc ? actionsDoc.compiled_at : '',
+  const live = { week:wk,
     players:new Set((me.players||[]).map(String)), starters:(me.starters||[]).map(String),
     reserve:(me.reserve||[]).map(String), ownerOf, dismissed:dismissedSet() };
-  const verified = ((actionsDoc && actionsDoc.actions) || []).map(a=>{
+  // A malformed actions.json is a bad data file, not a reason to blank the whole page.
+  const rawActions = actionsDoc && Array.isArray(actionsDoc.actions) ? actionsDoc.actions : [];
+  const verified = rawActions.filter(a=>a && typeof a==='object').map(a=>{
     const src = actionsDoc.sources && actionsDoc.sources[a.source];
     const w = a.week!=null ? a.week : (src && src.week!=null ? src.week : actionsDoc.week);
     const item = {...a, week: w==null ? wk : w, id: a.id || `${a.source||'?'}:${a.kind}:${a.player||''}`};
     return {...item, ...actionState(item, live)};
   });
-  // A player the routines have already turned into an instruction doesn't also need a heads-up.
-  const spokenFor = new Set(verified.filter(i=>i.state==='open').map(i=>String(i.player||'')));
+  // A player the routines have already turned into an OPEN instruction doesn't also need a
+  // heads-up. Alerts flagged `keep` (an injured starter) are never silenced this way.
+  const spokenFor = new Set(verified.filter(i=>i.state==='open' && i.player).map(i=>String(i.player)));
   const doNow = {
-    ok: !!actionsDoc, week: wk, league: CFG.league, compiled_at: live.compiled_at,
+    ok: !!actionsDoc, week: wk, league: CFG.league,
     now: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),
     items: verified,
     alerts: actionItems({me, players, games, byes, week:wk, txns, rostered, trendAdd, trendDrop, slots})
-              .filter(a=>!(a.id && spokenFor.has(String(a.id)))),
+              .filter(a=>!(a.id && !a.keep && spokenFor.has(String(a.id)))),
     nextCheck: pickNextCheck(actionsDoc && actionsDoc.sources),
     drift: rosterDrifted(actionsDoc, me),
   };

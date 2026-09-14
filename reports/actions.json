@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-09-14T21:29:05.638Z",
+  "compiled_at": "2026-09-14T23:51:39.231Z",
   "season": "2026",
   "week": 1,
   "games_have_started": true,
@@ -38,7 +38,7 @@
       "report": "2026-09-14-lineup.md",
       "week": 1,
       "verdict": "Nothing to change — Week 1 is final, all ten starters played, and you won 141.2–100.74.",
-      "next_check": "Lineup, Thu 7am",
+      "next_check": "Inactives, Sun 10am",
       "stale": false
     },
     "trades": {
@@ -52,7 +52,7 @@
       "report": "2026-09-14-inactives.md",
       "week": 1,
       "verdict": "Nothing to check — Week 1 is over and Week 2 games are still days out.",
-      "next_check": "Inactives, Sun 10am",
+      "next_check": "Trades, Mon 7am",
       "stale": false
     }
   },
