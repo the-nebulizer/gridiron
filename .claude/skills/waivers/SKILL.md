@@ -22,6 +22,15 @@ Not every question is the Tuesday report. When Ben asks about a single player, o
 4. **Which way is the market moving?** The snapshot carries Sleeper-wide adds AND drops. A player being dropped by tens of thousands is a signal; so is the reverse. Report the net, not just the add count — they run in both directions and the add count alone flatters a player everyone is cutting.
 5. **Is he actually rosterable?** A player on IR or PUP can't fill an active spot.
 
-Never: recommend a player without `rostered_in_league: false` in the current snapshot; spend below $1 on a player worth rostering; forget IR/PUP eligibility as a way to free a bench spot.
+6. Write the report to `reports/YYYY-MM-DD-waivers.md`, action block first per `docs/ACTIONS.md`, e.g.:
+   ```actions
+   { "week": 2, "verdict": "Add Justice Hill now; drop Bryce Young to make room.",
+     "next_check": "Lineup, Thu 7am",
+     "actions": [{ "kind": "add", "player": "<id from snapshot trending.adds>", "drop": "9228", "mode": "fcfs",
+       "urgency": "now", "why": "Henry handcuff with a pass-down role; Young never starts." }] }
+   ```
+   A hold verdict still ships this block, with `"actions": []`. Then run `node scripts/actions.mjs`; STOP on failure — fix the block, never bypass.
 
-**Publishing.** A report that isn't on `main` never reaches the dashboard. Finish with `node scripts/publish-report.mjs reports/<file>.md "report: week <N> waivers"` and say where it landed — see CLAUDE.md.
+Never: recommend a player without `rostered_in_league: false` in the current snapshot; spend below $1 on a player worth rostering; forget IR/PUP eligibility as a way to free a bench spot; emit an action for a player the snapshot doesn't place exactly where the action claims.
+
+**Publishing.** A report that isn't on `main` never reaches the dashboard. Finish with `node scripts/publish-report.mjs reports/<file>.md reports/actions.json "report: week <N> waivers"` and say where it landed — see CLAUDE.md.

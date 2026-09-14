@@ -1,5 +1,14 @@
 # Inactives check — nothing to check right now
 
+```actions
+{
+  "week": 1,
+  "verdict": "Nothing to check — Week 1 is over and Week 2 games are still days out.",
+  "next_check": "Inactives, Sun 10am",
+  "actions": []
+}
+```
+
 > Regenerated 2026-09-14T12:24:08Z after roster change: Zach Charbonnet (RB) newly flagged PUP on your IR slot.
 
 That flag is the tracker noticing Charbonnet's official PUP tag for the first time — he's been sitting on your IR slot since September 1st, so it's not a new event and there's nothing to act on.

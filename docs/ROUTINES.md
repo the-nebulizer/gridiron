@@ -1,5 +1,7 @@
 # Routines — owner's runbook
 
+**Update (2026-09-14)**: the prompts can in fact be updated through Claude Code's `RemoteTrigger` tool — verified today on the watcher (`trig_01DTuqiqG69gfwSjFfW65vah`). So the checklist below can be run from a Claude Code session instead of pasted in by hand. The paste-in text remains the source of truth for what each prompt should say.
+
 The five scheduled routines live in the claude.ai routines UI, not in this repo. Their prompts were created outside agent control and the API refuses to edit them, so every change below is something **Ben pastes in by hand**. This page is the checklist for that.
 
 Times: Central is CDT (UTC-5) until clocks fall back on **Sunday Nov 1, 2026**, then CST (UTC-6). Cron is evaluated in UTC, so every routine drifts an hour earlier in local time on Nov 1 unless its cron is changed.

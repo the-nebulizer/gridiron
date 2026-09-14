@@ -8,7 +8,7 @@ Season manager for Ben's Sleeper league. Ground truth = `node scripts/sync.mjs` 
 
 ## State (2026-09-09)
 
-- **Built + verified**: data layer (`scripts/`), snapshot resolves all 12 rosters to real names against the live league; skills `/lineup`, `/waivers`, `/trade`; docs.
+- **Built + verified**: data layer (`scripts/`), snapshot resolves all 12 rosters to real names against the live league; skills `/lineup`, `/waivers`, `/trade`, `/inactives`; docs.
 - **Dashboard**: `docs/index.html` on GitHub Pages (main//docs) at https://the-nebulizer.github.io/gridiron/ — client-side Sleeper fetches (CORS open), scorebug + lineups + standings + trending; auto-refreshes every 2 min while visible. Repo is PUBLIC by Ben's choice.
 - **Scheduled routines** (all verified working after Ben allowed api.sleeper.app in the cloud env network settings; reports commit to `reports/`):
   - Tue 7am waivers `trig_018jkMrmz2vDLU6qQdiGeKZE`
@@ -22,6 +22,8 @@ Season manager for Ben's Sleeper league. Ground truth = `node scripts/sync.mjs` 
 - **Routines (2026-09-10)**: the originals are the only ones that work — agent-created replacements spawn sessions with no repo attached (tested twice, removed). Their prompts and crons can only be changed in the claude.ai UI; `docs/ROUTINES.md` is the checklist. `publish-report.mjs --replace` lets a later same-day run supersede an earlier report (PR #2).
 - **Roster status changes are watched (2026-09-13)**: the fingerprint used to be player IDs by slot, so a player going to IR while sitting on the bench moved nothing and the watcher stayed silent — that is how Malik Davis's hip injury went unreported. It now also covers material status (Out/IR/PUP/Doubtful/Sus/NA, deliberately not Questionable), and a CHANGED run names what moved. The dashboard flags an out-for-the-season bench player too.
 - **Known gap**: the fingerprint still covers **only Ben's roster**, so the watcher doesn't re-run reports when another manager moves. The dashboard's league activity covers that live; widening the fingerprint to all 12 rosters would fix it properly, at the cost of far more re-runs.
+- **Do now card (2026-09-14)**: the dashboard's top card is structured data, not scraped prose. Three parts — see `docs/ACTIONS.md` for the full contract: (1) every report in `reports/` starts with an `actions` code block; (2) `node scripts/actions.mjs` validates each newest report against a fresh snapshot and compiles `reports/actions.json`; (3) `docs/index.html` reads that file, re-verifies each action against live Sleeper rosters, and renders the card at the top of the page. The four skills and the roster watcher must all run `node scripts/actions.mjs` before publishing or committing their reports. The skill set also grew a fourth entry, `/inactives`, for the Sunday game-day pivot check, which follows the same action-block contract.
+- **Routine prompts ARE editable via the API (2026-09-14)**: the earlier note that the API refuses updates was wrong for the Claude Code `RemoteTrigger` tool — a partial update with `enabled` and a full `job_config` both returned 200 and took effect on the watcher (`trig_01DTuqiqG69gfwSjFfW65vah`); the runbook's paste-ins can be applied from a Claude Code session instead of by hand.
 - **Not done**: nothing in-app can be automated (Sleeper API is read-only — all roster moves are manual in the Sleeper app).
 
 ## Next steps

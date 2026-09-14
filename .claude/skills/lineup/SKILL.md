@@ -11,7 +11,15 @@ description: Build this week's start/sit recommendation for Ben's team from a fr
 4. Decide each slot in **this league's scoring**: superflex + 6-pt pass TDs (a healthy starting QB in SUPER_FLEX nearly always beats any WR/TE), half-PPR.
 5. Frame close calls by win probability: projected favorite → prefer floor; underdog → prefer ceiling. Say which framing you used.
 6. Output: the full legal 10-slot lineup (QB, RB, RB, WR, WR, TE, FLEX, SUPER_FLEX, K, DEF); for every change from current starters, one sentence of reasoning; flag any Questionable/Doubtful starter with the bench pivot to make before kickoff (lineup changes are manual in the Sleeper app).
+7. Write the report to `reports/YYYY-MM-DD-lineup.md`, action block first per `docs/ACTIONS.md`, e.g.:
+   ```actions
+   { "week": 2, "verdict": "Start Bucky Irving over Jaylen Warren at FLEX.",
+     "next_check": "Waivers, Tue 7am",
+     "actions": [{ "kind": "start", "player": "11584", "for": "8228", "slot": "FLEX",
+       "urgency": "before_kickoff", "why": "Warren questionable; Irving has the full workload." }] }
+   ```
+   A hold verdict still ships this block, with `"actions": []`. Then run `node scripts/actions.mjs`; STOP on failure — fix the block, never bypass.
 
-Never: name a player without confirming their roster slot in the snapshot; carry availability claims from search snippets; leave a slot empty when a legal option exists.
+Never: name a player without confirming their roster slot in the snapshot; carry availability claims from search snippets; leave a slot empty when a legal option exists; emit an action for a player the snapshot doesn't place exactly where the action claims.
 
-**Publishing.** A report that isn't on `main` never reaches the dashboard. Finish with `node scripts/publish-report.mjs reports/<file>.md "report: week <N> lineup"` and say where it landed — see CLAUDE.md.
+**Publishing.** A report that isn't on `main` never reaches the dashboard. Finish with `node scripts/publish-report.mjs reports/<file>.md reports/actions.json "report: week <N> lineup"` and say where it landed — see CLAUDE.md.

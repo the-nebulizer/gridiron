@@ -31,10 +31,12 @@ The snapshot carries `season_start_date` and `games_have_started` (the latter is
 
 The dashboard reads `reports/` from **`main` only**. Scheduled runs happen on their own session branch, so an ordinary `git commit` + `git push` leaves the report where nobody will ever see it — the same as not writing it. Four reports were lost this way between Sep 3 and Sep 8, including a time-critical waiver call.
 
+Every report begins with the action block described in `docs/ACTIONS.md`, and `node scripts/actions.mjs` must pass — compiling `reports/actions.json` — before the report is published; publish the report and `reports/actions.json` together in the same command.
+
 So finish every run with:
 
 ```
-node scripts/publish-report.mjs reports/<file>.md "report: week <N> <type>"
+node scripts/publish-report.mjs reports/<file>.md reports/actions.json "report: week <N> <type>"
 ```
 
 It commits, pushes `HEAD:main`, rebases once if main moved, and if it still can't get there, pushes a branch and tells you to open a PR. **Never end a run with the report only on a session branch, and never end one silently — the final message must say where the report landed.**
@@ -50,8 +52,8 @@ Reports in `reports/` and the dashboard's own copy are written for Ben, not for 
 ## Layout
 
 - `config.json` — league/user IDs (public data, committed)
-- `scripts/sleeper.mjs` — API client; `scripts/sync.mjs` — snapshot builder
+- `scripts/sleeper.mjs` — API client; `scripts/sync.mjs` — snapshot builder; `scripts/actions.mjs` — compiles report action blocks into `reports/actions.json`
 - `scripts/league-activity.mjs` — what the other 11 managers have done, and who they dropped that's still claimable
 - `data/` — gitignored cache (`players.json` refreshed when >24h old; `league/snapshot.json` per sync)
-- `.claude/skills/` — `/lineup`, `/waivers`, `/trade`
-- `docs/` — league facts, season plan, resume doc
+- `.claude/skills/` — `/lineup`, `/waivers`, `/trade`, `/inactives`
+- `docs/` — league facts, season plan, resume doc, `docs/ACTIONS.md` (the "Do now" card contract)

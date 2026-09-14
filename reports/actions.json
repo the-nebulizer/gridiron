@@ -1,0 +1,145 @@
+{
+  "compiled_at": "2026-09-14T21:29:05.638Z",
+  "season": "2026",
+  "week": 1,
+  "games_have_started": true,
+  "roster": {
+    "starters": [
+      "4881",
+      "12527",
+      "11584",
+      "12526",
+      "2449",
+      "9484",
+      "8228",
+      "3163",
+      "8259",
+      "BUF"
+    ],
+    "bench": [
+      "1166",
+      "1479",
+      "5947",
+      "9228"
+    ],
+    "reserve": [
+      "9753"
+    ]
+  },
+  "sources": {
+    "waivers": {
+      "report": "2026-09-14-waivers.md",
+      "week": 2,
+      "verdict": "Claim Devaughn Vele now; a smaller speculative claim on Michael Mayer (dropping Jakobi Meyers) is optional.",
+      "next_check": "Lineup, Thu 7am",
+      "stale": false
+    },
+    "lineup": {
+      "report": "2026-09-14-lineup.md",
+      "week": 1,
+      "verdict": "Nothing to change — Week 1 is final, all ten starters played, and you won 141.2–100.74.",
+      "next_check": "Lineup, Thu 7am",
+      "stale": false
+    },
+    "trades": {
+      "report": "2026-09-14-trades.md",
+      "week": 1,
+      "verdict": "Two trades worth sending: Cousins + Meyers to Tally241 for Aaron Jones, and Bryce Young to amandaberry for Brian Robinson.",
+      "next_check": "Waivers, Tue 7am",
+      "stale": false
+    },
+    "inactives": {
+      "report": "2026-09-14-inactives.md",
+      "week": 1,
+      "verdict": "Nothing to check — Week 1 is over and Week 2 games are still days out.",
+      "next_check": "Inactives, Sun 10am",
+      "stale": false
+    }
+  },
+  "actions": [
+    {
+      "id": "waivers:add:11834",
+      "source": "waivers",
+      "report": "2026-09-14-waivers.md",
+      "kind": "add",
+      "week": 2,
+      "player": "11834",
+      "name": "Devaughn Vele",
+      "pos": "WR",
+      "team": "NO",
+      "mode": "waiver",
+      "faab": 15,
+      "urgency": "by_tuesday",
+      "deadline_label": "claims process Wed morning",
+      "why": "Vele is New Orleans's real WR2 by role with Tyson out, and the best add on this week's board."
+    },
+    {
+      "id": "waivers:add:9482",
+      "source": "waivers",
+      "report": "2026-09-14-waivers.md",
+      "kind": "add",
+      "week": 2,
+      "player": "9482",
+      "name": "Michael Mayer",
+      "pos": "TE",
+      "team": "LV",
+      "drop": "5947",
+      "drop_name": "Jakobi Meyers",
+      "mode": "waiver",
+      "faab": 6,
+      "urgency": "optional",
+      "deadline_label": "claims process Wed morning",
+      "why": "Mayer's expanded role may only last as long as Bowers is out, so it's a smaller speculative bid."
+    },
+    {
+      "id": "trades:trade:8",
+      "source": "trades",
+      "report": "2026-09-14-trades.md",
+      "kind": "trade",
+      "week": 1,
+      "with": 8,
+      "with_owner": "Tally241",
+      "give": [
+        "1166",
+        "5947"
+      ],
+      "give_names": [
+        "Kirk Cousins",
+        "Jakobi Meyers"
+      ],
+      "get": [
+        "4199"
+      ],
+      "get_names": [
+        "Aaron Jones"
+      ],
+      "message": "Hey — I've got more QB depth than I need and saw you're thin behind Maye/Nix. Would you do Kirk Cousins + Jakobi Meyers for Aaron Jones? Cousins is Vegas's actual Week 1 starter, so it's a real QB2/bye-week option for you, not a stash. I could use another back with an actual role given how thin my RB room is right now.",
+      "urgency": "this_week",
+      "why": "Cousins is a real starting QB for a team with no backup, and it turns your extra depth into a running back with an actual role."
+    },
+    {
+      "id": "trades:trade:9",
+      "source": "trades",
+      "report": "2026-09-14-trades.md",
+      "kind": "trade",
+      "week": 1,
+      "with": 9,
+      "with_owner": "amandaberry",
+      "give": [
+        "9228"
+      ],
+      "give_names": [
+        "Bryce Young"
+      ],
+      "get": [
+        "8154"
+      ],
+      "get_names": [
+        "Brian Robinson"
+      ],
+      "message": "You're carrying zero backup QB behind Lawrence/Love — I've got extra arms. Would you take Bryce Young for Brian Robinson? He's a real handcuff play for you and I could use another running back given how thin my bench is there right now.",
+      "urgency": "optional",
+      "why": "A cheaper fallback shot at the same running back fix, costing only your lowest-value quarterback stash."
+    }
+  ]
+}

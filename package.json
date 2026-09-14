@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "sync": "node scripts/sync.mjs"
+    "sync": "node scripts/sync.mjs",
+    "actions": "node scripts/actions.mjs"
   }
 }
