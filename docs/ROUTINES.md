@@ -126,7 +126,7 @@ Replace the opening of the steps so the no-op path costs almost nothing:
 
 ```
 1. Run `node scripts/sync.mjs`. If it fails, stop — commit nothing.
-2. Run `node scripts/roster-changed.mjs`. If it prints UNCHANGED: stop here. Do not read anything else, do not write anything.
+2. Run `node scripts/roster-changed.mjs`. If it prints UNCHANGED: stop here. Do not read anything else, do not write anything. If it prints CHANGED it also names what changed — players added or dropped, and any player whose status turned Out/IR/PUP/Doubtful while on the roster. Lead the reports with whichever of those it named.
 3. Only if CHANGED: read CLAUDE.md (prime directive, calendar calibration, and "Report voice") — everything below follows it.
 ```
 
