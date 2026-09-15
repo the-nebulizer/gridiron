@@ -11,7 +11,8 @@ import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { buildOutlook } from './outlook.mjs';
+import vm from 'node:vm';
+import { buildOutlook, SLOT_ELIGIBILITY } from './outlook.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const verbose = process.argv.includes('-v');
@@ -442,6 +443,48 @@ console.log('\npublish — a recompile that changes nothing must not commit');
   check('a repeat compile changes only compiled_at', first.compiled_at !== second.compiled_at &&
     JSON.stringify({ ...first, compiled_at: 0 }) === JSON.stringify({ ...second, compiled_at: 0 }));
   check('...and the fixture repo is otherwise untouched', git('rev-parse', 'HEAD').stdout.trim() === before);
+}
+
+// ---- 8. the dashboard must agree with the engine ---------------------------
+// docs/index.html carries its own copy of the slot matching, because it runs in a
+// browser with no access to these modules. Two implementations of the same rule drift;
+// this pins them together. The page used to guess coverage from the position on bye and
+// would tell Ben his QB bye was uncoverable while he held three other quarterbacks.
+
+console.log('\ndashboard — its bye coverage must match scripts/outlook.mjs exactly');
+
+{
+  const html = readFileSync(path.join(root, 'docs', 'index.html'), 'utf8');
+  const src = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)][0][1];
+  const from = src.indexOf('const SLOT_TAKES'), to = src.indexOf('/* ——— what needs Ben ——— */');
+  check('the page still carries the slot model', from !== -1 && to > from);
+
+  const ctx = { };
+  vm.createContext(ctx);
+  new vm.Script(src.slice(from, to) + ';this.emptySlots=emptySlots;this.SLOT_TAKES=SLOT_TAKES;').runInContext(ctx);
+
+  // Same eligibility table on both sides.
+  const enginePairs = Object.entries(SLOT_ELIGIBILITY).filter(([k]) => ctx.SLOT_TAKES[k]);
+  check('the page and the engine agree on what each slot accepts',
+    enginePairs.every(([k, v]) => JSON.stringify(v) === JSON.stringify(ctx.SLOT_TAKES[k])),
+    enginePairs.filter(([k, v]) => JSON.stringify(v) !== JSON.stringify(ctx.SLOT_TAKES[k])).map(([k]) => k).join(', '));
+
+  // And the same answer, week by week, on a roster with real holes.
+  const snap = outlookSnap([P.qb1, P.rb1, P.rb2, P.wr1, P.wr2, P.te1, P.wr3, P.qb2, P.k1, P.df1],
+                           [P.qb3, P.rb4, P.rb5, P.wr4], [P.rb3]);
+  const engine = buildOutlook(snap);
+  const active = [...snap.teams[0].starters, ...snap.teams[0].bench].filter(Boolean)
+    .map(p => ({ id: p.id, pos: p.position, team: p.team, bye: p.bye_week }));
+  const slotNames = snap.league.roster_positions.filter(x => x !== 'BN');
+  const disagreements = engine.weeks.filter((w) => {
+    const page = ctx.emptySlots(slotNames, active.filter(p => p.bye !== w.week)).slice().sort();
+    return JSON.stringify(page) !== JSON.stringify((w.empty_slots ?? []).slice().sort());
+  }).map(w => `W${w.week}`);
+  check('every week ahead gets the same verdict from both', disagreements.length === 0, disagreements.join(', '));
+
+  // The specific false alarm: a QB bye with quarterbacks to spare is covered.
+  const qbByeWeek = ctx.emptySlots(slotNames, active.filter(p => p.pos !== 'QB' || p.id !== 'qb1'));
+  check('a QB on bye with cover behind him is not reported as a hole', qbByeWeek.length === 0, qbByeWeek.join(','));
 }
 
 // ---- done ------------------------------------------------------------------

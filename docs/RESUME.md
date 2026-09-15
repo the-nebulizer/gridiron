@@ -32,9 +32,10 @@ Season manager for Ben's Sleeper league. Ground truth = `node scripts/sync.mjs` 
 
 ## Next steps
 
-1. Week 1: run `/lineup` before Sunday; act on SEASON-PLAN "Immediate" items (Charbonnet → IR if eligible).
-2. Keep `docs/SEASON-PLAN.md` log current after each transaction.
-3. Phase two (Aug 2027): draft assistant — poll `GET /v1/draft/{draft_id}/picks` via `scripts/sleeper.mjs`, filter cached verified rankings to available-only; consider zacharytran26/Fantasy-Football-Draft-MCP (MIT, Python) alongside for model projections.
+1. **Ben's, not the agent's** (see `docs/ROUTINES.md` — routines can only be edited in the claude.ai UI): move the Sunday inactives run to 10:40am Central so it fires after inactives post, and turn email notifications on for all five routines. Optional: cut the roster watcher from 16 runs a day to 2–3.
+2. Keep `docs/SEASON-PLAN.md` current after each transaction, and **close sections that have passed** rather than leaving them reading as advice — the pre-season "adds are free" item sat live until Sep 15 while `/waivers` was told to read the page.
+3. Watch the next `/waivers` run (Tuesdays): it now has to name which player on the roster an add displaces. If a report still justifies a claim with "fills the open bench spot" and never says who it beats out, the instruction needs strengthening.
+4. Phase two (Aug 2027): draft assistant — poll `GET /v1/draft/{draft_id}/picks` via `scripts/sleeper.mjs`, filter cached verified rankings to available-only; consider zacharytran26/Fantasy-Football-Draft-MCP (MIT, Python) alongside for model projections.
 
 ## Conventions
 

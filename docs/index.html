@@ -311,6 +311,33 @@ function gameLabel(games, byes, team, week){
   return side+' · '+dayTime(g.kick)+(g.tv?' · '+g.tv:'');
 }
 
+// Which positions each starting slot accepts, and a maximum matching of players onto
+// slots — the same model scripts/outlook.mjs uses, so the page and the reports can never
+// disagree about whether a week is coverable. Counting by position is not an answer when
+// FLEX and SUPER_FLEX exist: four QBs cover a QB bye, and two spare WRs do not cover a
+// kicker's.
+const SLOT_TAKES = {QB:['QB'], RB:['RB'], WR:['WR'], TE:['TE'], K:['K'], DEF:['DEF'],
+  FLEX:['RB','WR','TE'], WRRB_FLEX:['RB','WR'], REC_FLEX:['WR','TE'], SUPER_FLEX:['QB','RB','WR','TE']};
+function emptySlots(slotNames, pool){
+  // Most restrictive slot first, so an unfillable week names the slot nobody can play
+  // rather than whichever flex spot happened to be left over.
+  const order = slotNames.map((name,idx)=>({name,idx}))
+    .filter(x=>SLOT_TAKES[x.name])
+    .sort((a,b)=>SLOT_TAKES[a.name].length - SLOT_TAKES[b.name].length);
+  const filled = {}, slotOf = {};
+  const augment = (idx, seen)=>{
+    for(const p of pool){
+      if(seen.has(p.id) || !SLOT_TAKES[slotNames[idx]].includes(p.pos)) continue;
+      seen.add(p.id);
+      const held = slotOf[p.id];
+      if(held === undefined || augment(held, seen)){ slotOf[p.id] = idx; filled[idx] = p; return true; }
+    }
+    return false;
+  };
+  for(const {idx} of order) augment(idx, new Set());
+  return order.filter(({idx})=>!filled[idx]).map(({name})=>name);
+}
+
 /* ——— what needs Ben ——— */
 function actionItems({me, players, games, byes, week, txns, rostered, trendAdd, trendDrop, slots}){
   const items = [];
@@ -398,13 +425,23 @@ function actionItems({me, players, games, byes, week, txns, rostered, trendAdd, 
   }
 
   // Bye trouble in the next three weeks, while there's still time to plan for it.
-  if(byes) for(let w=week+1; w<=week+3; w++){
-    const outThisWeek = starters.filter(p=>byes[p.team]===w);
-    if(!outThisWeek.length) continue;
-    const thin = outThisWeek.filter(p=>['K','DEF','TE','QB'].includes(p.pos));
-    items.push({urgency: w===week+1?'soon':'watch',
-      what:`Week ${w}: ${outThisWeek.map(p=>p.name).join(', ')} on bye`,
-      why: thin.length ? `${thin.map(p=>p.pos).join(' and ')} can't be covered from your bench — plan a claim.` : 'Covered from the bench.'});
+  // Whether a week is actually coverable is solved against the real slots, not guessed
+  // from the position on bye: this used to call any QB/TE/K/DEF bye uncoverable (false
+  // with four quarterbacks) and any RB/WR bye covered (false with no spare bodies).
+  if(byes){
+    const active = (me.players||[]).filter(id=>!(me.reserve||[]).includes(id))
+      .map(id=>resolve(players,id)).filter(Boolean);
+    for(let w=week+1; w<=week+3; w++){
+      const outThisWeek = active.filter(p=>byes[p.team]===w);
+      if(!outThisWeek.length) continue;
+      const gaps = emptySlots(slots||[], active.filter(p=>byes[p.team]!==w));
+      const named = outThisWeek.filter(p=>(me.starters||[]).includes(p.id));
+      items.push({urgency: gaps.length ? (w===week+1?'now':'soon') : (w===week+1?'soon':'watch'),
+        what:`Week ${w}: ${(named.length?named:outThisWeek).map(p=>p.name).join(', ')} on bye`,
+        why: gaps.length
+          ? `No one on your roster can fill ${gaps.map(g=>g.replace('SUPER_FLEX','SUPERFLEX')).join(' or ')} that week — plan a claim.`
+          : 'Covered from the bench.'});
+    }
   }
 
   const rank = {now:0, soon:1, watch:2};

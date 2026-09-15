@@ -2,9 +2,13 @@
 
 Living doc. Update as the season moves. Every item was checked against the live snapshot on 2026-09-01 — notably, the draft-day transcript's claim that Jordyn Tyson was rostered turned out to be **false** (he is not on the team). Trust the snapshot.
 
-## Immediate (before Week 1 kickoff — season starts Sep 9)
+**Anything here about the calendar is superseded by the snapshot.** This file records intent, not state: it goes stale the moment the roster or the week moves, and it is read by `/waivers` as standing intent. Where it disagrees with a fresh sync, the sync wins — no exceptions. Sections that have closed are marked closed rather than deleted, so the reasoning stays readable without being mistaken for advice.
 
-0. **Pre-season adds are instant and free right now** (FCFS, not waivers — confirmed from the league's transaction log on Sep 1). The Sep 1 waiver report's Cousins/Davis/Hill picks are right, but as immediate adds, not Wednesday bids. Grab them in the app the moment you decide.
+## Immediate (pre-season) — **CLOSED, kicked off Sep 9. Historical only.**
+
+> Nothing in this section is current advice. It is kept for the record. **Adds are no longer instant or free** — the season is under way, so claims go through Wednesday waivers and cost FAAB. Read the add mode off the snapshot, never off this page.
+
+0. ~~**Pre-season adds are instant and free right now**~~ (FCFS, not waivers — true on Sep 1, **false since Sep 9 kickoff**). The Sep 1 waiver report's Cousins/Davis/Hill picks were right as immediate adds at the time.
 
 1. ~~IR slot is empty~~ **DONE 2026-09-01**: Ben moved Zach Charbonnet (RB, SEA — PUP) into the IR slot; bench now has an open spot (verified in snapshot). Revisit when Charbonnet comes off PUP — Sleeper will require moving him back to the active roster (or cutting him) to keep the slot legal.
 2. ~~Questionable tags to watch before Sunday: Jeanty, Kraft, Dicker (starters), Meyers, Pierce (bench).~~ **Updated 2026-09-10 from a fresh sync:** the Jeanty/Kraft/Dicker camp tags have cleared; the only tag on the roster is Jakobi Meyers (Questionable, thumb — bench, no lineup impact), plus Charbonnet on PUP in the IR slot. Pierce is no longer ours — dropped Sep 1, now on elembach's roster.
