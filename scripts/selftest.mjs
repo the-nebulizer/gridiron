@@ -571,6 +571,25 @@ console.log('\ndashboard — dependency resolution');
     ctx.resolveDependencies([null, 'nope', {id:'ok', kind:'add', state:'open'}]).length === 1);
 }
 
+// ---- 10. the modules must be importable without doing anything ------------
+// Importing scripts/actions.mjs used to run a full compile as a side effect, because its
+// CLI entry was unguarded. It passed here only because this checkout happened to have a
+// snapshot; a clean clone failed. Nothing should act merely because it was imported.
+
+console.log('\nmodules — importing must not run anything');
+
+{
+  const dir = await mkdtemp(path.join(sandboxRoot ?? tmpdir(), 'import-'));
+  await cp(path.join(root, 'scripts'), path.join(dir, 'scripts'), { recursive: true });
+  // No data/, no reports/ — exactly a fresh clone.
+  for (const mod of ['actions.mjs', 'outlook.mjs', 'sleeper.mjs']) {
+    const r = spawnSync(process.execPath, ['-e', `import('./scripts/${mod}').then(()=>console.log('clean'))`],
+      { cwd: dir, encoding: 'utf8' });
+    check(`importing ${mod} does nothing and exits clean`,
+      r.status === 0 && /clean/.test(r.stdout ?? ''), `${r.stdout ?? ''}${r.stderr ?? ''}`.slice(0, 200));
+  }
+}
+
 // ---- done ------------------------------------------------------------------
 
 if (sandboxRoot) await rm(sandboxRoot, { recursive: true, force: true });

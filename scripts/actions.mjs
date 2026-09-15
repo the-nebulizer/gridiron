@@ -29,7 +29,7 @@
 import { readFile, writeFile, readdir } from 'node:fs/promises';
 import { SLOT_ELIGIBILITY } from './outlook.mjs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const reportsDir = path.join(root, 'reports');
@@ -1147,8 +1147,15 @@ async function check(fileArg) {
 
 // ---- entry ----
 
+// Only when run as a command. This file also exports lifecycleState and buildIndex for
+// the test suite, and an unguarded entry meant importing it silently ran a full compile —
+// which worked in a checkout that happened to have a snapshot and failed in a clean clone.
+const invokedDirectly = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+
 const [, , mode, arg] = process.argv;
-if (mode === '--check') {
+if (!invokedDirectly) {
+  // imported: expose the helpers and do nothing else
+} else if (mode === '--check') {
   if (!arg) {
     console.error('usage: node scripts/actions.mjs --check <file>');
     process.exit(1);
