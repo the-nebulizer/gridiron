@@ -13,6 +13,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
 import { buildOutlook, SLOT_ELIGIBILITY } from './outlook.mjs';
+import { lifecycleState, buildIndex } from './actions.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const verbose = process.argv.includes('-v');
@@ -485,6 +486,89 @@ console.log('\ndashboard — its bye coverage must match scripts/outlook.mjs exa
   // The specific false alarm: a QB bye with quarterbacks to spare is covered.
   const qbByeWeek = ctx.emptySlots(slotNames, active.filter(p => p.pos !== 'QB' || p.id !== 'qb1'));
   check('a QB on bye with cover behind him is not reported as a hole', qbByeWeek.length === 0, qbByeWeek.join(','));
+}
+
+// ---- 9. the card and the compiler must mean the same thing by "done" -------
+
+console.log('\ndashboard — actionState must agree with the compiler on every lifecycle');
+
+{
+  const html = readFileSync(path.join(root, 'docs', 'index.html'), 'utf8');
+  const src = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)][0][1];
+  const from = src.indexOf('const URGENCY ='), to = src.indexOf('/* ——— end do-now pure ——— */');
+  const slice = to > from ? src.slice(from, to) : src.slice(from);
+  const ctx = {};
+  vm.createContext(ctx);
+  new vm.Script(slice + ';this.actionState=actionState;this.resolveDependencies=resolveDependencies;').runInContext(ctx);
+  check('the page still exposes actionState and resolveDependencies',
+    typeof ctx.actionState === 'function' && typeof ctx.resolveDependencies === 'function');
+
+  // Same world, described the two different ways the two sides read it.
+  const scenarios = [
+    ['add still free',        fixture(), { kind:'add', player:'fa1', mode:'waiver' }],
+    ['add I won',             (()=>{const f=fixture(); f.teams[0].bench.push(P.fa1); return f;})(), { kind:'add', player:'fa1' }],
+    ['add a rival took',      (()=>{const f=fixture(); f.teams[1].bench.push(P.fa1); return f;})(), { kind:'add', player:'fa1' }],
+    ['start not yet made',    fixture(), { kind:'start', player:'qb3', for:'qb2', slot:'SUPER_FLEX' }],
+    ['start already made',    (()=>{const f=fixture(); f.teams[0].starters[7]=P.qb3; f.teams[0].bench=[P.qb2]; return f;})(), { kind:'start', player:'qb3', for:'qb2' }],
+    ['start whose man left',  (()=>{const f=fixture(); f.teams[0].bench=[]; return f;})(), { kind:'start', player:'qb3', for:'qb2' }],
+    ['drop not yet made',     fixture(), { kind:'drop', player:'qb3' }],
+    ['drop already made',     (()=>{const f=fixture(); f.teams[0].bench=[]; return f;})(), { kind:'drop', player:'qb3' }],
+    ['ir with room',          (()=>{const f=fixture(); f.teams[0].reserve=[]; return f;})(), { kind:'ir', player:'qb3' }],
+    ['ir already done',       (()=>{const f=fixture(); f.teams[0].reserve=[P.qb3]; f.teams[0].bench=[]; return f;})(), { kind:'ir', player:'qb3' }],
+    ['activate pending',      fixture(), { kind:'activate', player:'rb3' }],
+    ['activate done',         (()=>{const f=fixture(); f.teams[0].reserve=[]; f.teams[0].bench.push(P.rb3); return f;})(), { kind:'activate', player:'rb3' }],
+    ['trade pending',         fixture(), { kind:'trade', with:2, with_owner:'Them', give:['qb3'], get:['opp1'] }],
+    ['trade accepted',        (()=>{const f=fixture(); f.teams[0].bench=[P.opp1]; f.teams[1].bench=[P.qb3]; return f;})(), { kind:'trade', with:2, with_owner:'Them', give:['qb3'], get:['opp1'] }],
+    ['trade I cannot honour', (()=>{const f=fixture(); f.teams[0].bench=[]; return f;})(), { kind:'trade', with:2, with_owner:'Them', give:['qb3'], get:['opp1'] }],
+    ['trade target moved on', (()=>{const f=fixture(); f.teams[1].starters=[P.opp2]; f.teams[1].bench=[]; return f;})(), { kind:'trade', with:2, with_owner:'Them', give:['qb3'], get:['opp1'] }],
+  ];
+
+  const disagreed = [];
+  for (const [label, snap, action] of scenarios) {
+    const me = snap.teams[0];
+    const mineIds = [...me.starters, ...me.bench, ...me.reserve].filter(Boolean).map(p => p.id);
+    const ownerOf = (id) => {
+      const t = snap.teams.find(x => x.roster_id !== snap.my_roster_id &&
+        [...x.starters, ...x.bench, ...x.reserve].filter(Boolean).some(p => p.id === String(id)));
+      return t ? t.owner : null;
+    };
+    const live = { week: snap.week, players: new Set(mineIds), starters: me.starters.filter(Boolean).map(p => p.id),
+                   reserve: me.reserve.map(p => p.id), ownerOf, dismissed: new Set() };
+    const page = ctx.actionState({ ...action, week: snap.week }, live).state;
+    const engine = lifecycleState(action, snap, buildIndex(snap));
+    if (page !== engine) disagreed.push(`${label}: card says "${page}", compiler says "${engine}"`);
+  }
+  check('all sixteen lifecycle scenarios agree', disagreed.length === 0, disagreed.join('\n'));
+}
+
+console.log('\ndashboard — dependency resolution');
+
+{
+  const html = readFileSync(path.join(root, 'docs', 'index.html'), 'utf8');
+  const src = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)][0][1];
+  const from = src.indexOf('const URGENCY ='), to = src.indexOf('/* ——— end do-now pure ——— */');
+  const ctx = {};
+  vm.createContext(ctx);
+  new vm.Script((to > from ? src.slice(from, to) : src.slice(from)) + ';this.resolveDependencies=resolveDependencies;').runInContext(ctx);
+  const R = (items) => Object.fromEntries(ctx.resolveDependencies(items).map(i => [i.id, i.state]));
+
+  check('a fallback waits while its parent is open',
+    R([{id:'t', kind:'trade', state:'open'}, {id:'w', kind:'add', state:'open', if_not:'t'}]).w === 'waiting');
+  check('a fallback is shelved once its parent is done',
+    R([{id:'t', kind:'trade', state:'done'}, {id:'w', kind:'add', state:'open', if_not:'t'}]).w === 'superseded');
+  check('a fallback is promoted when its parent falls through',
+    R([{id:'t', kind:'trade', state:'gone'}, {id:'w', kind:'add', state:'open', if_not:'t'}]).w === 'open');
+  check('an "after" child waits, then promotes when the parent is done',
+    R([{id:'a', kind:'activate', state:'open'}, {id:'b', kind:'ir', state:'open', after:'a'}]).b === 'waiting' &&
+    R([{id:'a', kind:'activate', state:'done'}, {id:'b', kind:'ir', state:'open', after:'a'}]).b === 'open');
+  check('an "after" child dies with a parent that became impossible',
+    R([{id:'a', kind:'add', state:'gone'}, {id:'b', kind:'drop', state:'open', after:'a'}]).b === 'gone');
+  check('a reference to an action that is not here leaves the child standing',
+    R([{id:'w', kind:'add', state:'open', if_not:'nobody'}]).w === 'open');
+  const cyc = R([{id:'x', kind:'add', state:'open', after:'y'}, {id:'y', kind:'add', state:'open', after:'x'}]);
+  check('a cycle resolves instead of hanging', !!cyc.x && !!cyc.y, JSON.stringify(cyc));
+  check('junk in the list is skipped, not thrown on',
+    ctx.resolveDependencies([null, 'nope', {id:'ok', kind:'add', state:'open'}]).length === 1);
 }
 
 // ---- done ------------------------------------------------------------------

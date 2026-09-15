@@ -68,7 +68,7 @@ async function loadSnapshot() {
 
 // ---- id resolution: snapshot (rosters/trending/transactions) first, then data/players.json ----
 
-function buildIndex(snapshot) {
+export function buildIndex(snapshot) {
   const byId = new Map(); // id -> { name, pos, team }
   const ownerOf = new Map(); // id -> roster_id
   const teamIds = new Map(); // roster_id -> Set(all ids on that roster)
@@ -209,10 +209,11 @@ function slotIsEmpty(snapshot, slot) {
 // ---- lifecycle: has the world already moved past this action? ----
 
 // The same done/gone tests docs/ACTIONS.md section 3 defines and docs/index.html
-// applies live. Computed from the RAW action (before validation) so that an
+// applies live. Exported so the suite can hold the page's copy to it —
+// the compiler and the card must never disagree about what "done" means. Computed from the RAW action (before validation) so that an
 // action which is already done or gone is never held to "can you still do
 // this" rules it cannot possibly pass.
-function lifecycleState(action, snapshot, index) {
+export function lifecycleState(action, snapshot, index) {
   if (typeof action !== 'object' || action === null || Array.isArray(action)) return 'open';
   const myId = snapshot.my_roster_id;
   const mine = index.teamIds.get(myId) ?? new Set();

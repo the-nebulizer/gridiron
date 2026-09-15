@@ -448,7 +448,9 @@ function actionItems({me, players, games, byes, week, txns, rostered, trendAdd, 
   return items.sort((a,b)=>rank[a.urgency]-rank[b.urgency]);
 }
 
-/* ——— do-now: pure logic (unit-tested from scratchpad/donow.test.mjs) ——— */
+/* ——— do-now: pure logic. Covered by `npm test`, which lifts these functions out of this
+   file and holds them to scripts/actions.mjs and scripts/outlook.mjs: two copies of one
+   rule drift, and the card and the compiler must never disagree about what "done" means. ——— */
 const URGENCY = ['now','before_kickoff','by_tuesday','this_week','optional'];
 const DEADLINE = {now:'now', before_kickoff:'before kickoff', by_tuesday:'by Tue night',
                   this_week:'this week', optional:'optional'};
@@ -560,7 +562,15 @@ function actionState(a, live){
                        : has(player) ? {state:'open'} : lost();
     case 'trade': {
       const get = Array.isArray(a.get) ? a.get : [];
+      const give = Array.isArray(a.give) ? a.give : [];
       if(get.length && get.every(has)) return {state:'done'};
+      // An offer you can no longer honour is not an instruction. The compiler already
+      // shelves these; the card used to keep showing them as open, telling Ben to send
+      // an offer built on a player he had dropped or traded away.
+      if(give.length && !give.every(has)) return {state:'gone'};
+      // Same the other way: the other manager may have moved the player it asks for.
+      if(get.length && live.ownerOf && a.with_owner &&
+         !get.every(id=> has(id) || live.ownerOf(S(id))===a.with_owner)) return {state:'gone'};
       return {state: dismissed ? 'dismissed' : 'open'};
     }
   }
