@@ -39,7 +39,7 @@ Directly under the report's `# H1` line, before any other content, a fenced code
 Rest of the report: the supporting argument, in prose.
 ````
 
-Every id in a block comes from the snapshot you just synced; never type one from memory. The block is required even when there is nothing to do: `"actions": []` with a `verdict` such as "Hold — nothing clears the bar." The dashboard strips the block before rendering the report on the brief tab; on GitHub it shows as a code block.
+Every id in a block comes from the snapshot you just synced; never type one from memory. The block is required even when there is nothing to do: `"actions": []` with a `verdict` such as "Hold — nothing clears the bar." The dashboard never renders the report body at all — it shows the `verdict` as a one-line outcome and links to the write-up on GitHub. On GitHub the block shows as a code block.
 
 ### Top-level fields
 
@@ -110,7 +110,7 @@ How the card treats a dependent action:
 | `if_not` | done | superseded, shelved |
 | `if_not` | gone / dismissed | promoted to open |
 
-Open primary actions are numbered in the standing order (lineup, then claims, then trades; urgency within each), and the card's header carries the three-line standing order so the numbering is never a surprise.
+Open primary actions are numbered in the standing order (lineup, then claims, then trades; urgency within each). The order is not printed on the card: the numbering is the outcome, the reasoning behind it is not something the dashboard shows.
 
 ## 2. The compiler — `scripts/actions.mjs`
 
@@ -177,7 +177,7 @@ Sits above the scorebug. Reads `reports/actions.json` from raw.githubusercontent
 - `stale` — a `start` action whose `week` is behind the live NFL week. Hidden. Other kinds never go stale by week.
 - `dismissed` — trades only, via a button; stored in `localStorage` keyed by action id + the source report filename, wrapped in try/catch. A dismissed trade stays hidden until a newer trades report replaces it.
 
-Each open item shows, in order: the move in one bold line with player names, the deadline chip (mono, right-aligned), the `why` sentence, for a trade its `message` under a collapsed "Offer message" toggle, and a source line ("Waivers · 2026-09-15 · verified live 14:02"). One "Open Sleeper ↗" link in the card header, not per item.
+Each open item shows, in order: the move in one bold line with player names, the deadline chip (mono, right-aligned), the `why` sentence, for a trade its `message` under a collapsed "Offer message" toggle, and a source line ("Waivers · 2026-09-15 · verified live 14:02"). One "Open Sleeper ↗" link in the card header, not per item. A dependent says "If that falls through:" or "Then:" and nothing more — which player the two actions contend over is the compiler's business, not the reader's.
 
 **Mechanical alerts** the page computes itself from live data and shows under the actions as "Heads up" (they need no judgment and never go stale). A heads-up whose player already has an open action in the card above is suppressed — the routines have already turned it into an instruction, so it isn't also raised as a separate alert:
 
