@@ -27,7 +27,7 @@
 //   node scripts/actions.mjs                 # compile newest report per type -> reports/actions.json
 //   node scripts/actions.mjs --check <file>  # strict validation of one report, no write
 import { readFile, writeFile, readdir } from 'node:fs/promises';
-import { SLOT_ELIGIBILITY } from './outlook.mjs';
+import { SLOT_ELIGIBILITY, buildOutlook } from './outlook.mjs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -39,6 +39,10 @@ const KINDS = ['add', 'drop', 'start', 'ir', 'activate', 'trade'];
 const URGENCIES = ['now', 'before_kickoff', 'by_tuesday', 'this_week', 'optional'];
 const ADD_MODES = ['fcfs', 'waiver'];
 const MAX_AGE_MS = 3 * 60 * 60 * 1000;
+// docs/ACTIONS.md "the case": a slotless waiver add at a position that isn't
+// thin is depth, and depth priced above 10% of remaining FAAB is priced like
+// a starter — that's the rule "depth is priced like depth" enforces.
+const DEPTH_BID_CAP = 0.1;
 
 const isNonEmptyString = (v) => typeof v === 'string' && v.trim().length > 0;
 const rel = (p) => path.relative(root, p);
@@ -206,6 +210,304 @@ function slotIsEmpty(snapshot, slot) {
   return myStarterRow(snapshot).some((r) => r.slot === slot && !r.player);
 }
 
+// ---- "the case": four plain-English lines computed from the snapshot, never
+// decorated by the routine. See docs/ACTIONS.md "The case — why this move,
+// in four lines". buildCase is pure: everything it needs (names, positions,
+// the outlook) is already resolved onto the built action or reachable
+// through snapshot/index/baseline, so it does no I/O of its own.
+
+// The card prints SUPER_FLEX as SUPERFLEX; every other slot name is shown as-is.
+function slotLabel(slot) {
+  return slot === 'SUPER_FLEX' ? 'SUPERFLEX' : slot;
+}
+
+// A player object shaped like a snapshot roster player, built from whatever
+// buildIndex/resolvePlayer already learned about this id — buildOutlook needs
+// {id, name, position, team, bye_week, injury_status}.
+function playerObjFor(index, id) {
+  const r = index.byId.get(id) ?? {};
+  return {
+    id,
+    name: r.name ?? id,
+    position: r.pos ?? null,
+    team: r.team ?? null,
+    bye_week: r.bye_week ?? null,
+    injury_status: r.injury_status ?? null,
+  };
+}
+
+// The players currently starting at `pos`: dedicated-slot holders first (in
+// roster-slot order), then flex holders of that position — the "behind
+// McMillan, Diggs" list in an add's bench case.
+function startersAtPosition(snapshot, pos) {
+  const dedicated = [];
+  const flex = [];
+  for (const { slot, player } of myStarterRow(snapshot)) {
+    if (!player || player.position !== pos) continue;
+    if (slot === pos) dedicated.push(player.name);
+    else if (SLOT_ELIGIBILITY[slot]?.includes(pos)) flex.push(player.name);
+  }
+  return [...dedicated, ...flex];
+}
+
+function namesList(names) {
+  return names.slice(0, 3).join(', ') + (names.length > 3 ? ', …' : '');
+}
+
+// Weeks whose empty_slots shrink (a hole this move fixes) or grow (a hole it
+// opens) between a baseline outlook and a what-if outlook, week by week.
+function diffWeeks(baseline, whatIf) {
+  const fixes = []; // { week, slot }
+  const opens = []; // { week, slot }
+  const baseByWeek = new Map(baseline.weeks.map((w) => [w.week, w]));
+  for (const w of whatIf.weeks) {
+    const base = baseByWeek.get(w.week);
+    const baseSet = new Set(base?.empty_slots ?? []);
+    const nowSet = new Set(w.empty_slots ?? []);
+    for (const slot of baseSet) if (!nowSet.has(slot)) fixes.push({ week: w.week, slot });
+    for (const slot of nowSet) if (!baseSet.has(slot)) opens.push({ week: w.week, slot });
+  }
+  return { fixes, opens };
+}
+
+// "W5, W7, W11" up to four weeks; past that a span reads better than a list —
+// dropping your only kicker opens a hole in every remaining week, and fifteen
+// "W" tokens on the card say less than "15 weeks (W3–W17)".
+function weeksLabel(weeks) {
+  const ws = [...new Set(weeks)].sort((a, b) => a - b);
+  if (ws.length <= 4) return ws.map((w) => `W${w}`).join(', ');
+  return `${ws.length} weeks (W${ws[0]}–W${ws[ws.length - 1]})`;
+}
+
+function fixesSuffix(fixes) {
+  const weeks = fixes.map((f) => f.week);
+  return weeks.length ? ` · fixes ${weeksLabel(weeks)}` : ' · fixes nothing on the calendar';
+}
+
+// "opens no holes" / "opens a W7 WR hole, a W9 K hole" / "opens a K hole in
+// 15 weeks (W3–W17)" — used where the need line already carries the fixes
+// half (add). Holes are grouped by slot so a season-long gap is one clause.
+function opensLine(opens) {
+  if (!opens.length) return 'opens no holes';
+  const bySlot = new Map();
+  for (const o of [...opens].sort((a, b) => a.week - b.week)) {
+    if (!bySlot.has(o.slot)) bySlot.set(o.slot, []);
+    bySlot.get(o.slot).push(o.week);
+  }
+  const clauses = [...bySlot.entries()].map(([slot, weeks]) =>
+    weeks.length >= 3
+      ? `a ${slotLabel(slot)} hole in ${weeksLabel(weeks)}`
+      : weeks.map((w) => `a W${w} ${slotLabel(slot)} hole`).join(', ')
+  );
+  return `opens ${clauses.join(', ')}`;
+}
+
+// fixes + opens together — used where nothing else in the case carries the
+// fixes half (trade, drop, ir, activate).
+function fixesAndOpensLine(fixes, opens) {
+  const parts = [];
+  if (fixes.length) parts.push(`fixes ${weeksLabel(fixes.map((f) => f.week))}`);
+  parts.push(opensLine(opens));
+  return parts.join(' · ');
+}
+
+function rankAt(baseline, pos) {
+  return (baseline.roster_shape.active_by_position[pos] ?? 0) + 1;
+}
+
+function needLine(baseline, pos, label = 'your thinnest spot') {
+  const thin = baseline.roster_shape.thin_positions.includes(pos);
+  const have = baseline.roster_shape.active_by_position[pos] ?? 0;
+  return `${pos}: you have ${have} — ${thin ? label : 'not thin'}`;
+}
+
+// "the drop/removed player emptied a thin spot" suffix shared by add's drop
+// and by drop/ir's own subject leaving the active roster.
+function lossSuffix(baseline, pos) {
+  if (!pos) return '';
+  const have = baseline.roster_shape.active_by_position[pos] ?? 0;
+  if (have === 1) return ` · drops your only ${pos}`;
+  if (baseline.roster_shape.thin_positions.includes(pos)) return ` · leaves ${pos} thin`;
+  return '';
+}
+
+function addCaseCost(action, snapshot, index) {
+  if (action.mode === 'fcfs') {
+    let cost = '$0, first come first served';
+    if (action.drop) {
+      const dropPos = index.byId.get(action.drop)?.pos ?? '?';
+      const starting = (snapshot.teams.find((t) => t.roster_id === snapshot.my_roster_id)?.starters ?? [])
+        .some((p) => p?.id === action.drop);
+      cost += ` · drops ${action.drop_name} (${dropPos}, ${starting ? 'starter' : 'bench'})`;
+    }
+    return cost;
+  }
+  const me = snapshot.teams.find((t) => t.roster_id === snapshot.my_roster_id);
+  const cap = me?.faab_remaining ?? 0;
+  const budget = snapshot.league.waiver_budget;
+  const atBudget = snapshot.teams.filter((t) => t.faab_remaining === budget).length;
+  let budgetPart;
+  if (atBudget === snapshot.teams.length) budgetPart = ` · every team still has $${budget}`;
+  else if (atBudget > 0) budgetPart = ` · ${atBudget} of ${snapshot.teams.length} teams still have $${budget}`;
+  else {
+    const avg = Math.round(snapshot.teams.reduce((s, t) => s + (t.faab_remaining ?? 0), 0) / snapshot.teams.length);
+    budgetPart = ` · league average $${avg} left`;
+  }
+  const rankIdx = (snapshot.trending?.adds ?? []).findIndex((p) => p.id === action.player);
+  const rankPart = rankIdx === -1 ? ' · not trending' : ` · #${rankIdx + 1} most-added in Sleeper this week`;
+  let cost = `$${action.faab} of $${cap}${budgetPart}${rankPart}`;
+  if (action.drop) {
+    const dropPos = index.byId.get(action.drop)?.pos ?? '?';
+    const starting = (snapshot.teams.find((t) => t.roster_id === snapshot.my_roster_id)?.starters ?? [])
+      .some((p) => p?.id === action.drop);
+    cost += ` · drops ${action.drop_name} (${dropPos}, ${starting ? 'starter' : 'bench'})`;
+  }
+  return cost;
+}
+
+function buildAddCase(action, snapshot, index, baseline) {
+  const c = {};
+  const pos = action.pos;
+
+  if (action.displaces_missing) {
+    c.starts = "The report didn't say who he displaces";
+  } else if (action.displaces) {
+    const slot = starterSlotOf(snapshot, action.displaces);
+    c.starts = `Starts over ${action.displaces_name} at ${slotLabel(slot)}`;
+  } else {
+    const n = rankAt(baseline, pos);
+    c.starts = `Bench — ${pos}${n} behind ${namesList(startersAtPosition(snapshot, pos))}`;
+  }
+
+  const player = playerObjFor(index, action.player);
+  const whatIf = buildOutlook(snapshot, { add: [player], drop: action.drop ? [action.drop] : [] });
+  const { fixes, opens } = diffWeeks(baseline, whatIf);
+
+  if (!action.displaces_missing && !action.displaces) {
+    const fixWeeks = [...new Set(fixes.map((f) => f.week))].sort((a, b) => a - b);
+    if (fixWeeks.length) c.starts += `; starts Week ${fixWeeks[0]}`;
+  }
+
+  c.need = needLine(baseline, pos) + fixesSuffix(fixes);
+  c.cost = addCaseCost(action, snapshot, index);
+
+  let later = opensLine(opens);
+  if (action.needs_slot && baseline.roster_shape.bench_open === 1) later += ' · uses your last bench slot';
+  if (action.drop) later += lossSuffix(baseline, index.byId.get(action.drop)?.pos);
+  c.later = later;
+
+  return c;
+}
+
+function buildTradeCase(action, snapshot, index, baseline) {
+  const c = {};
+  const getIds = action.get ?? [];
+  const giveIds = action.give ?? [];
+
+  if (action.displaces_missing) {
+    c.starts = "The report didn't say who he displaces";
+  } else {
+    const clauses = getIds.map((id, idx) => {
+      const info = index.byId.get(id) ?? {};
+      const name = info.name ?? id;
+      if (idx === 0 && action.displaces) {
+        const slot = starterSlotOf(snapshot, action.displaces);
+        return `${name} starts over ${action.displaces_name} at ${slotLabel(slot)}`;
+      }
+      // A position the snapshot can't name gets words, never a bare "?".
+      return info.pos ? `${name} is depth (${info.pos}${rankAt(baseline, info.pos)})` : `${name} is depth`;
+    });
+    c.starts = clauses.join('; ');
+  }
+
+  const incomingPos = [...new Set(getIds.map((id) => index.byId.get(id)?.pos).filter(Boolean))];
+  // Say so when the headline player's position is unknown, rather than
+  // quietly leaving him out of the need line.
+  const unknownIncoming = getIds.filter((id) => !index.byId.get(id)?.pos).map((id) => index.byId.get(id)?.name ?? id);
+  const givePos = [...new Set(giveIds.map((id) => index.byId.get(id)?.pos).filter(Boolean))];
+  const needParts = incomingPos.map((p) => needLine(baseline, p));
+  // "start N" counts who is actually in the lineup at that position today —
+  // dedicated slots alone would say Ben starts one QB in a superflex league.
+  const startingByPos = {};
+  for (const { player } of myStarterRow(snapshot)) {
+    if (player?.position) startingByPos[player.position] = (startingByPos[player.position] ?? 0) + 1;
+  }
+  const giveParts = givePos.map((p) => {
+    const have = baseline.roster_shape.active_by_position[p] ?? 0;
+    return `gives ${p} depth (you have ${have}, start ${startingByPos[p] ?? 0})`;
+  });
+  if (unknownIncoming.length) needParts.push(`${unknownIncoming.join(', ')}: position unknown`);
+  c.need = needParts.join('; ') + giveParts.map((g) => ` · ${g}`).join('');
+
+  const myStarters = new Set((snapshot.teams.find((t) => t.roster_id === snapshot.my_roster_id)?.starters ?? [])
+    .filter(Boolean).map((p) => p.id));
+  const giveNames = action.give_names ?? [];
+  let starters = 0, bench = 0;
+  for (const id of giveIds) (myStarters.has(id) ? starters++ : bench++);
+  c.cost = `gives ${giveNames.join(', ')} — ${starters} starter${starters === 1 ? '' : 's'}, ${bench} bench · no FAAB`;
+
+  const getPlayers = getIds.map((id) => playerObjFor(index, id));
+  const whatIf = buildOutlook(snapshot, { add: getPlayers, drop: giveIds });
+  const { fixes, opens } = diffWeeks(baseline, whatIf);
+  let later = fixesAndOpensLine(fixes, opens);
+  const freed = giveIds.length - getIds.length;
+  if (freed > 0) later += ` · frees ${freed} bench slot${freed === 1 ? '' : 's'}`;
+  c.later = later;
+
+  return c;
+}
+
+function buildStartCase(action, snapshot, index) {
+  const c = {};
+  const slot = slotLabel(action.slot);
+  c.starts = action.for ? `${action.name} in at ${slot}, ${action.for_name} to the bench` : `${action.name} in at ${slot}`;
+  if (action.for) {
+    const info = index.byId.get(action.for) ?? {};
+    // Only the facts the snapshot actually has: no "? bye W?" when a player
+    // came from the players file without a team or bye.
+    const facts = [info.injury_status || 'healthy'];
+    if (info.team && info.bye_week != null) facts.push(`${info.team} bye W${info.bye_week}`);
+    else if (info.bye_week != null) facts.push(`bye W${info.bye_week}`);
+    c.need = `${action.for_name}: ${facts.join(', ')}`;
+  }
+  return c;
+}
+
+function buildRemovalCase(action, snapshot, index, baseline) {
+  const c = {};
+  const pos = action.pos;
+  c.need = needLine(baseline, pos);
+
+  const player = playerObjFor(index, action.player);
+  const whatIf = action.kind === 'activate'
+    ? buildOutlook(snapshot, { add: [player] })
+    : buildOutlook(snapshot, { drop: [action.player] });
+  const { fixes, opens } = diffWeeks(baseline, whatIf);
+  let later = fixesAndOpensLine(fixes, opens);
+  if (action.kind === 'drop' || action.kind === 'ir') later += lossSuffix(baseline, pos);
+  c.later = later;
+
+  return c;
+}
+
+// The one pure, exported piece of "the case": computed the same way for
+// --check and compile so the number on the card always matches what the
+// snapshot can prove. `action` is the built action (post-validation);
+// `baseline` is buildOutlook(snapshot), computed once per run.
+export function buildCase(action, snapshot, index, baseline) {
+  switch (action.kind) {
+    case 'add': return buildAddCase(action, snapshot, index, baseline);
+    case 'trade': return buildTradeCase(action, snapshot, index, baseline);
+    case 'start': return buildStartCase(action, snapshot, index);
+    case 'drop':
+    case 'ir':
+    case 'activate':
+      return buildRemovalCase(action, snapshot, index, baseline);
+    default:
+      return {};
+  }
+}
+
 // ---- lifecycle: has the world already moved past this action? ----
 
 // The same done/gone tests docs/ACTIONS.md section 3 defines and docs/index.html
@@ -276,7 +578,7 @@ export function lifecycleState(action, snapshot, index) {
 // An action already `done` or `gone` skips these checks altogether: the
 // answer is knowably no and saying so again is noise.
 async function validateAndBuildAction(action, i, snapshot, index, problems, opts = {}) {
-  const { state = 'open', strict = true, warnings = [] } = opts;
+  const { state = 'open', strict = true, warnings = [], baseline = null } = opts;
   const live = state === 'open';
   const requireWorld = live && strict;
   const push = (msg) => problems.push(`action[${i}]: ${msg}`);
@@ -340,6 +642,49 @@ async function validateAndBuildAction(action, i, snapshot, index, problems, opts
     after: isNonEmptyString(action.after) ? action.after : undefined,
     if_not: isNonEmptyString(action.if_not) ? action.if_not : undefined,
   };
+
+  // ---- displaces: required on add/trade — docs/ACTIONS.md "The case". The
+  // id of the starter the incoming player replaces this week, or null if he
+  // doesn't start. For a trade it answers for get[0]; `incoming` is that
+  // player's resolved {name, pos}. Only checked live — an already done/gone
+  // action skips it, same as every other world check.
+  async function resolveDisplaces(incoming) {
+    if (!live) return;
+    if (!('displaces' in action)) {
+      // No kind prefix: worldFail's compile-mode warning already carries one.
+      const msg = `displaces is required: the id of the starter he replaces this week, or null if he does not start`;
+      if (worldFail(msg)) bad = true;
+      else out.displaces_missing = true;
+      return;
+    }
+    if (action.displaces === null) {
+      out.displaces = null;
+      out.displaces_name = null;
+      return;
+    }
+    if (!isNonEmptyString(action.displaces)) {
+      push(`(${kind}) displaces must be a player id string or null`);
+      bad = true;
+      return;
+    }
+    const dId = action.displaces;
+    const dResolved = await resolvePlayer(index, dId);
+    const dName = dResolved?.name ?? dId;
+    if (!myStarters.has(dId)) {
+      push(`(${kind}) displaces "${dId}" (${dName}) is not in my starters`);
+      bad = true;
+      return;
+    }
+    const dSlot = starterSlotOf(snapshot, dId);
+    const eligible = dSlot ? SLOT_ELIGIBILITY[dSlot] : null;
+    if (incoming?.pos && eligible && !eligible.includes(incoming.pos)) {
+      push(`(${kind}) ${incoming.name} is a ${incoming.pos}, which cannot take ${dName}'s ${dSlot} slot`);
+      bad = true;
+      return;
+    }
+    out.displaces = dId;
+    out.displaces_name = dName;
+  }
 
   if (kind !== 'trade') {
     if (!isNonEmptyString(action.player)) {
@@ -408,6 +753,23 @@ async function validateAndBuildAction(action, i, snapshot, index, problems, opts
           } else {
             out.faab = action.faab;
           }
+        }
+      }
+
+      await resolveDisplaces(resolved);
+
+      // "Depth is priced like depth": a slotless waiver add at a position
+      // that isn't thin, bidding more than DEPTH_BID_CAP of my remaining
+      // FAAB, is a starter's price for a player who isn't starting.
+      if (live && action.mode === 'waiver' && Number.isInteger(out.faab) &&
+          (out.displaces === null || out.displaces_missing) &&
+          !baseline.roster_shape.thin_positions.includes(resolved.pos)) {
+        const me = snapshot.teams.find((t) => t.roster_id === myId);
+        const cap = Math.floor((me?.faab_remaining ?? 0) * DEPTH_BID_CAP);
+        if (out.faab > cap) {
+          const n = rankAt(baseline, resolved.pos);
+          const msg = `${resolved.name} would be ${resolved.pos}${n} and doesn't start — a $${out.faab} bid is a starter's price; name who he displaces, or price him as a stash ($${cap} or less)`;
+          if (worldFail(msg)) bad = true;
         }
       }
     }
@@ -542,6 +904,7 @@ async function validateAndBuildAction(action, i, snapshot, index, problems, opts
         bad = true;
       } else {
         const getNames = [];
+        const getResolved = [];
         let getOk = true;
         for (const gid of get) {
           if (!withIds.has(gid) && requireWorld) {
@@ -556,10 +919,14 @@ async function validateAndBuildAction(action, i, snapshot, index, problems, opts
             continue;
           }
           getNames.push(r.name);
+          getResolved.push(r);
         }
         if (getOk) {
           out.get = get;
           out.get_names = getNames;
+          // displaces refers to get[0] — the player the trade actually
+          // installs in my lineup; the rest of `get` is depth (see the case).
+          await resolveDisplaces(getResolved[0]);
         } else {
           bad = true;
         }
@@ -595,12 +962,19 @@ async function validateAndBuildAction(action, i, snapshot, index, problems, opts
     out.consumes = [];
   }
 
+  // "The case" — docs/ACTIONS.md "The case — why this move, in four lines".
+  // Only computed for a genuinely open action: done/gone actions get no case,
+  // the same reasoning that already exempts them from the world checks above.
+  if (!bad && live) {
+    out.case = buildCase(out, snapshot, index, baseline);
+  }
+
   return bad ? null : out;
 }
 
 // ---- top-level block validation ----
 
-async function validateReportBlock(block, snapshot, index, { lifecycle = false } = {}) {
+async function validateReportBlock(block, snapshot, index, baseline, { lifecycle = false } = {}) {
   const driftWarnings = [];
   const problems = [];
   if (typeof block !== 'object' || block === null || Array.isArray(block)) {
@@ -629,6 +1003,7 @@ async function validateReportBlock(block, snapshot, index, { lifecycle = false }
       state,
       strict: !lifecycle,
       warnings: driftWarnings,
+      baseline,
     });
     if (built && state !== 'open') {
       built.state = state;
@@ -714,11 +1089,20 @@ function finalizeAction(action, source, report, week) {
     out.get_names = action.get_names;
   }
   if (action.message !== undefined) out.message = action.message;
+  // displaces is `undefined` (never set) when the report predates the rule
+  // and this is a compile — see resolveDisplaces above — vs. explicitly
+  // `null` when the routine said the player doesn't start; that distinction
+  // has to survive into the JSON, so this checks presence, not truthiness.
+  if (action.displaces !== undefined) {
+    out.displaces = action.displaces;
+    out.displaces_name = action.displaces_name;
+  }
   out.consumes = action.consumes ?? [];
   if (action.needs_slot) out.needs_slot = true;
   out.urgency = action.urgency;
   if (action.deadline_label !== undefined) out.deadline_label = action.deadline_label;
   out.why = action.why;
+  if (action.case !== undefined) out.case = action.case;
   return out;
 }
 
@@ -1100,6 +1484,10 @@ const describe = (a) =>
 async function compile() {
   const snapshot = await loadSnapshot();
   const index = buildIndex(snapshot);
+  // Computed once per run, not per action — every action's "need"/"cost"/
+  // "later" is measured against the SAME snapshot of where the roster stands
+  // right now, so two actions in the same compile agree with each other.
+  const baseline = buildOutlook(snapshot);
   const picks = await pickNewestReports();
 
   const problems = [];
@@ -1116,7 +1504,7 @@ async function compile() {
       problems.push(`${rel(filePath)}: ${error}`);
       continue;
     }
-    const result = await validateReportBlock(block, snapshot, index, { lifecycle: true });
+    const result = await validateReportBlock(block, snapshot, index, baseline, { lifecycle: true });
     if (result.problems) {
       problems.push(...result.problems.map((p) => `${rel(filePath)} ${p}`));
       continue;
@@ -1239,13 +1627,14 @@ async function check(fileArg) {
   const filePath = path.resolve(process.cwd(), fileArg);
   const snapshot = await loadSnapshot();
   const index = buildIndex(snapshot);
+  const baseline = buildOutlook(snapshot);
 
   const { error, block } = await loadReportBlock(filePath);
   if (error) {
     console.error(`${fileArg}: ${error}`);
     process.exit(1);
   }
-  const result = await validateReportBlock(block, snapshot, index);
+  const result = await validateReportBlock(block, snapshot, index, baseline);
 
   if (result.actionResults) {
     for (const r of result.actionResults) {
@@ -1253,6 +1642,11 @@ async function check(fileArg) {
         const a = r.action;
         const label = a.kind === 'trade' ? `trade with roster ${a.with}` : `${a.kind} ${a.player} (${a.name})`;
         console.log(`  action[${r.index}] OK — ${label}`);
+        // So the routine can see what the card will actually say before it
+        // publishes — the case is computed here the same way compile() does.
+        for (const key of ['starts', 'need', 'cost', 'later']) {
+          if (a.case?.[key] !== undefined) console.log(`      ${key}: ${a.case[key]}`);
+        }
       } else {
         for (const p of r.problems) console.log(`  ${p}`);
       }

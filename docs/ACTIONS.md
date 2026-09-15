@@ -69,14 +69,48 @@ Per-kind fields and validation (all checked against `data/league/snapshot.json`)
 
 | kind | extra fields | validation | live "done" test on the dashboard |
 |---|---|---|---|
-| `add` | `drop` (id, optional), `mode` (`fcfs` or `waiver`), `faab` (integer $, waiver mode only) | `player` rostered by **no** team in the league; `drop` (if given) on my roster; `faab` between 0 and my `faab_remaining` | `player` on my roster. If another team rostered them first, the card shows "taken by <owner>". |
+| `add` | `drop` (id, optional), `mode` (`fcfs` or `waiver`), `faab` (integer $, waiver mode only), `displaces` (starter id or `null`, required — see "The case") | `player` rostered by **no** team in the league; `drop` (if given) on my roster; `faab` between 0 and my `faab_remaining` | `player` on my roster. If another team rostered them first, the card shows "taken by <owner>". |
 | `drop` | — | `player` on my roster | `player` no longer on my roster |
 | `start` | `slot` (one of the league's non-BN positions), `for` (id of the starter being benched, optional) | `player` on my roster; `player`'s position must be legal in `slot`; `for` (if given) currently in my starters **and currently holding that same `slot`** (the swap must be in place, or it empties `for`'s slot); with no `for`, `slot` must already be empty | `player` in my starters and `for` (if given) not in my starters |
 | `ir` | — | `player` on my roster and not already in `reserve`; the IR slot must have room (`league.reserve_slots`, netted against any `activate` in the same set) | `player` in my `reserve` |
 | `activate` | — | `player` in my `reserve` | `player` on my roster and not in `reserve` |
-| `trade` | `with` (roster_id), `give` (ids), `get` (ids), `message` (sendable offer text, optional) | `with` ≠ my roster_id; every `give` on my roster; every `get` on `with`'s roster | every `get` on my roster. The page cannot see pending offers, so trades also get a manual "dismiss" on the card. |
+| `trade` | `with` (roster_id), `give` (ids), `get` (ids), `message` (sendable offer text, optional), `displaces` (starter id or `null` for the first player in `get`, required — see "The case") | `with` ≠ my roster_id; every `give` on my roster; every `get` on `with`'s roster | every `get` on my roster. The page cannot see pending offers, so trades also get a manual "dismiss" on the card. |
 
 Prefer one `start` with `for` over a separate bench instruction. Never emit an action that leaves a starting slot empty — this is now enforced rather than merely asked for: a `start` whose `for` holds a different slot is rejected, as is a kicker in the QB slot or any other position/slot mismatch.
+
+### The case — why this move, in four lines
+
+A move on the card has to convince Ben in five seconds, without a chat and without a dissertation. The `why` sentence is the routine's judgment; the **case** is the evidence, and the evidence is computed by the compiler from the snapshot so it cannot be decorated. Every open action carries a `case` object with up to four short lines, always in this order and always with these labels:
+
+| line | answers | source |
+|---|---|---|
+| `starts` | Does he crack my lineup, and over whom? | the routine's `displaces`, verified by the compiler |
+| `need` | Is this a position I'm short at, and what week does it fix? | computed: `outlook.roster_shape` and an outlook diff |
+| `cost` | What does it spend — bid, drop, players given — and what's the market? | computed: FAAB, league budgets, `trending` rank |
+| `later` | What does it change in the weeks ahead? | computed: outlook diff |
+
+**The routine supplies one field: `displaces`.** Required on every `add` and `trade`; it is the answer to "who does he beat out". Either the id of a player currently in my starters whose slot the incoming player takes this week, or `null`, meaning he does not start this week — depth, a stash, or cover for a later bye. The compiler rejects an `add` or `trade` without it (a report that hasn't answered the question hasn't made a case), rejects a `displaces` who is not in my starters, and rejects one whose slot the incoming player's position cannot legally fill. A `start` needs no `displaces`: its `for` already is one.
+
+What the compiler writes, per kind (names resolved, positions from the snapshot, weeks from `scripts/outlook.mjs`):
+
+- **`add`** —
+  `starts`: with `displaces`, "Starts over Jaylen Warren at FLEX"; with `null`, "Bench — WR5 behind Tetairoa McMillan, Stefon Diggs", and if the outlook diff shows a later week he would fill an otherwise-empty slot, "; starts Week 11" is appended.
+  `need`: "TE: you have 1 — your thinnest spot · fixes W11" or "WR: you have 4 — not thin · fixes nothing on the calendar". A position is thin per `outlook.roster_shape.thin_positions`; "fixes W<n>" lists weeks whose `empty_slots` the move removes.
+  `cost`: waiver: "$8 of $100 · 11 of 12 teams still have $100 · #8 most-added in Sleeper this week" (rank is the player's position in `snapshot.trending.adds`, or "not trending"); fcfs: "$0, first come first served"; either way "· drops Jakobi Meyers (WR, bench)" when there is a drop.
+  `later`: "opens no holes" or "opens a W7 WR hole" per week; a slot that opens in three or more weeks is one clause, "opens a K hole in 15 weeks (W3–W17)", and any list of more than four weeks is written as a span; "· uses your last bench slot" when the add has no drop and it fills the final open spot; "· drops your only K" when the drop empties a thin position.
+- **`trade`** —
+  `starts`: one clause per incoming player: "Aaron Jones starts over Jaylen Warren at FLEX" or "Brian Robinson is depth (RB4)".
+  `need`: the incoming positions as for `add`, then "· gives QB depth (you have 4, start 2)" — "start" counts who is in the lineup at that position today, so a superflex QB counts twice.
+  `cost`: "gives Kirk Cousins, Jakobi Meyers — 0 starters, 2 bench · no FAAB".
+  `later`: outlook diff with the full swap: holes fixed or opened, and "· frees 1 bench slot" when more leave than arrive.
+- **`start`** — `starts`: "Bucky Irving in at FLEX, Jaylen Warren to the bench"; `need`: the benched player's live status, "Jaylen Warren: Questionable, PIT bye W9". No `cost` or `later`.
+- **`drop`, `ir`, `activate`** — `need` (position count and thinness) and `later` (outlook diff) only.
+
+Lines are plain English, short enough to read as a table, and never contain ids, field names or exception text. The card renders whatever lines are present, in order, with the label in the left column; a missing line is simply not drawn.
+
+One rule falls out of the case and the compiler enforces it at write time: **depth is priced like depth.** An `add` with `displaces: null` at a position that is not thin, bidding more than 10% of my remaining FAAB, fails `--check` ("a fifth WR who doesn't start is not a $15 player — name who he displaces, or price him as a stash"). The compile, which runs over older reports, downgrades that to a warning.
+
+An action from a report written before this rule exists (no `displaces`) compiles with a `starts` line that says so — "The report didn't say who he displaces" — rather than failing the compile; the next run of that routine rewrites it.
 
 ### Sequencing — the standing order and explicit dependencies
 
@@ -110,7 +144,7 @@ How the card treats a dependent action:
 | `if_not` | done | superseded, shelved |
 | `if_not` | gone / dismissed | promoted to open |
 
-Open primary actions are numbered in the standing order (lineup, then claims, then trades; urgency within each). The order is not printed on the card: the numbering is the outcome, the reasoning behind it is not something the dashboard shows.
+Open primary actions are numbered in the standing order (lineup, then claims, then trades; urgency within each). The number is the order to do them in, not a ranking of how good each move is — and because a bare "1" was read as "priority 1" once, every row also carries a kind tag (`lineup`, `claim`, `trade`, `ir`) next to the number, and the case lines (above) carry the argument.
 
 ## 2. The compiler — `scripts/actions.mjs`
 
@@ -163,6 +197,18 @@ Behaviour:
 }
 ```
 
+Every `add` and `trade` also carries `displaces` (id or `null`) and `displaces_name`, and every action carries its `case` (see "The case" above), e.g.
+
+```json
+"displaces": null, "displaces_name": null,
+"case": {
+  "starts": "Bench — TE2 behind Tucker Kraft; starts Week 11",
+  "need":   "TE: you have 1 — your thinnest spot · fixes W11",
+  "cost":   "$8 of $100 · 11 of 12 teams still have $100 · #8 most-added in Sleeper this week",
+  "later":  "opens no holes · uses your last bench slot"
+}
+```
+
 `roster` is the roster part of `reports/.roster-fingerprint.json` (my starter ids in slot order, bench and reserve ids sorted; not the `hurt` list), so the page can tell when the roster has moved since the actions were written. Every player id in an action gets a resolved `name`, `pos`, `team` (and `drop_name`, `for_name`, `give_names`, `get_names`, `with_owner` as applicable).
 
 ## 3. The card — `docs/index.html`
@@ -177,7 +223,7 @@ Sits above the scorebug. Reads `reports/actions.json` from raw.githubusercontent
 - `stale` — a `start` action whose `week` is behind the live NFL week. Hidden. Other kinds never go stale by week.
 - `dismissed` — trades only, via a button; stored in `localStorage` keyed by action id + the source report filename, wrapped in try/catch. A dismissed trade stays hidden until a newer trades report replaces it.
 
-Each open item shows, in order: the move in one bold line with player names, the deadline chip (mono, right-aligned), the `why` sentence, for a trade its `message` under a collapsed "Offer message" toggle, and a source line ("Waivers · 2026-09-15 · verified live 14:02"). One "Open Sleeper ↗" link in the card header, not per item. A dependent says "If that falls through:" or "Then:" and nothing more — which player the two actions contend over is the compiler's business, not the reader's.
+Each open item shows, in order: the kind tag and order number, the move in one bold line with player names, the deadline chip (mono, right-aligned), the **case** as a small two-column grid (label left — Starts / Need / Cost / Later — text right, only the lines the action carries), the `why` sentence, for a trade its `message` under a collapsed "Offer message" toggle, and a source line ("Waivers · 2026-09-15 · verified live 14:02"). Shelved (done / gone / superseded) items don't draw the case — it argued for a move that is over. One "Open Sleeper ↗" link in the card header, not per item. A dependent says "If that falls through:" or "Then:" and nothing more — which player the two actions contend over is the compiler's business, not the reader's.
 
 **Mechanical alerts** the page computes itself from live data and shows under the actions as "Heads up" (they need no judgment and never go stale). A heads-up whose player already has an open action in the card above is suppressed — the routines have already turned it into an instruction, so it isn't also raised as a separate alert:
 

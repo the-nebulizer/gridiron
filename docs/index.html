@@ -63,10 +63,18 @@
   .act .move .meta{font-family:var(--mono);font-size:13px;font-weight:400;color:var(--chalk-dim)}
   .act .chip{font-family:var(--mono);font-size:12px;color:var(--amber);border:1px solid var(--line);padding:2px 9px;white-space:nowrap;align-self:start;justify-self:end}
   .act.done .chip,.act.gone .chip{color:var(--chalk-dim)}
+  .act .kind{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--amber);margin-right:10px;vertical-align:middle}
+  /* the case: the compiler's evidence for the move, a small two-column grid spanning the same
+     columns as .why — label left, answer right, only the lines the action actually carries */
+  .act .case{grid-column:2/-1;display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;margin:8px 0 2px;font-size:13px;line-height:1.35}
+  .act .case .k{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--chalk-dim);padding-top:2px}
+  .act .case .v{color:var(--chalk)}
   .act .why{grid-column:2/-1;font-size:16px;color:var(--chalk-dim)}
   /* dependents: drawn under the action they wait on, indented with padding — no extra columns */
   .act.waiting .glyph,.act.superseded .glyph{color:var(--chalk-dim)}
   .act.waiting .move,.act.superseded .move{color:var(--chalk-dim);font-weight:500}
+  .act.waiting .kind,.act.superseded .kind{color:var(--chalk-dim)}
+  .act.waiting .case .v{color:var(--chalk-dim)}
   .act .lead{font-family:var(--mono);font-size:12px;font-weight:400;letter-spacing:.04em;color:var(--chalk-dim)}
   .act.nest{border-bottom-style:dotted}
   .act.nest-1{padding-left:46px}
@@ -599,6 +607,23 @@ function actionHeadline(i){
   return `${esc(titleCase(i.kind||'—'))} ${nm(i.name,i.pos,i.team)}`.trim();
 }
 
+// One kind tag per row, so a bare order number is never read as a priority ranking.
+// `add` reads as `claim` unless it's the pre-season first-come-first-serve mode, where it's `add`.
+const KIND_TAG = {add:'claim', drop:'drop', start:'lineup', ir:'ir', activate:'ir', trade:'trade'};
+const kindTag = (i)=> i.kind==='add' && i.mode==='fcfs' ? 'add' : (KIND_TAG[i.kind] || '');
+
+// The case: up to four short lines, always in this order, always with these labels. Shelved
+// items (done/gone/superseded) don't draw it — it argued for a move that is over.
+const CASE_LINES = [['starts','Starts'], ['need','Need'], ['cost','Cost'], ['later','Later']];
+function caseGrid(i){
+  if(i.state!=='open' && i.state!=='waiting') return '';
+  const c = i.case;
+  if(!c || typeof c!=='object' || Array.isArray(c)) return '';
+  const lines = CASE_LINES.filter(([k])=> typeof c[k]==='string' && c[k]!=='')
+    .map(([k,label])=> `<span class="k">${esc(label)}</span><span class="v">${esc(c[k])}</span>`).join('');
+  return lines ? `<div class="case">${lines}</div>` : '';
+}
+
 /* o = {num} for a numbered primary, or {depth, parent} for a dependent drawn under it. */
 function actionRow(i, m, o){
   o = o || {};
@@ -620,10 +645,12 @@ function actionRow(i, m, o){
   // What the link means, in Ben's words: do this next, or do this instead.
   const lead = nested
     ? `<span class="lead">${i.link==='if_not' ? 'If that falls through:' : 'Then:'}</span> ` : '';
+  const kind = kindTag(i);
   return `<div class="act ${esc(i.state)}${depth ? ` nest nest-${depth}` : ''}">
       <div class="glyph" aria-hidden="true">${esc(glyph)}</div>
-      <div class="move">${lead}${actionHeadline(i)}</div>
+      <div class="move">${kind ? `<span class="kind">${esc(kind)}</span>` : ''}${lead}${actionHeadline(i)}</div>
       <div class="chip">${esc(chip)}</div>
+      ${caseGrid(i)}
       ${i.why ? `<div class="why">${esc(i.why)}</div>` : ''}
       ${offer}
       <div class="src"><span>${src}</span>${dism}</div>

@@ -96,10 +96,20 @@ function fixture(overrides = {}) {
   return { ...snap, ...overrides };
 }
 
-const block = (actions, extra = {}) =>
-  '# Fixture report\n\n```actions\n' +
-  JSON.stringify({ week: 2, verdict: 'Fixture.', next_check: 'Lineup, Thu 7am', actions, ...extra }, null, 2) +
-  '\n```\n';
+// Fixtures predate the `displaces` rule (docs/ACTIONS.md "The case"), so
+// inject `displaces: null` into add/trade actions that don't declare one —
+// every fixture here is written as depth/no-starter unless a test says
+// otherwise by setting `displaces` itself.
+const block = (actions, extra = {}) => {
+  const withDisplaces = actions.map((a) =>
+    (a?.kind === 'add' || a?.kind === 'trade') && !('displaces' in a) ? { ...a, displaces: null } : a
+  );
+  return (
+    '# Fixture report\n\n```actions\n' +
+    JSON.stringify({ week: 2, verdict: 'Fixture.', next_check: 'Lineup, Thu 7am', actions: withDisplaces, ...extra }, null, 2) +
+    '\n```\n'
+  );
+};
 
 // A throwaway repo with our scripts and the given fixtures, so actions.mjs
 // runs exactly as it does in production, against paths it controls.
@@ -815,7 +825,272 @@ console.log('\ndashboard — dependency resolution');
     R([{id:'t', kind:'trade', state:'open'}, {id:'w', kind:'add', state:'done', if_not:'t'}]).w === 'done');
 }
 
-// ---- 10. the modules must be importable without doing anything ------------
+// ---- the case — the card has to convince in four lines ---------------------
+// docs/ACTIONS.md "The case — why this move, in four lines" and the `case`
+// example in section 2. The routine supplies one field, `displaces`; every
+// other line — starts/need/cost/later — is computed by the compiler from the
+// snapshot so it can't be decorated. Pinning the compiler's actual sentences
+// here (not the shape of a sentence) is the point: a routine reads these
+// lines off the card exactly as written.
+
+console.log('\nthe case — the card has to convince in four lines');
+
+// block() (above) injects `displaces: null` into every add/trade fixture that
+// doesn't declare one, so the two cases below that need a report with NO
+// displaces key at all have to go around it and build the JSON by hand.
+function blockRaw(actions, extra = {}) {
+  return (
+    '# Fixture report\n\n```actions\n' +
+    JSON.stringify({ week: 2, verdict: 'Fixture.', next_check: 'Lineup, Thu 7am', actions, ...extra }, null, 2) +
+    '\n```\n'
+  );
+}
+
+console.log('\n  displaces — the one field the routine supplies');
+
+{
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-waivers.md': blockRaw([{ kind: 'add', player: 'fa1', mode: 'waiver', faab: 10, urgency: 'by_tuesday', why: 'No displaces key at all.' }]),
+  });
+  const r = runActions(dir, ['--check', 'reports/2026-09-15-waivers.md']);
+  check('--check rejects an add with no displaces key at all', r.code === 1 && /displaces is required/.test(r.out), r.out);
+}
+
+await strict('displaces naming a bench player is rejected', [
+  { kind: 'add', player: 'fa1', mode: 'waiver', faab: 10, displaces: 'qb3', urgency: 'by_tuesday', why: 'qb3 is on the bench, not in my starters.' },
+], { expect: /is not in my starters/ });
+
+await strict('displaces naming a slot the add cannot fill is rejected', [
+  { kind: 'add', player: 'fa2', mode: 'waiver', faab: 5, displaces: 'qb1', urgency: 'by_tuesday', why: 'A K cannot take the QB slot.' },
+], { expect: /cannot take/ });
+
+console.log('\n  starts — named displacement vs. bench depth');
+
+{
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-waivers.md': block([{ kind: 'add', player: 'fa3', mode: 'waiver', faab: 5, displaces: 'wr1', urgency: 'by_tuesday', why: 'Starts over a starter.' }]),
+  });
+  const r = runActions(dir, ['--check', 'reports/2026-09-15-waivers.md']);
+  check('a WR add naming who it displaces reads "Starts over ... at WR"',
+    r.code === 0 && /starts: Starts over Wide One at WR/.test(r.out), r.out);
+}
+
+{
+  // fa3 is a THIRD active WR against two dedicated slots — not thin — so the
+  // bench line names WR4 behind the three already starting (dedicated slots
+  // first, then the flex holder). It does NOT stop at "Wide Three" the way a
+  // one-line contract example does: this fixture's Week 5 has a FLEX/WR
+  // crunch a spare active WR happens to fix, so the compiler appends "; starts
+  // Week 5" — read off the real output rather than assumed.
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-waivers.md': block([{ kind: 'add', player: 'fa3', mode: 'waiver', faab: 10, displaces: null, urgency: 'by_tuesday', why: 'Depth, not a starter.' }]),
+  });
+  const r = runActions(dir, ['--check', 'reports/2026-09-15-waivers.md']);
+  check('a WR add with no displaces reads "Bench — WR4 behind Wide One, Wide Two, Wide Three" (plus the week it starts, in this fixture)',
+    r.code === 0 && /starts: Bench — WR4 behind Wide One, Wide Two, Wide Three; starts Week 5/.test(r.out), r.out);
+}
+
+console.log('\n  depth is priced like depth — DEPTH_BID_CAP');
+
+{
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-waivers.md': block([{ kind: 'add', player: 'fa3', mode: 'waiver', faab: 15, displaces: null, urgency: 'by_tuesday', why: 'A fourth WR at a starter price.' }]),
+  });
+  const r = runActions(dir, ['--check', 'reports/2026-09-15-waivers.md']);
+  check('a non-thin depth add priced above 10% of remaining FAAB fails --check', r.code === 1 && /starter's price/.test(r.out), r.out);
+}
+{
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-waivers.md': block([{ kind: 'add', player: 'fa3', mode: 'waiver', faab: 10, displaces: null, urgency: 'by_tuesday', why: 'Right at the cap.' }]),
+  });
+  const r = runActions(dir, ['--check', 'reports/2026-09-15-waivers.md']);
+  check('...but exactly 10% of remaining FAAB passes', r.code === 0, r.out);
+}
+{
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-waivers.md': block([{ kind: 'add', player: 'fa1', mode: 'waiver', faab: 15, displaces: null, urgency: 'by_tuesday', why: 'TE is thin, so the cap does not apply.' }]),
+  });
+  const r = runActions(dir, ['--check', 'reports/2026-09-15-waivers.md']);
+  check('...and a thin position is exempt from the cap entirely, at any bid', r.code === 0, r.out);
+}
+
+console.log('\n  a report written before this rule existed still compiles');
+
+{
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-waivers.md': blockRaw([{ kind: 'add', player: 'fa1', mode: 'waiver', faab: 10, urgency: 'by_tuesday', why: 'A pre-rule report.' }]),
+  });
+  const r = runActions(dir);
+  check('compiling a report whose add has no displaces key exits 0', r.code === 0, r.out);
+  check('...and warns that displaces is required', /displaces is required/.test(r.out), r.out);
+  const written = JSON.parse(readFileSync(path.join(dir, 'reports', 'actions.json'), 'utf8'));
+  const action = written.actions.find((a) => a.player === 'fa1');
+  check('...the compiled case says so, in words Ben can read',
+    action?.case?.starts === "The report didn't say who he displaces", JSON.stringify(action?.case));
+  check('...and the compiled action carries no displaces property at all',
+    !!action && !('displaces' in action), JSON.stringify(action));
+}
+
+console.log('\n  need — thinness and the position count');
+
+{
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-waivers.md': block([{ kind: 'add', player: 'fa1', mode: 'waiver', faab: 10, displaces: null, urgency: 'by_tuesday', why: 'TE need line.' }]),
+  });
+  const r = runActions(dir, ['--check', 'reports/2026-09-15-waivers.md']);
+  check('a TE add\'s need line names TE as the thinnest spot', /need: TE: you have 1 — your thinnest spot/.test(r.out), r.out);
+}
+{
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-waivers.md': block([{ kind: 'add', player: 'fa3', mode: 'waiver', faab: 10, displaces: null, urgency: 'by_tuesday', why: 'WR need line.' }]),
+  });
+  const r = runActions(dir, ['--check', 'reports/2026-09-15-waivers.md']);
+  check('a WR add\'s need line says WR is not thin (3 active against 2 dedicated slots)',
+    /need: WR: you have 3 — not thin/.test(r.out), r.out);
+}
+
+console.log('\n  cost — the bid, the market, and the trending rank');
+
+{
+  // Both fixture teams sit at the full waiver budget — confirm it rather than
+  // assume it, so "every team still has $100" below is actually honest.
+  const f = fixture();
+  check('the fixture keeps every team at the full waiver_budget, so "every team still has" is an honest claim',
+    Number.isInteger(f.league.waiver_budget) && f.teams.every((t) => t.faab_remaining === f.league.waiver_budget));
+
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-waivers.md': block([
+      { kind: 'add', id: 'w1', player: 'fa1', mode: 'waiver', faab: 10, displaces: null, urgency: 'by_tuesday', why: 'fa1 is #1 in trending.adds.' },
+      { kind: 'add', id: 'w2', player: 'fa3', mode: 'waiver', faab: 10, displaces: null, urgency: 'by_tuesday', why: 'fa3 is not in trending at all.' },
+    ]),
+  });
+  const r = runActions(dir, ['--check', 'reports/2026-09-15-waivers.md']);
+  check('a waiver add\'s cost line names the bid against my remaining cap', /cost: \$10 of \$100/.test(r.out), r.out);
+  check('...and that every team still has the full budget', /every team still has \$100/.test(r.out), r.out);
+  check('...and fa1\'s rank as #1 most-added', /#1 most-added/.test(r.out), r.out);
+  check('...while fa3, absent from trending.adds, reads "not trending"', /not trending/.test(r.out), r.out);
+}
+
+console.log('\n  later — bench slots, dropped positions, and the outlook diff');
+
+{
+  // Four on the bench against five BN slots: exactly one is open, so a
+  // slotless add uses the last one.
+  const snap = fixture();
+  snap.teams[0].bench = [P.qb3, P.rb4, P.rb5, P.wr4];
+  const dir = await sandbox(snap, {
+    '2026-09-15-waivers.md': block([{ kind: 'add', player: 'fa2', mode: 'waiver', faab: 10, displaces: null, urgency: 'by_tuesday', why: 'Last bench slot.' }]),
+  });
+  const r = runActions(dir, ['--check', 'reports/2026-09-15-waivers.md']);
+  check('an add with no drop into the last open bench slot says so', /uses your last bench slot/.test(r.out), r.out);
+}
+{
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-waivers.md': block([{ kind: 'drop', player: 'k1', urgency: 'now', why: 'The only kicker on the roster.' }]),
+  });
+  const r = runActions(dir, ['--check', 'reports/2026-09-15-waivers.md']);
+  check('dropping the only K says so', /drops your only K/.test(r.out), r.out);
+}
+{
+  // Trading the only WR who covers a Week 7 hole for a TE (which doesn't
+  // offset a WR loss) opens a real hole — read straight off scripts/outlook.mjs
+  // rather than guessed: with wr1 gone, Week 7's FLEX/WR cover collapses.
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-waivers.md': block([{ kind: 'add', player: 'fa1', drop: 'wr1', mode: 'waiver', faab: 5, displaces: null, urgency: 'by_tuesday', why: 'Trades a starting WR for bench TE depth.' }]),
+  });
+  const r = runActions(dir, ['--check', 'reports/2026-09-15-waivers.md']);
+  check('dropping the only cover for a bye week opens a hole the outlook can name', /opens a W\d+ \w+ hole/.test(r.out), r.out);
+}
+
+console.log('\n  a trade case — the incoming player, the give, and the outlook diff');
+
+{
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-trades.md': block([{ kind: 'trade', with: 2, give: ['qb3'], get: ['opp1'], displaces: 'rb1', urgency: 'this_week', why: 'Trade case.' }]),
+  });
+  const r = runActions(dir, ['--check', 'reports/2026-09-15-trades.md']);
+  check('a trade naming who the incoming player displaces reads "... starts over ... at RB"',
+    /starts: Other One starts over Rush One at RB/.test(r.out), r.out);
+  check('...its cost line counts what leaves, starters vs. bench, no FAAB',
+    /cost: gives Quinn Three — 0 starters, 1 bench · no FAAB/.test(r.out), r.out);
+}
+{
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-trades.md': block([{ kind: 'trade', with: 2, give: ['qb3', 'rb1'], get: ['opp1'], displaces: null, urgency: 'this_week', why: 'Gives up two for one.' }]),
+  });
+  const r = runActions(dir, ['--check', 'reports/2026-09-15-trades.md']);
+  check('a trade that gives more than it gets frees a bench slot', /frees 1 bench slot/.test(r.out), r.out);
+}
+
+console.log('\n  a start case — who comes in, who sits, and the bench player\'s status');
+
+{
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-lineup.md': block([{ kind: 'start', player: 'qb3', for: 'qb2', slot: 'SUPER_FLEX', urgency: 'before_kickoff', why: 'Start case.' }]),
+  });
+  const r = runActions(dir, ['--check', 'reports/2026-09-15-lineup.md']);
+  check('a start case names who comes in, at what slot, and who it benches',
+    /starts: Quinn Three in at SUPERFLEX, Quinn Two to the bench/.test(r.out), r.out);
+  check('...and names the benched player\'s health and bye',
+    /need: Quinn Two: healthy, BBB bye W6/.test(r.out), r.out);
+}
+
+console.log('\n  --check prints the case so a routine can see what the card will say before publishing');
+
+{
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-lineup.md': block([{ kind: 'start', player: 'qb3', for: 'qb2', slot: 'SUPER_FLEX', urgency: 'before_kickoff', why: 'Prints on stdout.' }]),
+  });
+  const r = spawnSync(process.execPath, ['scripts/actions.mjs', '--check', 'reports/2026-09-15-lineup.md'], { cwd: dir, encoding: 'utf8' });
+  check('the case lines print under the OK action, on stdout',
+    r.status === 0 && /starts:/.test(r.stdout ?? '') && /need:/.test(r.stdout ?? ''), r.stdout);
+}
+
+console.log('\n  the dashboard: caseGrid, kindTag — extending the do-now pure slice with a local esc');
+
+{
+  const html = readFileSync(path.join(root, 'docs', 'index.html'), 'utf8');
+  const src = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)][0][1];
+  const from = src.indexOf('const URGENCY ='), to = src.indexOf('/* ——— end do-now pure ——— */');
+  const slice = to > from ? src.slice(from, to) : src.slice(from);
+  // esc() is defined outside the pure slice (docs/index.html line ~241, shared
+  // by the whole page), so the slice alone throws the moment actionRow/
+  // caseGrid/actionHeadline call it. Define a local copy in the same script
+  // scope rather than widening the slice — the same workaround the card
+  // agent's harness used.
+  const escSrc = "const esc=(s)=>String(s??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[c]));\n";
+  const ctx = {};
+  vm.createContext(ctx);
+  new vm.Script(escSrc + slice + ';this.actionRow=actionRow;this.caseGrid=caseGrid;this.kindTag=kindTag;').runInContext(ctx);
+
+  const openAdd = {
+    id: 'w1', kind: 'add', mode: 'waiver', state: 'open', urgency: 'by_tuesday',
+    name: 'Free Three', pos: 'WR', team: 'TTT',
+    case: {
+      starts: 'Bench — WR4 behind Wide One, Wide Two, Wide Three',
+      need: 'WR: you have 3 — not thin',
+      cost: '$10 of $100 · every team still has $100 · not trending',
+      later: 'opens no holes',
+    },
+    why: 'Depth.', report: '2026-09-15-waivers.md', source: 'waivers',
+  };
+  const row = ctx.actionRow(openAdd, { now: '14:02' }, { num: 1 });
+  check('an open add with a four-line case renders a case grid', row.includes('class="case"'), row);
+  const idx = ['>Starts<', '>Need<', '>Cost<', '>Later<'].map((l) => row.indexOf(l));
+  check('...with the labels Starts / Need / Cost / Later, in that order',
+    idx.every((n) => n !== -1) && idx.every((n, i) => i === 0 || n > idx[i - 1]), JSON.stringify(idx));
+  check('...and the row is tagged claim, not a bare number', row.includes('<span class="kind">claim</span>'), row);
+
+  const doneRow = ctx.actionRow({ ...openAdd, state: 'done' }, { now: '14:02' }, { num: 1 });
+  check('a done add with the same case does NOT render the case grid — the argument is over',
+    !doneRow.includes('class="case"'), doneRow);
+
+  check('a start row is tagged lineup', ctx.kindTag({ kind: 'start' }) === 'lineup');
+  check('a fcfs add is tagged add, not claim (pre-season, first-come-first-served)',
+    ctx.kindTag({ kind: 'add', mode: 'fcfs' }) === 'add');
+}
+
+// ---- the modules must be importable without doing anything ------------
 // Importing scripts/actions.mjs used to run a full compile as a side effect, because its
 // CLI entry was unguarded. It passed here only because this checkout happened to have a
 // snapshot; a clean clone failed. Nothing should act merely because it was imported.

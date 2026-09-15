@@ -20,7 +20,7 @@ description: Build this week's start/sit recommendation for Ben's team from a fr
      "actions": [{ "kind": "start", "player": "11584", "for": "8228", "slot": "FLEX",
        "urgency": "before_kickoff", "why": "Warren questionable; Irving has the full workload." }] }
    ```
-   A hold verdict still ships this block, with `"actions": []`. Then validate the block you just wrote: `node scripts/actions.mjs --check reports/<file>.md` — strict, and STOP on failure; fix the block, never bypass. Then compile the card: `node scripts/actions.mjs`. The compile also reads the other three routines' newest reports; if it notes an action of theirs as done, gone, or drifted, that is expected — it is not yours to fix and not a reason to stop.
+   The card shows a case for every move — for a start, who comes in at which slot and the benched player's live status — computed by the compiler from the block, so the `why` should carry the judgment (matchup, injury, usage), not restate the roster. A hold verdict still ships this block, with `"actions": []`. Then validate the block you just wrote: `node scripts/actions.mjs --check reports/<file>.md` — strict, and STOP on failure; fix the block, never bypass. Then compile the card: `node scripts/actions.mjs`. The compile also reads the other three routines' newest reports; if it notes an action of theirs as done, gone, or drifted, that is expected — it is not yours to fix and not a reason to stop.
 
 Never: name a player without confirming their roster slot in the snapshot; carry availability claims from search snippets; leave a slot empty when a legal option exists; emit an action for a player the snapshot doesn't place exactly where the action claims.
 

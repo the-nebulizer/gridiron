@@ -18,7 +18,7 @@
 //   node scripts/outlook.mjs --json
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -196,7 +196,10 @@ export function buildOutlook(snapshot, { add = [], drop = [] } = {}) {
 
 // ---- CLI ----
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Compared as URLs, not strings: a space in the checkout path ("Hobby coding")
+// is %20 in import.meta.url and a literal space in argv, so the old string
+// comparison never matched there and the CLI silently printed nothing.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   // Parsed strictly: an argument this doesn't understand is an error, never a
   // shrug. The old version matched only the "--add <id>" form by looking at
   // the previous token, so "--add=11834" silently added nobody and printed an

@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-09-15T15:19:09.274Z",
+  "compiled_at": "2026-09-15T22:12:09.917Z",
   "season": "2026",
   "week": 2,
   "games_have_started": true,
@@ -30,7 +30,7 @@
     "waivers": {
       "report": "2026-09-15-waivers.md",
       "week": 2,
-      "verdict": "Claim Devaughn Vele now for $15, no drop needed; if the Cousins/Meyers trade to Tally241 falls through by Tuesday night, also claim Mike Gesicki for $8 by dropping Meyers to fill the Week 11 tight end hole.",
+      "verdict": "Claim Mike Gesicki for $8, no drop needed — he takes the one open bench slot and fixes the Week 11 tight end hole outright. Only if that claim is lost to another team, fall back to Devaughn Vele for $10 as bench depth.",
       "next_check": "Lineup, Thu 7am",
       "stale": false
     },
@@ -42,11 +42,11 @@
       "stale": true
     },
     "trades": {
-      "report": "2026-09-14-trades.md",
-      "week": 1,
-      "verdict": "Two trades worth sending: Cousins + Meyers to Tally241 for Aaron Jones, and Bryce Young to amandaberry for Brian Robinson.",
+      "report": "2026-09-15-trades.md",
+      "week": 2,
+      "verdict": "Still two trades worth sending: Cousins + Meyers to Tally241 for Aaron Jones, and Bryce Young to amandaberry for Brian Robinson.",
       "next_check": "Waivers, Tue 7am",
-      "stale": true
+      "stale": false
     },
     "inactives": {
       "report": "2026-09-14-inactives.md",
@@ -58,51 +58,64 @@
   },
   "actions": [
     {
-      "id": "waivers:add:11834",
-      "source": "waivers",
-      "report": "2026-09-15-waivers.md",
-      "kind": "add",
-      "week": 2,
-      "player": "11834",
-      "name": "Devaughn Vele",
-      "pos": "WR",
-      "team": "NO",
-      "mode": "waiver",
-      "faab": 15,
-      "consumes": [],
-      "needs_slot": true,
-      "urgency": "by_tuesday",
-      "deadline_label": "claims process Wed morning",
-      "why": "Locked in as Saints' clear WR2 with Tyson out multiple more weeks; turned 82 snaps into 7-69-1 and remains the top add in the league."
-    },
-    {
       "id": "waivers:add:4993",
       "source": "waivers",
       "report": "2026-09-15-waivers.md",
       "kind": "add",
       "week": 2,
-      "if_not": "trades:trade:8",
       "player": "4993",
       "name": "Mike Gesicki",
       "pos": "TE",
       "team": "CIN",
-      "drop": "5947",
-      "drop_name": "Jakobi Meyers",
       "mode": "waiver",
       "faab": 8,
-      "consumes": [
-        "5947"
-      ],
+      "displaces": null,
+      "displaces_name": null,
+      "consumes": [],
+      "needs_slot": true,
+      "urgency": "by_tuesday",
+      "deadline_label": "claims process Wed morning",
+      "why": "Bengals' clear lead TE, and the only move that fills the Week 11 hole the outlook can't otherwise staff — takes the last open bench slot outright.",
+      "case": {
+        "starts": "Bench — TE2 behind Tucker Kraft; starts Week 11",
+        "need": "TE: you have 1 — your thinnest spot · fixes W11",
+        "cost": "$8 of $100 · 11 of 12 teams still have $100 · #8 most-added in Sleeper this week",
+        "later": "opens no holes · uses your last bench slot"
+      }
+    },
+    {
+      "id": "waivers:add:11834",
+      "source": "waivers",
+      "report": "2026-09-15-waivers.md",
+      "kind": "add",
+      "week": 2,
+      "if_not": "waivers:add:4993",
+      "player": "11834",
+      "name": "Devaughn Vele",
+      "pos": "WR",
+      "team": "NO",
+      "mode": "waiver",
+      "faab": 10,
+      "displaces": null,
+      "displaces_name": null,
+      "consumes": [],
+      "needs_slot": true,
       "urgency": "optional",
       "deadline_label": "claims process Wed morning",
-      "why": "Bengals' clear lead TE (5-78-1, most team targets), unlike Mayer's closing Bowers-return window — fills the Week 11 TE hole. Meyers can't drop while the Cousins trade is pending."
+      "why": "Saints' clear WR2 with Tyson out into October, but beats no current starter and no free slot is left once Gesicki claims it — fallback only.",
+      "case": {
+        "starts": "Bench — WR5 behind Tetairoa McMillan, Stefon Diggs",
+        "need": "WR: you have 4 — not thin · fixes nothing on the calendar",
+        "cost": "$10 of $100 · 11 of 12 teams still have $100 · #1 most-added in Sleeper this week",
+        "later": "opens no holes · uses your last bench slot"
+      }
     },
     {
       "id": "trades:trade:8",
       "source": "trades",
-      "report": "2026-09-14-trades.md",
+      "report": "2026-09-15-trades.md",
       "kind": "trade",
-      "week": 1,
+      "week": 2,
       "with": 8,
       "with_owner": "Tally241",
       "give": [
@@ -120,19 +133,27 @@
         "Aaron Jones"
       ],
       "message": "Hey — I've got more QB depth than I need and saw you're thin behind Maye/Nix. Would you do Kirk Cousins + Jakobi Meyers for Aaron Jones? Cousins is Vegas's actual Week 1 starter, so it's a real QB2/bye-week option for you, not a stash. I could use another back with an actual role given how thin my RB room is right now.",
+      "displaces": null,
+      "displaces_name": null,
       "consumes": [
         "1166",
         "5947"
       ],
       "urgency": "this_week",
-      "why": "Cousins is a real starting QB for a team with no backup, and it turns your extra depth into a running back with an actual role."
+      "why": "Cousins is a real starting QB for a team with no backup, and it turns your extra depth into a running back with an actual role.",
+      "case": {
+        "starts": "Aaron Jones is depth (RB4)",
+        "need": "RB: you have 3 — not thin · gives QB depth (you have 4, start 2) · gives WR depth (you have 4, start 2)",
+        "cost": "gives Kirk Cousins, Jakobi Meyers — 0 starters, 2 bench · no FAAB",
+        "later": "opens no holes · frees 1 bench slot"
+      }
     },
     {
       "id": "trades:trade:9",
       "source": "trades",
-      "report": "2026-09-14-trades.md",
+      "report": "2026-09-15-trades.md",
       "kind": "trade",
-      "week": 1,
+      "week": 2,
       "with": 9,
       "with_owner": "amandaberry",
       "give": [
@@ -148,11 +169,19 @@
         "Brian Robinson"
       ],
       "message": "You're carrying zero backup QB behind Lawrence/Love — I've got extra arms. Would you take Bryce Young for Brian Robinson? He's a real handcuff play for you and I could use another running back given how thin my bench is there right now.",
+      "displaces": null,
+      "displaces_name": null,
       "consumes": [
         "9228"
       ],
       "urgency": "optional",
-      "why": "A cheaper fallback shot at the same running back fix, costing only your lowest-value quarterback stash."
+      "why": "A cheaper fallback shot at the same running back fix, costing only your lowest-value quarterback stash.",
+      "case": {
+        "starts": "Brian Robinson is depth (RB4)",
+        "need": "RB: you have 3 — not thin · gives QB depth (you have 4, start 2)",
+        "cost": "gives Bryce Young — 0 starters, 1 bench · no FAAB",
+        "later": "opens no holes"
+      }
     }
   ]
 }
