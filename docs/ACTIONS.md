@@ -70,7 +70,7 @@ Per-kind fields and validation (all checked against `data/league/snapshot.json`)
 | `add` | `drop` (id, optional), `mode` (`fcfs` or `waiver`), `faab` (integer $, waiver mode only) | `player` rostered by **no** team in the league; `drop` (if given) on my roster; `faab` between 0 and my `faab_remaining` | `player` on my roster. If another team rostered them first, the card shows "taken by <owner>". |
 | `drop` | — | `player` on my roster | `player` no longer on my roster |
 | `start` | `slot` (one of the league's non-BN positions), `for` (id of the starter being benched, optional) | `player` on my roster; `for` (if given) currently in my starters | `player` in my starters and `for` (if given) not in my starters |
-| `ir` | — | `player` on my roster and not already in `reserve` | `player` in my `reserve` |
+| `ir` | — | `player` on my roster and not already in `reserve`; the IR slot must have room (`league.reserve_slots`, netted against any `activate` in the same set) | `player` in my `reserve` |
 | `activate` | — | `player` in my `reserve` | `player` on my roster and not in `reserve` |
 | `trade` | `with` (roster_id), `give` (ids), `get` (ids), `message` (sendable offer text, optional) | `with` ≠ my roster_id; every `give` on my roster; every `get` on `with`'s roster | every `get` on my roster. The page cannot see pending offers, so trades also get a manual "dismiss" on the card. |
 
@@ -90,6 +90,8 @@ Actions from four routines land on one card, so they must not contradict each ot
 
 - Two open actions that **consume the same rostered player** (as `drop`, `give`, `for`, or the subject of `ir` / `activate` / `drop`) must be linked by `after` or `if_not` in one direction.
 - Adds with no `drop` that are not linked to each other must not exceed the open bench slots.
+- `ir` actions must not exceed `league.reserve_slots`, counting who is already in reserve and netting off any `activate` in the same set — so "activate X, then IR Y" is fine but a second body into a full IR slot is an error.
+- An `ir` action for a player whose designation is not in `league.ir_eligible_statuses` is a warning, not an error: Sleeper's `reserve_allow_*` flags don't map cleanly onto every tag it displays, so this flags a likely-refused move without blocking the report.
 - The bids of unlinked adds should not exceed `faab_remaining` (warning only; Sleeper skips a claim it cannot fund).
 - `after` / `if_not` must reference an action that exists in the compiled set (any source), and must not form a cycle.
 

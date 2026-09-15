@@ -63,7 +63,13 @@ function buildIndex(snapshot) {
   const remember = (p) => {
     if (!p || p.id == null) return;
     if (!byId.has(p.id)) {
-      byId.set(p.id, { name: p.name, pos: p.position ?? null, team: p.team ?? null });
+      byId.set(p.id, {
+        name: p.name,
+        pos: p.position ?? null,
+        team: p.team ?? null,
+        bye_week: p.bye_week ?? null,
+        injury_status: p.injury_status ?? null,
+      });
     }
   };
 
@@ -710,7 +716,41 @@ async function checkConflictRules(actions, snapshot, index) {
     }
   }
 
-  // Rule 3: the faab of adds not directly linked to another add should not
+  // Rule 3: the IR slot has a real capacity. An `ir` action for a full IR is a
+  // move Sleeper will refuse, so it is an error — but an `activate` in the same
+  // set frees a slot, so the two are netted rather than counted separately.
+  const slots = snapshot.league?.reserve_slots;
+  if (Number.isInteger(slots)) {
+    const me = snapshot.teams.find((t) => t.roster_id === snapshot.my_roster_id);
+    const inReserve = me?.reserve.length ?? 0;
+    const irs = actions.filter((a) => a.kind === 'ir');
+    const activates = actions.filter((a) => a.kind === 'activate');
+    const net = inReserve + irs.length - activates.length;
+    if (irs.length && net > slots) {
+      errors.push(
+        `${irs.length} ir action(s) [${irs.map((a) => a.id).join(', ')}] would put ${net} player(s) in ${slots} IR slot(s) (${inReserve} already there, ${activates.length} activate(s) to free one); activate or drop someone first`
+      );
+    }
+  }
+
+  // Rule 4: Sleeper only accepts certain injury designations into the IR slot.
+  // A warning, not an error: the league's reserve_allow_* flags don't map
+  // one-to-one onto every tag Sleeper shows (a PUP player sits on this IR
+  // today), so this flags a likely-refused move without blocking a report.
+  const irStatuses = snapshot.league?.ir_eligible_statuses;
+  if (Array.isArray(irStatuses) && irStatuses.length) {
+    for (const a of actions.filter((x) => x.kind === 'ir')) {
+      const status = (await resolvePlayer(index, a.player))?.injury_status ?? null;
+      const ok = status && irStatuses.some((s) => s.toLowerCase() === String(status).toLowerCase());
+      if (!ok) {
+        warnings.push(
+          `${a.id}: ${a.name} carries ${status ? `status "${status}"` : 'no injury designation'}, and this league's IR accepts ${irStatuses.join('/')} — Sleeper may refuse the move`
+        );
+      }
+    }
+  }
+
+  // Rule 5: the faab of adds not directly linked to another add should not
   // exceed faab_remaining. Warning only — Sleeper just skips an unfunded claim.
   const waiverAdds = actions.filter((a) => a.kind === 'add' && a.mode === 'waiver' && Number.isInteger(a.faab));
   const unlinkedAdds = waiverAdds.filter((a) => !waiverAdds.some((b) => b.id !== a.id && directlyLinked(a, b)));

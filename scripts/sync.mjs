@@ -7,6 +7,7 @@ import { readFile, writeFile, mkdir, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as sleeper from './sleeper.mjs';
+import { buildOutlook } from './outlook.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const config = JSON.parse(await readFile(path.join(root, 'config.json'), 'utf8'));
@@ -76,6 +77,7 @@ const teams = rosters.map((r) => {
   return {
     roster_id: r.roster_id,
     owner: ownerName.get(r.owner_id) ?? r.owner_id,
+    division: r.settings?.division ?? null,
     record: `${r.settings?.wins ?? 0}-${r.settings?.losses ?? 0}${r.settings?.ties ? `-${r.settings.ties}` : ''}`,
     // Sleeper splits points into whole + hundredths; ignoring the decimal
     // part shaves up to 0.99 off every team.
@@ -128,15 +130,53 @@ const snapshot = {
   // pre-season (free-agent) mode while adds were still first-come-first-serve.
   games_have_started: sleeper.kickoffHasHappened(schedule),
   week,
+  // Every league rule a recommendation might turn on, read from the API — not
+  // a subset. A rule that isn't here is a rule some routine will reconstruct
+  // from memory, which is the one thing this project exists to prevent.
   league: {
     name: league.name,
+    teams: league.total_rosters ?? league.settings?.num_teams ?? null,
+    divisions: league.settings?.divisions ?? 0,
+    roster_positions: league.roster_positions,
+    bench_slots: (league.roster_positions ?? []).filter((p) => p === 'BN').length,
+    reserve_slots: league.settings?.reserve_slots ?? 0,
+    taxi_slots: league.settings?.taxi_slots ?? 0,
+    // Which injury designations Sleeper will let into the IR slot. An `ir`
+    // recommendation for a player carrying anything else is a move the app
+    // will simply refuse.
+    ir_eligible_statuses: Object.entries({
+      Out: league.settings?.reserve_allow_out,
+      Doubtful: league.settings?.reserve_allow_doubtful,
+      NA: league.settings?.reserve_allow_na,
+      Sus: league.settings?.reserve_allow_sus,
+      DNR: league.settings?.reserve_allow_dnr,
+      COV: league.settings?.reserve_allow_cov,
+    }).filter(([, allowed]) => allowed === 1).map(([status]) => status),
     pass_td: league.scoring_settings?.pass_td,
     rec: league.scoring_settings?.rec,
-    roster_positions: league.roster_positions,
+    scoring: league.scoring_settings,
+    waiver_type: league.settings?.waiver_type === 2 ? 'faab' : String(league.settings?.waiver_type ?? ''),
     waiver_budget: league.settings?.waiver_budget,
+    waiver_bid_min: league.settings?.waiver_bid_min ?? 0,
+    waiver_clear_days: league.settings?.waiver_clear_days,
+    // Sleeper counts the week from Sunday, so 2 is Tuesday night's deadline
+    // for the Wednesday run.
+    waiver_day_of_week: league.settings?.waiver_day_of_week,
     trade_deadline: league.settings?.trade_deadline,
+    trade_review_days: league.settings?.trade_review_days,
+    veto_votes_needed: league.settings?.veto_votes_needed,
+    trades_disabled: league.settings?.disable_trades === 1,
+    draft_pick_trading: league.settings?.pick_trading === 1,
+    max_keepers: league.settings?.max_keepers ?? 0,
+    playoff_teams: league.settings?.playoff_teams,
     playoff_week_start: league.settings?.playoff_week_start,
+    // With league_average_match on, every team also plays the league median
+    // each week — a second result that rewards a high floor over a boom bench.
+    median_matchup: league.settings?.league_average_match === 1,
   },
+  // Team -> bye week for all 32 NFL teams, so any player's bye is derivable
+  // without re-fetching the schedule (and without anyone recalling one).
+  byes: Object.fromEntries([...byes.entries()].sort()),
   my_roster_id: config.roster_id,
   teams,
   matchup: myMatchup
@@ -151,6 +191,12 @@ const snapshot = {
   transactions: transactions.sort((a, b) => (b.at ?? 0) - (a.at ?? 0)),
   trending: { adds: trendResolve(trendingAdds), drops: trendResolve(trendingDrops) },
 };
+
+// The forward view, computed here so every routine reads the same numbers:
+// what my roster looks like in each week still to come, which slots go empty,
+// and which weeks need a plan. Nothing downstream should ever count positions
+// or recall a bye by hand. See scripts/outlook.mjs.
+snapshot.outlook = buildOutlook(snapshot);
 
 await mkdir(path.join(dataDir, 'league'), { recursive: true });
 await writeFile(path.join(dataDir, 'league', 'snapshot.json'), JSON.stringify(snapshot, null, 2));
@@ -184,19 +230,23 @@ if (hurt.length) {
   console.log(`\nInjury flags on my roster:`);
   for (const p of hurt) console.log(`  ${p.name} (${p.position}) — ${p.injury_status}`);
 }
-// Bye weeks on my roster, grouped — the weeks that need a plan, from data.
-const myByes = new Map();
-for (const p of [...myTeam.starters, ...myTeam.bench, ...myTeam.reserve].filter(Boolean)) {
-  if (!p.bye_week) continue;
-  if (!myByes.has(p.bye_week)) myByes.set(p.bye_week, []);
-  myByes.get(p.bye_week).push(`${p.name} (${p.position ?? '?'})`);
+// The forward view: roster shape now, then every week still to come. Past
+// weeks are not printed — nothing can be done about them, and a bye that has
+// already passed reads as a problem when it isn't one.
+const shape = snapshot.outlook.roster_shape;
+console.log(`\nRoster shape: ${Object.entries(shape.active_by_position).map(([pos, n]) => `${n} ${pos}`).join(', ')} active${shape.ir_used ? `, ${shape.ir_used} on IR` : ''}`);
+console.log(`  Bench ${shape.bench_slots - shape.bench_open}/${shape.bench_slots} used, IR ${shape.ir_used}/${shape.ir_slots} used.${shape.thin_positions.length ? ` No cover at: ${shape.thin_positions.join(', ')}.` : ''}`);
+console.log(`\nWeeks ${snapshot.outlook.from_week}-${snapshot.outlook.through_week} (playoffs W${snapshot.outlook.playoff_weeks[0]}-W${snapshot.outlook.playoff_weeks.at(-1)}, trade deadline W${snapshot.outlook.trade_deadline_week}):`);
+for (const w of snapshot.outlook.weeks) {
+  const bits = [];
+  if (w.byes) bits.push(`bye: ${w.byes.map((p) => `${p.name} (${p.pos})`).join(', ')}`);
+  if (w.empty_slots) bits.push(`CANNOT FILL ${w.empty_slots.join(', ')}`);
+  if (w.empty_slots_if_injured_stay_out) bits.push(`${w.empty_slots_if_injured_stay_out.join(', ')} empty unless ${w.injured_counted.map((p) => p.name).join('/')} is back`);
+  if (bits.length) console.log(`  W${String(w.week).padEnd(2)}${w.playoffs ? '*' : ' '} ${bits.join(' · ')}`);
 }
-if (myByes.size) {
-  console.log(`\nMy bye weeks (from the ${state.season} schedule):`);
-  for (const w of [...myByes.keys()].sort((a, b) => a - b)) {
-    console.log(`  W${String(w).padEnd(2)} ${myByes.get(w).join(', ')}`);
-  }
-}
+console.log(snapshot.outlook.crunch_weeks.length
+  ? `  Crunch weeks: ${snapshot.outlook.crunch_weeks.map((w) => `W${w}`).join(', ')} (* = fantasy playoffs)`
+  : `  No crunch weeks ahead.`);
 const freeAdds = snapshot.trending.adds.filter((t) => !t.rostered_in_league).slice(0, 10);
 console.log(`\nTop trending adds NOT rostered in this league:`);
 for (const t of freeAdds) console.log(`  ${t.name} (${t.position ?? '?'} ${t.team ?? '-'}) +${t.add_count}`);

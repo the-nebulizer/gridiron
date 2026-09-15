@@ -16,8 +16,13 @@ then read `data/league/snapshot.json`. That file is the only truth about who is 
 
 - League ID `1353093442397294592`, 12 teams; Ben = `JustBenwastaken`, roster_id **12**
 - **Superflex** (QB/2RB/2WR/TE/FLEX/SUPER_FLEX/K/DEF + 5 BN + 1 IR), **6-pt pass TDs**, **half-PPR**
-- **$100 FAAB**, waivers process **Wednesday**; trade deadline **W11**; playoffs 7 teams, **W15–17**
+- **$100 FAAB**, 2-day waiver clear, waivers process **Wednesday**; trade deadline **W11**; playoffs 7 teams, **W15–17**
+- **Keeper league** — `max_keepers: 1`, so a young player has value past this season. **Draft picks cannot be traded.** Trade review is 0 days (an accepted offer processes at once); 6 votes veto.
+- **Two divisions**, and `league_average_match` is on — every team also plays the **league median** each week, so a high floor wins twice and a boom bench wins once.
+- **One IR slot**, and Sleeper only accepts certain designations in it — read `league.reserve_slots` and `league.ir_eligible_statuses` from the snapshot rather than assuming IR is a free bench spot.
 - Scoring implication that generic rankings miss: with 6-pt pass TDs in superflex, a startable QB in SUPER_FLEX nearly always beats a WR/TE there.
+
+Every one of these is in the snapshot under `league`, read from the API on each sync. Quote the snapshot, not this list.
 
 ## Calendar calibration (check EVERY run)
 
@@ -26,6 +31,23 @@ The snapshot carries `season_start_date` and `games_have_started` (the latter is
 **Before `season_start_date`** (pre-season): unrostered players are largely first-come-first-serve — adds are instant and cost $0 FAAB, not Wednesday bids (confirm from the snapshot: `free_agent` transactions completing at creation time = FCFS mode). Recommend "add NOW", never "bid and wait". No games exist yet: no points, no inactives, no start/sit urgency; injury tags are camp designations. A routine that fires when its job doesn't exist yet (e.g. Sunday inactives with no Sunday games) writes a one-paragraph report saying exactly that and stops.
 
 **After kickoff**: players lock to waivers per league rules (Wednesday processing, FAAB bids) and the skills' normal guidance applies.
+
+## Forward awareness (every recommendation, not just this week's)
+
+A recommendation that only weighs the current week is how a roster ends up with four QBs and one TE, or with its kicker and defense on bye in the same week and no FAAB left to cover it. Every sync computes `snapshot.outlook` (`scripts/outlook.mjs`) and every routine reads it:
+
+- `roster_shape` — how many I have at each position, how many the lineup demands, which bench and IR slots are open, and `thin_positions`: the positions with no cover if one body is lost.
+- `weeks` — for **every week still to come**, who is on bye and which starting slots cannot be filled at all. The question is solved as a real assignment against the league's slots, so FLEX and SUPER_FLEX are accounted for; a bare count per position is not an answer.
+- `crunch_weeks`, `playoff_weeks`, `weeks_until_trade_deadline` — what to plan budget and trades around.
+
+Never count a position by hand, and never state a bye week from memory — both are already computed. Before recommending a swap, check what it does to the rest of the season:
+
+```
+node scripts/outlook.mjs                          # the roster as it stands
+node scripts/outlook.mjs --add <id> --drop <id>   # the same view if I made that move
+```
+
+A move that fixes one week and empties a slot in another is a trade-off to state plainly in the report, never a hidden cost. Weeks 15–17 are the fantasy playoffs and count for more than a Week 3 upgrade.
 
 ## Publishing a report (every scheduled run, without exception)
 
@@ -57,6 +79,7 @@ Reports in `reports/` and the dashboard's own copy are written for Ben, not for 
 
 - `config.json` — league/user IDs (public data, committed)
 - `scripts/sleeper.mjs` — API client; `scripts/sync.mjs` — snapshot builder; `scripts/actions.mjs` — compiles report action blocks into `reports/actions.json`
+- `scripts/outlook.mjs` — the forward view: positional counts, and every week ahead I can't field a legal lineup. Runs inside every sync; also a what-if tool (`--add` / `--drop`)
 - `scripts/league-activity.mjs` — what the other 11 managers have done, and who they dropped that's still claimable
 - `data/` — gitignored cache (`players.json` refreshed when >24h old; `league/snapshot.json` per sync)
 - `.claude/skills/` — `/lineup`, `/waivers`, `/trade`, `/inactives`
