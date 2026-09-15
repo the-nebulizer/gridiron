@@ -131,6 +131,8 @@ node scripts/actions.mjs                 # compile newest report per type -> rep
 
 Lifecycle states are computed with the same tests the dashboard applies live (section 3), so the compiler and the page always agree about what "done" means.
 
+The `state` a compiled action carries is a note from compile time, not an instruction: `docs/index.html` recomputes every action's state against live Sleeper rosters on each refresh and that recomputation wins. So an action compiled as `gone` renders as open again if the player comes back — which is the behaviour you want, and the reason the page must never be made to trust the field.
+
 Behaviour:
 
 - Requires `data/league/snapshot.json`. Fails if it is missing or its `fetched_at` is more than 3 hours old ("run `node scripts/sync.mjs` first").

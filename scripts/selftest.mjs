@@ -320,7 +320,7 @@ console.log('\noutlook — counts are not an answer; the assignment is');
 const outlookSnap = (starters, bench, reserve = []) => ({
   week: 1,
   my_roster_id: 1,
-  league: { roster_positions: [...SLOTS, 'BN'], reserve_slots: 1, playoff_week_start: 15, trade_deadline: 11 },
+  league: { roster_positions: [...SLOTS, 'BN', 'BN', 'BN', 'BN', 'BN'], reserve_slots: 1, playoff_week_start: 15, trade_deadline: 11 },
   teams: [{ roster_id: 1, starters, bench, reserve }],
 });
 
@@ -354,6 +354,14 @@ const outlookSnap = (starters, bench, reserve = []) => ({
   check('a player on IR is not counted as active', o.roster_shape.active_by_position.RB === 4 && !o.roster_shape.active_by_position.RB5, JSON.stringify(o.roster_shape.active_by_position));
   check('...and shows up under reserve instead', o.roster_shape.reserve_by_position.RB === 1, JSON.stringify(o.roster_shape.reserve_by_position));
   check('past weeks are not reported', o.weeks[0].week === 1 && o.from_week === 1, String(o.from_week));
+  check('open roster room counts bodies against total capacity', o.roster_shape.bench_open === 1, `bench_open=${o.roster_shape.bench_open}`);
+}
+{
+  // An empty starting slot must not read as extra bench room: the roster cap
+  // is on the whole active roster, so 14 bodies in 15 places is one space.
+  const starters = [P.qb1, P.rb1, P.rb2, P.wr1, P.wr2, P.te1, P.wr3, null, P.k1, P.df1];
+  const o = buildOutlook(outlookSnap(starters, [P.qb3, P.rb4, P.rb5, P.wr4], [P.rb3]));
+  check('an empty starting slot does not inflate open roster room', o.roster_shape.bench_open === 2, `bench_open=${o.roster_shape.bench_open} (13 bodies, 15 places)`);
 }
 {
   const base = outlookSnap([P.qb1, P.rb1, P.rb2, P.wr1, P.wr2, P.te1, P.wr3, P.qb2, P.k1, P.df1], [P.qb3, P.rb4, P.rb5, P.wr4], [P.rb3]);
@@ -368,6 +376,44 @@ const outlookSnap = (starters, bench, reserve = []) => ({
     buildOutlook({ week: 1, my_roster_id: 1, league: { roster_positions: ['QB', 'LOLWUT'] }, teams: [{ roster_id: 1, starters: [P.qb1], bench: [], reserve: [] }] });
   } catch { threw = true; }
   check('an unknown slot throws rather than silently under-reporting a hole', threw);
+}
+
+// ---- 6. the command line itself -------------------------------------------
+// A what-if tool that ignores an argument answers "this move changes nothing"
+// when it has in fact ignored the move. That is worse than crashing.
+
+console.log('\ncommand line — a misunderstood argument must never look like an answer');
+
+function runOutlook(dir, args) {
+  const r = spawnSync(process.execPath, ['scripts/outlook.mjs', ...args], { cwd: dir, encoding: 'utf8' });
+  return { code: r.status ?? 1, out: `${r.stdout ?? ''}${r.stderr ?? ''}` };
+}
+
+{
+  const dir = await sandbox(fixture(), {});
+  const spaced = runOutlook(dir, ['--add', 'fa1', '--drop', 'qb3']);
+  const equals = runOutlook(dir, ['--add=fa1', '--drop=qb3']);
+  check('--add <id> is honoured', spaced.code === 0 && /add Free One/.test(spaced.out), spaced.out);
+  check('--add=<id> is honoured too, not silently dropped', equals.code === 0 && /add Free One/.test(equals.out), equals.out);
+  check('...and both forms agree', spaced.out === equals.out, 'the two forms produced different output');
+
+  const unknown = runOutlook(dir, ['--bogus']);
+  check('an unrecognised argument is an error, not a shrug', unknown.code === 2 && /Unknown argument/.test(unknown.out), unknown.out);
+
+  const missingValue = runOutlook(dir, ['--add']);
+  check('a flag with no value is an error', missingValue.code === 2 && /needs a player id/.test(missingValue.out), missingValue.out);
+
+  const badDrop = runOutlook(dir, ['--drop', 'not-on-my-roster']);
+  check('dropping someone who is not on the roster is an error', badDrop.code === 2 && /Cannot drop/.test(badDrop.out), badDrop.out);
+
+  const plain = runOutlook(dir, []);
+  check('no arguments prints the roster as it stands', plain.code === 0 && /as it stands/.test(plain.out), plain.out);
+}
+
+{
+  const dir = await sandbox(fixture(), {});
+  const r = runActions(dir, ['--check', 'reports/does-not-exist.md']);
+  check('--check on a missing file says so instead of throwing', r.code === 1 && /no such file/.test(r.out) && !/at async/.test(r.out), r.out);
 }
 
 // ---- done ------------------------------------------------------------------

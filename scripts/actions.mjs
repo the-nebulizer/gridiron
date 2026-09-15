@@ -160,7 +160,15 @@ async function resolvePlayer(index, id) {
 // ---- parsing the ```actions block out of a report ----
 
 async function loadReportBlock(filePath) {
-  const raw = await readFile(filePath, 'utf8');
+  let raw;
+  try {
+    raw = await readFile(filePath, 'utf8');
+  } catch (e) {
+    // A routine runs --check on a path it built from today's date; a typo
+    // there used to surface as a raw Node stack trace, which reads like the
+    // tool is broken rather than like the filename is wrong.
+    return { error: e.code === 'ENOENT' ? 'no such file' : `could not read it: ${e.message}` };
+  }
   const re = /```actions[ \t]*\r?\n([\s\S]*?)\r?\n```/g;
   const first = re.exec(raw);
   if (!first) return { error: 'no fenced ```actions``` block found' };

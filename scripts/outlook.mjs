@@ -179,7 +179,11 @@ export function buildOutlook(snapshot, { add = [], drop = [] } = {}) {
       reserve_by_position: countByPosition(reserve),
       active_count: active.length,
       bench_slots: benchSlots,
-      bench_open: Math.max(benchSlots - Math.max(active.length - slotNames.length, 0), 0),
+      // Sleeper caps the ACTIVE roster as a whole (starting slots + bench),
+      // not each section, so open room is capacity minus bodies. Deriving it
+      // as "bench minus (active - starting slots)" over-counted whenever a
+      // starting slot sat empty — exactly when you most need the number.
+      bench_open: Math.max(slotNames.length + benchSlots - active.length, 0),
       ir_slots: irSlots,
       ir_used: reserve.length,
       ir_open: Math.max(irSlots - reserve.length, 0),
@@ -193,11 +197,35 @@ export function buildOutlook(snapshot, { add = [], drop = [] } = {}) {
 // ---- CLI ----
 
 if (import.meta.url === `file://${process.argv[1]}`) {
+  // Parsed strictly: an argument this doesn't understand is an error, never a
+  // shrug. The old version matched only the "--add <id>" form by looking at
+  // the previous token, so "--add=11834" silently added nobody and printed an
+  // unchanged roster — a what-if tool answering "this move changes nothing"
+  // when it had in fact ignored the move.
+  const usage = 'Usage: node scripts/outlook.mjs [--add <id>]... [--drop <id>]... [--json]';
   const args = process.argv.slice(2);
-  const asJson = args.includes('--json');
-  const collect = (flag) => args.flatMap((a, i) => (args[i - 1] === flag ? [a] : []));
-  const addIds = collect('--add');
-  const dropIds = collect('--drop');
+  const parsed = { add: [], drop: [], json: false };
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i];
+    if (a === '--json') { parsed.json = true; continue; }
+    const inline = a.match(/^--(add|drop)=(.+)$/);
+    if (inline) { parsed[inline[1]].push(inline[2]); continue; }
+    if (a === '--add' || a === '--drop') {
+      const value = args[i + 1];
+      if (value === undefined || value.startsWith('--')) {
+        console.error(`${a} needs a player id.\n${usage}`);
+        process.exit(2);
+      }
+      parsed[a.slice(2)].push(value);
+      i++;
+      continue;
+    }
+    console.error(`Unknown argument "${a}".\n${usage}`);
+    process.exit(2);
+  }
+  const asJson = parsed.json;
+  const addIds = parsed.add;
+  const dropIds = parsed.drop;
 
   const snapshot = JSON.parse(await readFile(path.join(root, 'data', 'league', 'snapshot.json'), 'utf8'));
   const ageHours = (Date.now() - new Date(snapshot.fetched_at).getTime()) / 3600000;
@@ -233,6 +261,17 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       injury_status: p.injury_status ?? null,
     };
   };
+
+  // A drop id that isn't actually on the roster would drop nobody and quietly
+  // report the status quo — the same silent-wrong-answer failure as above.
+  const me = snapshot.teams.find((t) => t.roster_id === snapshot.my_roster_id);
+  const mine = new Set([...me.starters, ...me.bench, ...me.reserve].filter(Boolean).map((p) => p.id));
+  for (const id of dropIds) {
+    if (!mine.has(id)) {
+      console.error(`Cannot drop "${id}" — not on my roster. Roster ids: ${[...mine].join(', ')}`);
+      process.exit(2);
+    }
+  }
 
   const add = [];
   for (const id of addIds) add.push(await resolveAdd(id));
