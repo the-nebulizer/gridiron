@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-09-15T04:43:53.894Z",
+  "compiled_at": "2026-09-15T12:06:48.377Z",
   "season": "2026",
   "week": 2,
   "games_have_started": true,
@@ -28,9 +28,9 @@
   },
   "sources": {
     "waivers": {
-      "report": "2026-09-14-waivers.md",
+      "report": "2026-09-15-waivers.md",
       "week": 2,
-      "verdict": "Claim Vele now; send the Cousins + Meyers offer to Tally241; only if that's declined by Tuesday night, claim Mayer by dropping Meyers.",
+      "verdict": "Claim Devaughn Vele now for $15, no drop needed; if the Cousins/Meyers trade to Tally241 falls through by Tuesday night, also claim Mike Gesicki for $8 by dropping Meyers to fill the Week 11 tight end hole.",
       "next_check": "Lineup, Thu 7am",
       "stale": false
     },
@@ -60,7 +60,7 @@
     {
       "id": "waivers:add:11834",
       "source": "waivers",
-      "report": "2026-09-14-waivers.md",
+      "report": "2026-09-15-waivers.md",
       "kind": "add",
       "week": 2,
       "player": "11834",
@@ -73,29 +73,29 @@
       "needs_slot": true,
       "urgency": "by_tuesday",
       "deadline_label": "claims process Wed morning",
-      "why": "Vele is New Orleans's real WR2 by role with Tyson out, and the best add on this week's board."
+      "why": "Locked in as Saints' clear WR2 with Tyson out multiple more weeks; turned 82 snaps into 7-69-1 and remains the top add in the league."
     },
     {
-      "id": "waivers:add:9482",
+      "id": "waivers:add:4993",
       "source": "waivers",
-      "report": "2026-09-14-waivers.md",
+      "report": "2026-09-15-waivers.md",
       "kind": "add",
       "week": 2,
       "if_not": "trades:trade:8",
-      "player": "9482",
-      "name": "Michael Mayer",
+      "player": "4993",
+      "name": "Mike Gesicki",
       "pos": "TE",
-      "team": "LV",
+      "team": "CIN",
       "drop": "5947",
       "drop_name": "Jakobi Meyers",
       "mode": "waiver",
-      "faab": 6,
+      "faab": 8,
       "consumes": [
         "5947"
       ],
       "urgency": "optional",
       "deadline_label": "claims process Wed morning",
-      "why": "Meyers is offered in the Cousins trade and can't be dropped while it's pending — fallback if Tally241 declines by Tuesday night."
+      "why": "Bengals' clear lead TE (5-78-1, most team targets), unlike Mayer's closing Bowers-return window — fills the Week 11 TE hole. Meyers can't drop while the Cousins trade is pending."
     },
     {
       "id": "trades:trade:8",
