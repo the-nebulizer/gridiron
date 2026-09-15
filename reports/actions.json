@@ -1,7 +1,7 @@
 {
-  "compiled_at": "2026-09-15T03:06:14.916Z",
+  "compiled_at": "2026-09-15T04:43:53.894Z",
   "season": "2026",
-  "week": 1,
+  "week": 2,
   "games_have_started": true,
   "roster": {
     "starters": [
@@ -39,21 +39,21 @@
       "week": 1,
       "verdict": "Nothing to change — Week 1 is final, all ten starters played, and you won 141.2–100.74.",
       "next_check": "Inactives, Sun 10am",
-      "stale": false
+      "stale": true
     },
     "trades": {
       "report": "2026-09-14-trades.md",
       "week": 1,
       "verdict": "Two trades worth sending: Cousins + Meyers to Tally241 for Aaron Jones, and Bryce Young to amandaberry for Brian Robinson.",
       "next_check": "Waivers, Tue 7am",
-      "stale": false
+      "stale": true
     },
     "inactives": {
       "report": "2026-09-14-inactives.md",
       "week": 1,
       "verdict": "Nothing to check — Week 1 is over and Week 2 games are still days out.",
       "next_check": "Trades, Mon 7am",
-      "stale": false
+      "stale": true
     }
   },
   "actions": [

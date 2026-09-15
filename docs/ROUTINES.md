@@ -4,7 +4,9 @@
 
 **Update (2026-09-14, later)**: the paste-ins are done — step 5 (plus the bye/inactives phrasing) is live in all four weekly routines, and steps 1–3, 4, 5, 7 are live in the watcher. Still pending: both model changes (watcher and inactives → Haiku 4.5), both cron changes (inactives and watcher schedules), and turning on email notifications for all five. The live prompts were written from the corrected text below, so every routine now also compiles `reports/actions.json` before publishing.
 
-The five scheduled routines live in the claude.ai routines UI, not in this repo. Their prompts were created outside agent control and the API refuses to edit them, so every change below is something **Ben pastes in by hand**. This page is the checklist for that.
+The five scheduled routines live in the claude.ai routines UI, not in this repo. Their prompts **can** be edited from a Claude Code session (see the 2026-09-14 update above — the earlier "the API refuses to edit them" note was wrong); notification settings still cannot, so those remain Ben's to change in the UI. This page is the checklist either way.
+
+**Keep the blocks below in step with the live prompts.** They drifted once already: the paste-in text omitted `reports/actions.json` from the publish command long after the live prompts had it, so re-pasting from this page would have silently un-fixed the card.
 
 Times: Central is CDT (UTC-5) until clocks fall back on **Sunday Nov 1, 2026**, then CST (UTC-6). Cron is evaluated in UTC, so every routine drifts an hour earlier in local time on Nov 1 unless its cron is changed.
 
@@ -72,6 +74,14 @@ The repo-side fix is in PR #1: `scripts/publish-report.mjs`, the "Publishing a r
 
 **Until PR #1 merges, every scheduled run clones `main`, finds none of the fix, and strands its report on a session branch the same way as before. The next fire is the Sunday inactives run.** Merging PR #1 first is the single highest-leverage action on this page.
 
+## Paste-in text — one sentence for all four weekly routines (2026-09-15)
+
+Each weekly prompt's step 4 ends with "Then run `node scripts/actions.mjs`; if it fails, fix the block it names and re-run". Replace that sentence with:
+
+```
+Then validate the block you just wrote: node scripts/actions.mjs --check reports/<YYYY-MM-DD>-<type>.md — strict; if it fails, fix the block and re-run, never bypass it. Then compile the card: node scripts/actions.mjs. The compile also reads the other three routines' newest reports; if it notes an action of theirs as done, gone or drifted, that is the world having moved on, not an error — do not try to fix their reports and do not stop.
+```
+
 ## Paste-in text — the four weekly routines
 
 In each of the Waivers, Lineup, Trades and Inactives prompts, **replace step 5** ("Commit only that report file to main ... and push") with the block for that routine.
@@ -79,7 +89,7 @@ In each of the Waivers, Lineup, Trades and Inactives prompts, **replace step 5**
 ### Waivers — step 5
 
 ```
-5. Publish, or the dashboard never sees it. This session runs on its own branch, so a plain git push strands the report. Run: node scripts/publish-report.mjs reports/<YYYY-MM-DD>-waivers.md "report: week <N> waivers" --replace — it pushes to main and verifies the report is actually there. If it reports failure, it will have pushed a fallback branch: say so and say the report is NOT on the dashboard. Finish with one plain sentence stating whether origin/main contains the report. Never end the run without that sentence.
+5. Publish, or the dashboard never sees it. This session runs on its own branch, so a plain git push strands the report. Run: node scripts/publish-report.mjs reports/<YYYY-MM-DD>-waivers.md reports/actions.json "report: week <N> waivers" --replace — it pushes to main and verifies the report AND reports/actions.json are actually there. If it reports failure, it will have pushed a fallback branch: say so and say the report is NOT on the dashboard. Finish with one plain sentence stating whether origin/main contains the report. Never end the run without that sentence.
 ```
 
 Also in the Waivers prompt, replace the phrase
@@ -93,13 +103,13 @@ with
 ### Lineup — step 5
 
 ```
-5. Publish, or the dashboard never sees it. This session runs on its own branch, so a plain git push strands the report. Run: node scripts/publish-report.mjs reports/<YYYY-MM-DD>-lineup.md "report: week <N> lineup" --replace — it pushes to main and verifies the report is actually there. If it reports failure, it will have pushed a fallback branch: say so and say the report is NOT on the dashboard. Finish with one plain sentence stating whether origin/main contains the report. Never end the run without that sentence.
+5. Publish, or the dashboard never sees it. This session runs on its own branch, so a plain git push strands the report. Run: node scripts/publish-report.mjs reports/<YYYY-MM-DD>-lineup.md reports/actions.json "report: week <N> lineup" --replace — it pushes to main and verifies the report AND reports/actions.json are actually there. If it reports failure, it will have pushed a fallback branch: say so and say the report is NOT on the dashboard. Finish with one plain sentence stating whether origin/main contains the report. Never end the run without that sentence.
 ```
 
 ### Trades — step 5
 
 ```
-5. Publish, or the dashboard never sees it. This session runs on its own branch, so a plain git push strands the report. Run: node scripts/publish-report.mjs reports/<YYYY-MM-DD>-trades.md "report: week <N> trades" --replace — it pushes to main and verifies the report is actually there. If it reports failure, it will have pushed a fallback branch: say so and say the report is NOT on the dashboard. Finish with one plain sentence stating whether origin/main contains the report. Never end the run without that sentence.
+5. Publish, or the dashboard never sees it. This session runs on its own branch, so a plain git push strands the report. Run: node scripts/publish-report.mjs reports/<YYYY-MM-DD>-trades.md reports/actions.json "report: week <N> trades" --replace — it pushes to main and verifies the report AND reports/actions.json are actually there. If it reports failure, it will have pushed a fallback branch: say so and say the report is NOT on the dashboard. Finish with one plain sentence stating whether origin/main contains the report. Never end the run without that sentence.
 ```
 
 Also in the Trades prompt, replace the phrase
@@ -113,7 +123,7 @@ with
 ### Inactives — step 5
 
 ```
-5. Publish, or the dashboard never sees it. This session runs on its own branch, so a plain git push strands the report. Run: node scripts/publish-report.mjs reports/<YYYY-MM-DD>-inactives.md "report: week <N> inactives" --replace — it pushes to main; --replace means this run's report supersedes any earlier one from today and verifies the report is actually there. If it reports failure, it will have pushed a fallback branch: say so and say the report is NOT on the dashboard. Finish with one plain sentence stating whether origin/main contains the report. Never end the run without that sentence.
+5. Publish, or the dashboard never sees it. This session runs on its own branch, so a plain git push strands the report. Run: node scripts/publish-report.mjs reports/<YYYY-MM-DD>-inactives.md reports/actions.json "report: week <N> inactives" --replace — it pushes to main; --replace means this run's report supersedes any earlier one from today, and it verifies the report AND reports/actions.json are actually there. If it reports failure, it will have pushed a fallback branch: say so and say the report is NOT on the dashboard. Finish with one plain sentence stating whether origin/main contains the report. Never end the run without that sentence.
 ```
 
 Also in the Inactives prompt, add this sentence to the opening paragraph:

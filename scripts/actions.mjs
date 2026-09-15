@@ -8,10 +8,26 @@
 // only). Staleness only drops `start` actions at compile time; every other
 // kind stays open. Every compiled action carries its source's `week`.
 //
+// Two modes, deliberately different in strictness:
+//
+//   --check <file>  strict. Everything must be doable RIGHT NOW. This is the
+//                   write-time gate: a routine runs it on the report it just
+//                   wrote, and a report that names a move you cannot make is
+//                   a bug in the report.
+//   (no args)       compile. Runs over the newest report of every type,
+//                   including ones written days ago, so an action may since
+//                   have been DONE (you made the move) or GONE (someone else
+//                   took the player). Those are expected outcomes, not report
+//                   bugs: they are carried through with a `state` so the card
+//                   can show them, and only genuinely open actions are held
+//                   to the strict rules. Acting on the advice used to break
+//                   the next routine's compile outright — see docs/ACTIONS.md.
+//
 // Usage:
-//   node scripts/actions.mjs                 # validate newest report per type, write reports/actions.json
-//   node scripts/actions.mjs --check <file>  # validate one report only, no write
+//   node scripts/actions.mjs                 # compile newest report per type -> reports/actions.json
+//   node scripts/actions.mjs --check <file>  # strict validation of one report, no write
 import { readFile, writeFile, readdir } from 'node:fs/promises';
+import { SLOT_ELIGIBILITY } from './outlook.mjs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -162,10 +178,108 @@ async function loadReportBlock(filePath) {
   }
 }
 
+// ---- my starting lineup, by slot ----
+// snapshot.teams[].starters is positional: index i is roster_positions' i-th
+// non-BN slot. Both helpers rely on that alignment, which sync.mjs preserves.
+function myStarterRow(snapshot) {
+  const me = snapshot.teams.find((t) => t.roster_id === snapshot.my_roster_id);
+  const slots = (snapshot.league.roster_positions ?? []).filter((p) => p !== 'BN');
+  return slots.map((slot, i) => ({ slot, player: me?.starters?.[i] ?? null }));
+}
+
+// Which slot a player is currently starting in, or null if he isn't starting.
+function starterSlotOf(snapshot, playerId) {
+  const row = myStarterRow(snapshot).find((r) => r.player?.id === playerId);
+  return row ? row.slot : null;
+}
+
+// True when at least one slot of that name has nobody in it.
+function slotIsEmpty(snapshot, slot) {
+  return myStarterRow(snapshot).some((r) => r.slot === slot && !r.player);
+}
+
+// ---- lifecycle: has the world already moved past this action? ----
+
+// The same done/gone tests docs/ACTIONS.md section 3 defines and docs/index.html
+// applies live. Computed from the RAW action (before validation) so that an
+// action which is already done or gone is never held to "can you still do
+// this" rules it cannot possibly pass.
+function lifecycleState(action, snapshot, index) {
+  if (typeof action !== 'object' || action === null || Array.isArray(action)) return 'open';
+  const myId = snapshot.my_roster_id;
+  const mine = index.teamIds.get(myId) ?? new Set();
+  const starters = index.teamStarterIds.get(myId) ?? new Set();
+  const reserve = index.teamReserveIds.get(myId) ?? new Set();
+  const p = action.player;
+
+  switch (action.kind) {
+    case 'add': {
+      if (!isNonEmptyString(p)) return 'open';
+      if (mine.has(p)) return 'done';
+      const owner = index.ownerOf.get(p);
+      return owner !== undefined ? 'gone' : 'open';
+    }
+    case 'drop':
+      return isNonEmptyString(p) && !mine.has(p) ? 'done' : 'open';
+    case 'start': {
+      if (!isNonEmptyString(p)) return 'open';
+      if (starters.has(p) && (!isNonEmptyString(action.for) || !starters.has(action.for))) return 'done';
+      return mine.has(p) ? 'open' : 'gone';
+    }
+    case 'ir':
+      if (!isNonEmptyString(p)) return 'open';
+      if (reserve.has(p)) return 'done';
+      return mine.has(p) ? 'open' : 'gone';
+    case 'activate':
+      if (!isNonEmptyString(p)) return 'open';
+      if (mine.has(p) && !reserve.has(p)) return 'done';
+      return reserve.has(p) ? 'open' : 'gone';
+    case 'trade': {
+      const get = Array.isArray(action.get) ? action.get : [];
+      const give = Array.isArray(action.give) ? action.give : [];
+      if (get.length && get.every((id) => mine.has(id))) return 'done';
+      // A player you no longer have cannot be given away: the offer is moot,
+      // whether it was accepted, withdrawn, or the player went elsewhere.
+      if (give.length && !give.every((id) => mine.has(id))) return 'gone';
+      // Same the other way: the other manager may have moved the player this
+      // offer asks for, which kills the offer without anyone answering it.
+      const withIds = index.teamIds.get(Number(action.with));
+      if (withIds && get.length && !get.every((id) => withIds.has(id))) return 'gone';
+      return 'open';
+    }
+    default:
+      return 'open';
+  }
+}
+
 // ---- per-action validation + build ----
 
-async function validateAndBuildAction(action, i, snapshot, index, problems) {
+// Shape and ids are always checked — a garbled id is a bug in any mode.
+// What differs is how a mismatch with the CURRENT world is treated:
+//
+//   strict (--check, at write time)  an error. A report should never be
+//                                    written naming a move you cannot make.
+//   compile (over older reports)     a warning, and the stale part of the
+//                                    action is dropped rather than the whole
+//                                    run. Reality moving on is not a bug in
+//                                    a report written before it moved.
+//
+// An action already `done` or `gone` skips these checks altogether: the
+// answer is knowably no and saying so again is noise.
+async function validateAndBuildAction(action, i, snapshot, index, problems, opts = {}) {
+  const { state = 'open', strict = true, warnings = [] } = opts;
+  const live = state === 'open';
+  const requireWorld = live && strict;
   const push = (msg) => problems.push(`action[${i}]: ${msg}`);
+  const pushWorld = (msg) => { if (requireWorld) problems.push(`action[${i}]: ${msg}`); };
+  // Returns true when the mismatch was fatal (strict mode), so the caller can
+  // decide what to keep when it wasn't.
+  const worldFail = (msg) => {
+    if (!live) return false;
+    if (strict) { push(msg); return true; }
+    warnings.push(`action[${i}] (${action.kind}): ${msg}`);
+    return false;
+  };
 
   if (typeof action !== 'object' || action === null || Array.isArray(action)) {
     push('must be an object');
@@ -237,7 +351,7 @@ async function validateAndBuildAction(action, i, snapshot, index, problems) {
 
     if (kind === 'add') {
       const owner = index.ownerOf.get(player);
-      if (owner !== undefined) {
+      if (owner !== undefined && requireWorld) {
         const oName = index.ownerName.get(owner) ?? String(owner);
         push(`(add) player ${player} (${resolved.name}) is already rostered by ${oName} (roster ${owner}) — not a free agent`);
         bad = true;
@@ -252,9 +366,14 @@ async function validateAndBuildAction(action, i, snapshot, index, problems) {
         if (!isNonEmptyString(action.drop)) {
           push('(add) drop must be a player id string');
           bad = true;
-        } else if (!myIds.has(action.drop)) {
-          push(`(add) drop id "${action.drop}" is not on my roster`);
-          bad = true;
+        } else if (!myIds.has(action.drop) && live) {
+          if (worldFail(`drop "${action.drop}" is no longer on my roster`)) {
+            bad = true;
+          } else {
+            // He already left, so the add no longer needs him gone — it needs
+            // a bench slot, which the sequencing rules will check for.
+            out.drop_gone = true;
+          }
         } else {
           const dropResolved = await resolvePlayer(index, action.drop);
           if (!dropResolved) {
@@ -273,9 +392,12 @@ async function validateAndBuildAction(action, i, snapshot, index, problems) {
         } else {
           const me = snapshot.teams.find((t) => t.roster_id === myId);
           const cap = me?.faab_remaining ?? 0;
-          if (!Number.isInteger(action.faab) || action.faab < 0 || action.faab > cap) {
-            push(`(add) faab must be an integer between 0 and my faab_remaining (${cap}), got ${JSON.stringify(action.faab)}`);
+          if (!Number.isInteger(action.faab) || action.faab < 0) {
+            push(`(add) faab must be a non-negative integer, got ${JSON.stringify(action.faab)}`);
             bad = true;
+          } else if (action.faab > cap && live) {
+            if (worldFail(`bid $${action.faab} is more than my remaining FAAB ($${cap})`)) bad = true;
+            else out.faab = action.faab;
           } else {
             out.faab = action.faab;
           }
@@ -284,28 +406,35 @@ async function validateAndBuildAction(action, i, snapshot, index, problems) {
     }
 
     if (kind === 'drop' && !myIds.has(player)) {
-      push(`(drop) player ${player} (${resolved.name}) is not on my roster`);
-      bad = true;
+      pushWorld(`(drop) player ${player} (${resolved.name}) is not on my roster`);
+      if (requireWorld) bad = true;
     }
 
     if (kind === 'start') {
       if (!myIds.has(player)) {
-        push(`(start) player ${player} (${resolved.name}) is not on my roster`);
-        bad = true;
+        pushWorld(`(start) player ${player} (${resolved.name}) is not on my roster`);
+        if (requireWorld) bad = true;
       }
       const nonBnSlots = (snapshot.league.roster_positions ?? []).filter((p) => p !== 'BN');
-      if (!isNonEmptyString(action.slot) || !nonBnSlots.includes(action.slot)) {
+      const slotOk = isNonEmptyString(action.slot) && nonBnSlots.includes(action.slot);
+      if (!slotOk) {
         push(`(start) slot must be one of ${[...new Set(nonBnSlots)].join(', ')} (got ${JSON.stringify(action.slot)})`);
         bad = true;
       } else {
         out.slot = action.slot;
+        // Sleeper will not accept a player into a slot his position can't
+        // fill, so a report that asks for it is asking for a move Ben cannot
+        // make. Roster membership alone used to be the whole check — a kicker
+        // in the QB slot validated clean.
+        const eligible = SLOT_ELIGIBILITY[action.slot];
+        if (eligible && resolved.pos && !eligible.includes(resolved.pos)) {
+          push(`(start) ${resolved.name} is a ${resolved.pos}, which cannot fill the ${action.slot} slot (${action.slot} takes ${eligible.join('/')})`);
+          bad = true;
+        }
       }
       if (action.for !== undefined) {
         if (!isNonEmptyString(action.for)) {
           push('(start) for must be a player id string');
-          bad = true;
-        } else if (!myStarters.has(action.for)) {
-          push(`(start) for id "${action.for}" is not currently in my starters`);
           bad = true;
         } else {
           const forResolved = await resolvePlayer(index, action.for);
@@ -316,11 +445,29 @@ async function validateAndBuildAction(action, i, snapshot, index, problems) {
             out.for = action.for;
             out.for_name = forResolved.name;
           }
+          if (live && !myStarters.has(action.for)) {
+            if (worldFail(`"${action.for}" (${forResolved?.name ?? 'unknown'}) is no longer in my starters`)) bad = true;
+          } else if (live && slotOk) {
+            // The swap has to be in place. If the benched player is holding a
+            // DIFFERENT slot, his slot is left empty and the lineup is
+            // illegal — "never emit an action that leaves a starting slot
+            // empty", which nothing enforced before.
+            const forSlot = starterSlotOf(snapshot, action.for);
+            if (forSlot !== null && forSlot !== action.slot) {
+              if (worldFail(`${resolved.name} is going into ${action.slot} but ${forResolved?.name ?? action.for} is starting at ${forSlot} — that leaves ${forSlot} empty; bench the player who holds ${action.slot} instead`)) bad = true;
+            }
+          }
+        }
+      } else if (live && slotOk) {
+        // No `for` means the named slot must already be empty, otherwise the
+        // instruction silently displaces whoever is in it.
+        if (!slotIsEmpty(snapshot, action.slot) && worldFail(`${action.slot} is already filled, so this needs a "for" naming the starter being benched`)) {
+          bad = true;
         }
       }
     }
 
-    if (kind === 'ir') {
+    if (kind === 'ir' && requireWorld) {
       if (!myIds.has(player)) {
         push(`(ir) player ${player} (${resolved.name}) is not on my roster`);
         bad = true;
@@ -330,7 +477,7 @@ async function validateAndBuildAction(action, i, snapshot, index, problems) {
       }
     }
 
-    if (kind === 'activate' && !myReserve.has(player)) {
+    if (kind === 'activate' && requireWorld && !myReserve.has(player)) {
       push(`(activate) player ${player} (${resolved.name}) is not in my reserve`);
       bad = true;
     }
@@ -360,7 +507,7 @@ async function validateAndBuildAction(action, i, snapshot, index, problems) {
         const giveNames = [];
         let giveOk = true;
         for (const gid of give) {
-          if (!myIds.has(gid)) {
+          if (!myIds.has(gid) && requireWorld) {
             push(`(trade) give id "${gid}" is not on my roster`);
             giveOk = false;
             continue;
@@ -389,7 +536,7 @@ async function validateAndBuildAction(action, i, snapshot, index, problems) {
         const getNames = [];
         let getOk = true;
         for (const gid of get) {
-          if (!withIds.has(gid)) {
+          if (!withIds.has(gid) && requireWorld) {
             push(`(trade) get id "${gid}" is not on roster ${withNum}`);
             getOk = false;
             continue;
@@ -445,7 +592,8 @@ async function validateAndBuildAction(action, i, snapshot, index, problems) {
 
 // ---- top-level block validation ----
 
-async function validateReportBlock(block, snapshot, index) {
+async function validateReportBlock(block, snapshot, index, { lifecycle = false } = {}) {
+  const driftWarnings = [];
   const problems = [];
   if (typeof block !== 'object' || block === null || Array.isArray(block)) {
     return { problems: ['actions block must be a JSON object'] };
@@ -465,13 +613,28 @@ async function validateReportBlock(block, snapshot, index) {
   const actionResults = []; // { index, ok, action }
   for (let i = 0; i < block.actions.length; i++) {
     const localProblems = [];
-    const built = await validateAndBuildAction(block.actions[i], i, snapshot, index, localProblems);
+    // In compile mode an action that is already done or gone is exempt from
+    // the "can you still do this" checks — the world moved, the report didn't
+    // lie. In --check mode everything is held to the strict standard.
+    const state = lifecycle ? lifecycleState(block.actions[i], snapshot, index) : 'open';
+    const built = await validateAndBuildAction(block.actions[i], i, snapshot, index, localProblems, {
+      state,
+      strict: !lifecycle,
+      warnings: driftWarnings,
+    });
+    if (built && state !== 'open') {
+      built.state = state;
+      // A finished or impossible action consumes nothing and needs no bench
+      // slot, so it must not trip the sequencing rules against live actions.
+      built.consumes = [];
+      delete built.needs_slot;
+    }
     actionResults.push({ index: i, ok: localProblems.length === 0, problems: localProblems, action: built });
     problems.push(...localProblems);
   }
 
-  if (problems.length) return { problems, actionResults };
-  return { block, stale, actions: actionResults.map((r) => r.action), actionResults };
+  if (problems.length) return { problems, actionResults, driftWarnings };
+  return { block, stale, actions: actionResults.map((r) => r.action), actionResults, driftWarnings };
 }
 
 // ---- newest-report-per-type selection ----
@@ -510,6 +673,7 @@ function finalizeAction(action, source, report, week) {
   const idKey = action.kind === 'trade' ? action.with : action.player;
   const id = action.id ?? `${source}:${action.kind}:${idKey}`;
   const out = { id, source, report, kind: action.kind, week };
+  if (action.state !== undefined) out.state = action.state;
   if (action.after !== undefined) out.after = action.after;
   if (action.if_not !== undefined) out.if_not = action.if_not;
   if (action.player !== undefined) {
@@ -676,9 +840,13 @@ function groupLinked(actions) {
 // check: the file's own actions plus reports/actions.json's other-source
 // actions). Returns { errors, warnings } — errors fail the run, the faab
 // warning does not.
-async function checkConflictRules(actions, snapshot, index) {
+async function checkConflictRules(allActions, snapshot, index) {
   const errors = [];
   const warnings = [];
+  // Done and gone actions are history: they hold no player, need no bench
+  // slot, and spend no FAAB. Counting them would manufacture conflicts with
+  // the live ones.
+  const actions = allActions.filter((a) => a.state === undefined || a.state === 'open');
 
   // Rule 1: two actions that consume the same rostered player must be
   // directly linked.
@@ -766,6 +934,11 @@ async function checkConflictRules(actions, snapshot, index) {
   return { errors, warnings };
 }
 
+const describe = (a) =>
+  a.kind === 'trade'
+    ? `trade with ${a.with_owner ?? a.with} (${(a.give_names ?? []).join(', ')} for ${(a.get_names ?? []).join(', ')})`
+    : `${a.kind} ${a.name ?? a.player}${a.for_name ? ` for ${a.for_name}` : ''}${a.drop_name ? ` (drop ${a.drop_name})` : ''}`;
+
 // ---- compile mode ----
 
 async function compile() {
@@ -774,6 +947,7 @@ async function compile() {
   const picks = await pickNewestReports();
 
   const problems = [];
+  const drift = [];
   const sources = {};
   const collected = []; // { action, source, report }
 
@@ -786,11 +960,12 @@ async function compile() {
       problems.push(`${rel(filePath)}: ${error}`);
       continue;
     }
-    const result = await validateReportBlock(block, snapshot, index);
+    const result = await validateReportBlock(block, snapshot, index, { lifecycle: true });
     if (result.problems) {
       problems.push(...result.problems.map((p) => `${rel(filePath)} ${p}`));
       continue;
     }
+    for (const w of result.driftWarnings ?? []) drift.push(`${rel(filePath)} ${w}`);
     sources[type] = {
       report: file,
       week: block.week,
@@ -865,9 +1040,20 @@ async function compile() {
 
   await writeFile(path.join(reportsDir, 'actions.json'), JSON.stringify(output, null, 2));
   const dependentCount = finalActions.filter((a) => a.after !== undefined || a.if_not !== undefined).length;
+  const done = finalActions.filter((a) => a.state === 'done');
+  const gone = finalActions.filter((a) => a.state === 'gone');
+  const openCount = finalActions.length - done.length - gone.length;
   console.log(
-    `wrote reports/actions.json — week ${output.week}, ${finalActions.length} action(s) (${dependentCount} dependent on another action), sources: ${Object.keys(sources).join(', ') || '(none)'}`
+    `wrote reports/actions.json — week ${output.week}, ${openCount} open action(s) (${dependentCount} dependent on another action), sources: ${Object.keys(sources).join(', ') || '(none)'}`
   );
+  // Say what has already happened rather than letting it pass in silence: a
+  // done action is advice that worked, a gone one is advice overtaken.
+  for (const a of done) console.log(`  done — ${describe(a)}`);
+  for (const a of gone) console.log(`  gone — ${describe(a)} (no longer possible)`);
+  // Parts of a still-open action that reality has overtaken. Not fatal here —
+  // the report was written before the move — but the next run of that routine
+  // should rewrite it, so say so every time.
+  for (const d of drift) console.error(`actions.mjs: note — ${d}`);
 }
 
 // ---- check mode ----

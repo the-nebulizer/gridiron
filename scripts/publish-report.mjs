@@ -141,12 +141,39 @@ function rebaseReplacing() {
   return rebase;
 }
 
+// reports/actions.json is COMPILED from the report files beside it. If the
+// rebase pulled another session's newer report onto this branch, the copy we
+// are about to publish was compiled without it — the card would disagree with
+// the reports it claims to summarise. Recompile before pushing, always.
+function recompileActionsAfterRebase() {
+  const compiled = 'reports/actions.json';
+  if (!files.includes(compiled)) return { ok: true };
+  try {
+    execFileSync(process.execPath, ['scripts/actions.mjs'], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+  } catch (e) {
+    return { ok: false, out: `Recompiling ${compiled} after the rebase failed:\n${`${e.stdout ?? ''}${e.stderr ?? ''}`.trim()}` };
+  }
+  if (tryGit('diff', '--quiet', '--', compiled).ok) return { ok: true };
+  git('add', '--', compiled);
+  const commit = tryGit('commit', '-m', `${message} (recompiled actions.json against the rebased reports)`, '--', compiled);
+  if (!commit.ok) return { ok: false, out: `Could not commit the recompiled ${compiled}: ${commit.out.split('\n').filter(Boolean).pop() ?? ''}` };
+  localBlobs.set(compiled, git('rev-parse', `HEAD:${compiled}`));
+  console.log(`Recompiled ${compiled} against the reports the rebase brought in.`);
+  return { ok: true };
+}
+
 let push = tryGit('push', 'origin', 'HEAD:main');
 if (!push.ok) {
   console.log(replace ? "Push rejected; rebasing on main (keeping this branch's version of any conflicted files given here) and retrying." : 'Push rejected; rebasing on main and retrying.');
   const rebase = replace ? rebaseReplacing() : tryGit('pull', '--rebase', 'origin', 'main');
   if (rebase.ok) {
-    push = tryGit('push', 'origin', 'HEAD:main');
+    const recompiled = recompileActionsAfterRebase();
+    if (recompiled.ok) {
+      push = tryGit('push', 'origin', 'HEAD:main');
+    } else {
+      console.error(recompiled.out);
+      push = { ok: false, out: 'Could not recompile reports/actions.json after the rebase; refusing to publish a card that disagrees with its reports.' };
+    }
   } else {
     // Leave nothing half-rebased behind, and do not push over a conflict.
     tryGit('rebase', '--abort');

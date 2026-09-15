@@ -32,9 +32,18 @@ The snapshot carries `season_start_date` and `games_have_started` (the latter is
 
 **After kickoff**: players lock to waivers per league rules (Wednesday processing, FAAB bids) and the skills' normal guidance applies.
 
-## Forward awareness (every recommendation, not just this week's)
+## Forward awareness (know what's coming; still decide for now)
 
-A recommendation that only weighs the current week is how a roster ends up with four QBs and one TE, or with its kicker and defense on bye in the same week and no FAAB left to cover it. Every sync computes `snapshot.outlook` (`scripts/outlook.mjs`) and every routine reads it:
+Recommendations are made for the week in front of us. What changed is that they are no longer *blind* to the rest of the season — a roster that ends up with four QBs and one TE, or with its kicker and defense on bye in the same week and no FAAB left, got there one defensible weekly decision at a time.
+
+So: **aware, not planning.** Decide on what helps now; let the future break a tie, and always say what a move costs later. Never bench a player, pass on an upgrade, or hold a claim purely to protect a later week — lineups are set weekly and rosters move constantly.
+
+Two exceptions, both hard constraints rather than preferences:
+
+- **FAAB is finite.** Don't spend to nothing ahead of a week the outlook says can't be filled. Name the reserve and what it's for.
+- **The trade deadline (W11) is a cutoff.** After it, a hole in the playoff weeks can only be fixed on waivers. A slot the outlook shows unfillable in `playoff_weeks` has to be raised before then.
+
+Every sync computes `snapshot.outlook` (`scripts/outlook.mjs`) and every routine reads it:
 
 - `roster_shape` — how many I have at each position, how many the lineup demands, which bench and IR slots are open, and `thin_positions`: the positions with no cover if one body is lost.
 - `weeks` — for **every week still to come**, who is on bye and which starting slots cannot be filled at all. The question is solved as a real assignment against the league's slots, so FLEX and SUPER_FLEX are accounted for; a bare count per position is not an answer.
@@ -47,18 +56,18 @@ node scripts/outlook.mjs                          # the roster as it stands
 node scripts/outlook.mjs --add <id> --drop <id>   # the same view if I made that move
 ```
 
-A move that fixes one week and empties a slot in another is a trade-off to state plainly in the report, never a hidden cost. Weeks 15–17 are the fantasy playoffs and count for more than a Week 3 upgrade.
+A move that fixes one week and empties a slot in another is a trade-off to state plainly in the report. The move can still be right; what's not allowed is making it silently.
 
 ## Publishing a report (every scheduled run, without exception)
 
 The dashboard reads `reports/` from **`main` only**. Scheduled runs happen on their own session branch, so an ordinary `git commit` + `git push` leaves the report where nobody will ever see it — the same as not writing it. Four reports were lost this way between Sep 3 and Sep 8, including a time-critical waiver call.
 
-Every report begins with the action block described in `docs/ACTIONS.md`, and `node scripts/actions.mjs` must pass — compiling `reports/actions.json` — before the report is published; publish the report and `reports/actions.json` together in the same command.
+Every report begins with the action block described in `docs/ACTIONS.md`. Validate the block you just wrote with `node scripts/actions.mjs --check reports/<file>.md` (strict — stop on failure), then compile the card with `node scripts/actions.mjs`, then publish the report and `reports/actions.json` together in the same command. The compile reads all four routines' newest reports and will note actions of *theirs* as done, gone or drifted — that is the world moving on, not your report being wrong, and never a reason to stop.
 
 So finish every run with:
 
 ```
-node scripts/publish-report.mjs reports/<file>.md reports/actions.json "report: week <N> <type>"
+node scripts/publish-report.mjs reports/<file>.md reports/actions.json "report: week <N> <type>" --replace
 ```
 
 It commits, pushes `HEAD:main`, rebases once if main moved, and if it still can't get there, pushes a branch and tells you to open a PR. **Never end a run with the report only on a session branch, and never end one silently — the final message must say where the report landed.**
@@ -80,6 +89,7 @@ Reports in `reports/` and the dashboard's own copy are written for Ben, not for 
 - `config.json` — league/user IDs (public data, committed)
 - `scripts/sleeper.mjs` — API client; `scripts/sync.mjs` — snapshot builder; `scripts/actions.mjs` — compiles report action blocks into `reports/actions.json`
 - `scripts/outlook.mjs` — the forward view: positional counts, and every week ahead I can't field a legal lineup. Runs inside every sync; also a what-if tool (`--add` / `--drop`)
+- The snapshot's `available` block is the real free-agent pool by position — `trending` is Sleeper-wide noise and hides most of it
 - `scripts/league-activity.mjs` — what the other 11 managers have done, and who they dropped that's still claimable
 - `data/` — gitignored cache (`players.json` refreshed when >24h old; `league/snapshot.json` per sync)
 - `.claude/skills/` — `/lineup`, `/waivers`, `/trade`, `/inactives`

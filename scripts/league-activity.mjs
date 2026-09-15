@@ -51,7 +51,7 @@ for (const team of snapshot.teams) {
 
 // Sleeper-wide add/drop counts: how the wider market is moving on a player.
 const addCount = new Map(snapshot.trending.adds.map((t) => [t.id, t.add_count]));
-const dropCount = new Map(snapshot.trending.drops.map((t) => [t.id, t.add_count]));
+const dropCount = new Map(snapshot.trending.drops.map((t) => [t.id, t.drop_count]));
 const marketFor = (p) => {
   if (!p) return null;
   const up = addCount.get(p.id) ?? 0;

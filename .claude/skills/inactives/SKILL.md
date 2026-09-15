@@ -20,6 +20,6 @@ description: Sunday game-day check for Out/Doubtful/inactive starters on Ben's t
        "why": "Diggs ruled out; Allen is the best healthy WR on the bench." }] }
    ```
    A hold verdict (nobody flipped) still ships this block, with `"actions": []`.
-7. Run `node scripts/actions.mjs`; STOP on failure — fix the block, never bypass. Publish with `node scripts/publish-report.mjs reports/<file>.md reports/actions.json "report: week <N> inactives"` and say where it landed — see CLAUDE.md.
+7. Then validate the block you just wrote: `node scripts/actions.mjs --check reports/<file>.md` — strict, and STOP on failure; fix the block, never bypass. Then compile the card: `node scripts/actions.mjs`. The compile also reads the other three routines' newest reports; if it notes an action of theirs as done, gone, or drifted, that is expected — it is not yours to fix and not a reason to stop. Publish with `node scripts/publish-report.mjs reports/<file>.md reports/actions.json "report: week <N> inactives" --replace` and say where it landed — see CLAUDE.md.
 
 Never: treat a preseason/camp injury tag as a game-day status; name a pivot without confirming both players' roster slots in the snapshot; skip the action block on a "not actionable" report; emit an action for a player the snapshot doesn't place exactly where the action claims.

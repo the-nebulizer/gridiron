@@ -6,7 +6,9 @@ The dashboard's top card lists concrete moves for Ben to make in the Sleeper app
 2. `node scripts/actions.mjs` validates each newest report against a fresh snapshot and compiles `reports/actions.json`.
 3. `docs/index.html` reads `reports/actions.json`, checks each action against live Sleeper rosters, and renders the card.
 
-The prime directive applies at every step: an action that names a player who is not provably where the action says they are is a validation error, and the compile fails.
+The prime directive applies at every step: an action that names a player who is not provably where the action says they are is a validation error **at write time**, and `--check` fails.
+
+There is a second, softer case the contract has to handle, and getting it wrong broke the whole loop once: an action written days ago that has since been **done** (Ben made the move) or **gone** (someone else took the player). Those are the system working, not a bad report. The compile carries them through with a `state` so the card can show them; only genuinely open actions are held to the strict rules. Until 2026-09-15 the compile revalidated everything as if freshly written, so acting on the advice — winning the claim, making the lineup swap, having the trade accepted — made the next routine's compile exit non-zero and publish nothing.
 
 ## 1. The action block (in every report)
 
@@ -69,12 +71,12 @@ Per-kind fields and validation (all checked against `data/league/snapshot.json`)
 |---|---|---|---|
 | `add` | `drop` (id, optional), `mode` (`fcfs` or `waiver`), `faab` (integer $, waiver mode only) | `player` rostered by **no** team in the league; `drop` (if given) on my roster; `faab` between 0 and my `faab_remaining` | `player` on my roster. If another team rostered them first, the card shows "taken by <owner>". |
 | `drop` | — | `player` on my roster | `player` no longer on my roster |
-| `start` | `slot` (one of the league's non-BN positions), `for` (id of the starter being benched, optional) | `player` on my roster; `for` (if given) currently in my starters | `player` in my starters and `for` (if given) not in my starters |
+| `start` | `slot` (one of the league's non-BN positions), `for` (id of the starter being benched, optional) | `player` on my roster; `player`'s position must be legal in `slot`; `for` (if given) currently in my starters **and currently holding that same `slot`** (the swap must be in place, or it empties `for`'s slot); with no `for`, `slot` must already be empty | `player` in my starters and `for` (if given) not in my starters |
 | `ir` | — | `player` on my roster and not already in `reserve`; the IR slot must have room (`league.reserve_slots`, netted against any `activate` in the same set) | `player` in my `reserve` |
 | `activate` | — | `player` in my `reserve` | `player` on my roster and not in `reserve` |
 | `trade` | `with` (roster_id), `give` (ids), `get` (ids), `message` (sendable offer text, optional) | `with` ≠ my roster_id; every `give` on my roster; every `get` on `with`'s roster | every `get` on my roster. The page cannot see pending offers, so trades also get a manual "dismiss" on the card. |
 
-Prefer one `start` with `for` over a separate bench instruction. Never emit an action that leaves a starting slot empty.
+Prefer one `start` with `for` over a separate bench instruction. Never emit an action that leaves a starting slot empty — this is now enforced rather than merely asked for: a `start` whose `for` holds a different slot is rejected, as is a kicker in the QB slot or any other position/slot mismatch.
 
 ### Sequencing — the standing order and explicit dependencies
 
@@ -113,9 +115,21 @@ Open primary actions are numbered in the standing order (lineup, then claims, th
 ## 2. The compiler — `scripts/actions.mjs`
 
 ```
-node scripts/actions.mjs                 # validate newest report per type, write reports/actions.json
-node scripts/actions.mjs --check <file>  # validate one report only, no write
+node scripts/actions.mjs --check <file>  # strict validation of one report, no write
+node scripts/actions.mjs                 # compile newest report per type -> reports/actions.json
 ```
+
+**The two modes are deliberately different in strictness**, and each routine runs both: `--check` on the report it just wrote, then the compile.
+
+| | `--check <file>` | compile |
+|---|---|---|
+| when | write time, on your own report | after, over all four routines' newest reports |
+| an action you cannot do right now | **error** — a report should never name an impossible move | depends: see below |
+| already done / gone | error | carried through with `state`, logged, exempt from the strict rules and from sequencing (they hold no player, need no bench slot, spend no FAAB) |
+| open but partly overtaken (its `drop` left the roster, its `for` stopped starting, its bid now exceeds FAAB) | error | **note**, printed on every run; the stale part is dropped, the run continues |
+| malformed block, bad enum, unknown player id | error | error |
+
+Lifecycle states are computed with the same tests the dashboard applies live (section 3), so the compiler and the page always agree about what "done" means.
 
 Behaviour:
 

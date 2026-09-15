@@ -112,12 +112,56 @@ const transactions = transactionsRaw.map((t) => ({
   faab_bid: t.settings?.waiver_bid ?? null,
 }));
 
-const trendResolve = (list) =>
+// `count` used to be called `add_count` on BOTH lists, so a player being cut
+// by 400k managers carried an "add_count" of 400k — an invitation to read the
+// drop list as interest. Each entry now names its own direction and carries
+// the net, because the two run at once and the add count alone flatters a
+// player everyone is also cutting.
+const addCounts = new Map(trendingAdds.map((t) => [t.player_id, t.count]));
+const dropCounts = new Map(trendingDrops.map((t) => [t.player_id, t.count]));
+const trendResolve = (list, direction) =>
   list.map((t) => ({
     ...resolve(t.player_id),
-    add_count: t.count,
+    [direction === 'add' ? 'add_count' : 'drop_count']: t.count,
+    net_adds: (addCounts.get(t.player_id) ?? 0) - (dropCounts.get(t.player_id) ?? 0),
     rostered_in_league: allRosteredIds.has(t.player_id),
   }));
+
+// Who is actually available, not just who is trending. Candidates used to come
+// only from Sleeper's global trending top-100, which in a 12-team league hides
+// most of the pool: 81 of 87 unrostered QBs were invisible to /waivers,
+// including a listed NFL starter — in a superflex league. The pool is filtered
+// to players who could plausibly start (depth chart 1-2, or trending, or a
+// defense) and capped per position so it stays cheap to read.
+const POOL_CAP = { QB: 10, RB: 12, WR: 12, TE: 10, K: 6, DEF: 8 };
+const availableByPosition = {};
+for (const [id, p] of Object.entries(players)) {
+  if (allRosteredIds.has(id)) continue;
+  const pos = p.position;
+  if (!POOL_CAP[pos]) continue;
+  if (pos !== 'DEF') {
+    if (!p.team) continue;                       // not on an NFL roster
+    if (p.status && p.status !== 'Active') continue; // practice squad, inactive
+    const depth = p.depth_chart_order;
+    if (!(depth != null && depth <= 2) && !addCounts.has(id)) continue;
+  }
+  const resolved = resolve(id);
+  (availableByPosition[pos] ??= []).push({
+    ...resolved,
+    depth_chart_order: p.depth_chart_order ?? null,
+    add_count: addCounts.get(id) ?? 0,
+    drop_count: dropCounts.get(id) ?? 0,
+    net_adds: (addCounts.get(id) ?? 0) - (dropCounts.get(id) ?? 0),
+  });
+}
+for (const [pos, list] of Object.entries(availableByPosition)) {
+  list.sort((a, b) =>
+    (a.depth_chart_order ?? 9) - (b.depth_chart_order ?? 9) ||
+    b.net_adds - a.net_adds ||
+    String(a.name).localeCompare(String(b.name))
+  );
+  availableByPosition[pos] = list.slice(0, POOL_CAP[pos]);
+}
 
 const snapshot = {
   fetched_at: new Date().toISOString(),
@@ -189,7 +233,10 @@ const snapshot = {
       }
     : null,
   transactions: transactions.sort((a, b) => (b.at ?? 0) - (a.at ?? 0)),
-  trending: { adds: trendResolve(trendingAdds), drops: trendResolve(trendingDrops) },
+  trending: { adds: trendResolve(trendingAdds, 'add'), drops: trendResolve(trendingDrops, 'drop') },
+  // The free-agent pool by position, best first. This is the candidate list
+  // for /waivers — `trending` alone is Sleeper-wide noise, not availability.
+  available: availableByPosition,
 };
 
 // The forward view, computed here so every routine reads the same numbers:
@@ -247,7 +294,24 @@ for (const w of snapshot.outlook.weeks) {
 console.log(snapshot.outlook.crunch_weeks.length
   ? `  Crunch weeks: ${snapshot.outlook.crunch_weeks.map((w) => `W${w}`).join(', ')} (* = fantasy playoffs)`
   : `  No crunch weeks ahead.`);
+// Forward-aware, not forward-planning: the outlook says which slots go empty
+// and this says who is sitting there to fix it. The call itself is /waivers'.
+const holes = new Map();
+for (const w of snapshot.outlook.weeks) {
+  for (const slot of w.empty_slots ?? []) {
+    if (!holes.has(slot)) holes.set(slot, []);
+    holes.get(slot).push(w.week);
+  }
+}
+if (holes.size) {
+  console.log(`\nFree agents who cover the slots above:`);
+  for (const [slot, weeks] of holes) {
+    const pool = (snapshot.available[slot] ?? []).filter((p) => !weeks.includes(p.bye_week)).slice(0, 4);
+    console.log(`  ${slot} (needed W${weeks.join(', W')}): ${pool.length ? pool.map((p) => `${p.name} (${p.team})`).join(', ') : 'nobody unrostered covers it'}`);
+  }
+}
+
 const freeAdds = snapshot.trending.adds.filter((t) => !t.rostered_in_league).slice(0, 10);
 console.log(`\nTop trending adds NOT rostered in this league:`);
-for (const t of freeAdds) console.log(`  ${t.name} (${t.position ?? '?'} ${t.team ?? '-'}) +${t.add_count}`);
+for (const t of freeAdds) console.log(`  ${t.name} (${t.position ?? '?'} ${t.team ?? '-'}) +${t.add_count} adds, net ${t.net_adds >= 0 ? '+' : ''}${t.net_adds}`);
 console.log(`\nSnapshot written to data/league/snapshot.json`);
