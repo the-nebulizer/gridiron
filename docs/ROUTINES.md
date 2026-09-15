@@ -167,20 +167,20 @@ Each report opens with a single quoted line written for Ben: "> Refreshed <Month
 
 ### Step 7 — replace entirely with
 
-**Note (2026-09-14):** the live watcher prompt matches this block — it compiles `reports/actions.json` with `node scripts/actions.mjs` after writing the four reports and commits it alongside them and the fingerprint (see `docs/ACTIONS.md`).
+**Note (2026-09-15):** this used to spell out raw `git` commands with a hand-written rebase-and-resolve dance. `scripts/publish-report.mjs` already does all of it, takes as many files as you give it, verifies against `origin/main` before claiming success, and — since the same date — recompiles `reports/actions.json` after a `--replace` rebase, which the hand-written version could not do. A rebase that pulls in another session's report makes the compiled card disagree with the reports beside it, and only a recompile fixes that. Use the script.
 
 ```
-7. Run `node scripts/actions.mjs`; STOP on failure — fix whichever report's block is wrong, never bypass (see docs/ACTIONS.md). Then publish all four reports in ONE commit together with reports/actions.json and reports/.roster-fingerprint.json — never the reports without the fingerprint (a missing fingerprint makes the next hourly run think everything changed and regenerate all four again), and never a plain git push (this session runs on its own branch; the dashboard reads main only). Run:
-   git add reports/*.md reports/actions.json reports/.roster-fingerprint.json
-   git commit -m "reports: refresh after roster change (week <N>)"
-   git push origin HEAD:main
-   If the push is rejected because main moved: git pull --rebase origin main, keeping THIS session's version of any conflicting report file (git checkout --theirs <file> during the rebase, then git add and git rebase --continue), and push HEAD:main again. If the rebase fails or the second push is refused: git rebase --abort, push to a fallback branch (git push origin HEAD:refs/heads/reports-fallback-<YYYY-MM-DD-HHMM>), and finish with an explicit sentence saying the reports are NOT on the dashboard and naming that branch. Otherwise finish with one plain sentence confirming origin/main contains the four reports, reports/actions.json, and the fingerprint. Never end the run without that sentence.
+7. Run `node scripts/actions.mjs`; STOP on failure — fix whichever report's block is wrong, never bypass (see docs/ACTIONS.md). If it only prints notes about actions being done, gone or drifted, that is the world having moved on, not an error: carry on. Then publish all four reports in ONE commit together with reports/actions.json and reports/.roster-fingerprint.json — never the reports without the fingerprint (a missing fingerprint makes the next run think everything changed and regenerate all four again), and never a plain git push (this session runs on its own branch; the dashboard reads main only). Run:
+   node scripts/publish-report.mjs reports/<YYYY-MM-DD>-waivers.md reports/<YYYY-MM-DD>-lineup.md reports/<YYYY-MM-DD>-trades.md reports/<YYYY-MM-DD>-inactives.md reports/actions.json reports/.roster-fingerprint.json "reports: refresh after roster change (week <N>)" --replace
+   It commits, pushes HEAD:main, and rebases once if main moved, keeping this session's version of these files and recompiling reports/actions.json against whatever the rebase brought in. It only says "Published" after reading origin/main back and seeing every one of these files there. If it reports failure it will have pushed a fallback branch: say so, name the branch, and say the reports are NOT on the dashboard. Finish with one plain sentence stating whether origin/main has them. Never end the run without that sentence.
 ```
 
 ## Checklist
 
 - [x] Merge PR #1 (done Sep 10 — every routine's publish step now works via CLAUDE.md)
 - [ ] Watcher model → Haiku 4.5; inactives model → Haiku 4.5
+- [ ] Re-paste step 7 into the watcher (2026-09-15 version above — it now uses publish-report.mjs, which recompiles actions.json after a rebase; the hand-written git block could not)
+- [ ] Add the `--check` sentence (2026-09-15) to step 4 of all four weekly prompts
 - [x] Watcher steps 1–3 reordered so UNCHANGED runs read nothing (pasted in 2026-09-14)
 - [ ] Inactives cron → `40 15 * * 0` now, `40 16 * * 0` from Nov 1
 - [ ] Watcher cron → `30 12,17,23 * * *` (or at least `30 0-3,12-23 * * *`)

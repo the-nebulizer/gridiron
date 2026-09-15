@@ -4,6 +4,8 @@
   "type": "module",
   "scripts": {
     "sync": "node scripts/sync.mjs",
-    "actions": "node scripts/actions.mjs"
+    "actions": "node scripts/actions.mjs",
+    "test": "node scripts/selftest.mjs",
+    "outlook": "node scripts/outlook.mjs"
   }
 }

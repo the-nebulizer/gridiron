@@ -271,7 +271,6 @@ async function validateAndBuildAction(action, i, snapshot, index, problems, opts
   const live = state === 'open';
   const requireWorld = live && strict;
   const push = (msg) => problems.push(`action[${i}]: ${msg}`);
-  const pushWorld = (msg) => { if (requireWorld) problems.push(`action[${i}]: ${msg}`); };
   // Returns true when the mismatch was fatal (strict mode), so the caller can
   // decide what to keep when it wasn't.
   const worldFail = (msg) => {
@@ -351,10 +350,9 @@ async function validateAndBuildAction(action, i, snapshot, index, problems, opts
 
     if (kind === 'add') {
       const owner = index.ownerOf.get(player);
-      if (owner !== undefined && requireWorld) {
+      if (owner !== undefined) {
         const oName = index.ownerName.get(owner) ?? String(owner);
-        push(`(add) player ${player} (${resolved.name}) is already rostered by ${oName} (roster ${owner}) — not a free agent`);
-        bad = true;
+        if (worldFail(`${resolved.name} is already rostered by ${oName} (roster ${owner}) — not a free agent`)) bad = true;
       }
       if (!ADD_MODES.includes(action.mode)) {
         push(`(add) mode must be "fcfs" or "waiver" (got ${JSON.stringify(action.mode)})`);
@@ -405,15 +403,16 @@ async function validateAndBuildAction(action, i, snapshot, index, problems, opts
       }
     }
 
-    if (kind === 'drop' && !myIds.has(player)) {
-      pushWorld(`(drop) player ${player} (${resolved.name}) is not on my roster`);
-      if (requireWorld) bad = true;
+    // Unreachable in compile mode — a drop whose player has left is `done` —
+    // so in practice this is the write-time check.
+    if (kind === 'drop' && !myIds.has(player) && worldFail(`${resolved.name} is not on my roster`)) {
+      bad = true;
     }
 
     if (kind === 'start') {
-      if (!myIds.has(player)) {
-        pushWorld(`(start) player ${player} (${resolved.name}) is not on my roster`);
-        if (requireWorld) bad = true;
+      // Likewise: a start whose player has left my roster is `gone`.
+      if (!myIds.has(player) && worldFail(`${resolved.name} is not on my roster`)) {
+        bad = true;
       }
       const nonBnSlots = (snapshot.league.roster_positions ?? []).filter((p) => p !== 'BN');
       const slotOk = isNonEmptyString(action.slot) && nonBnSlots.includes(action.slot);
@@ -446,7 +445,7 @@ async function validateAndBuildAction(action, i, snapshot, index, problems, opts
             out.for_name = forResolved.name;
           }
           if (live && !myStarters.has(action.for)) {
-            if (worldFail(`"${action.for}" (${forResolved?.name ?? 'unknown'}) is no longer in my starters`)) bad = true;
+            if (worldFail(`"${action.for}" (${forResolved?.name ?? 'unknown'}) is not in my starters`)) bad = true;
           } else if (live && slotOk) {
             // The swap has to be in place. If the benched player is holding a
             // DIFFERENT slot, his slot is left empty and the lineup is

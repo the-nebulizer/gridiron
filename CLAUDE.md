@@ -91,6 +91,7 @@ Reports in `reports/` and the dashboard's own copy are written for Ben, not for 
 - `scripts/outlook.mjs` — the forward view: positional counts, and every week ahead I can't field a legal lineup. Runs inside every sync; also a what-if tool (`--add` / `--drop`)
 - The snapshot's `available` block is the real free-agent pool by position — `trending` is Sleeper-wide noise and hides most of it
 - `scripts/league-activity.mjs` — what the other 11 managers have done, and who they dropped that's still claimable
+- `scripts/selftest.mjs` — `npm test`, offline. Run it after touching `actions.mjs`, `outlook.mjs` or `sync.mjs`; every case in it is a bug that shipped once
 - `data/` — gitignored cache (`players.json` refreshed when >24h old; `league/snapshot.json` per sync)
 - `.claude/skills/` — `/lineup`, `/waivers`, `/trade`, `/inactives`
 - `docs/` — league facts, season plan, resume doc, `docs/ACTIONS.md` (the "Do now" card contract)
