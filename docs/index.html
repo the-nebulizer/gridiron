@@ -151,6 +151,7 @@
   .runlink{font-family:var(--mono);font-size:13px;border:1px solid var(--amber);color:var(--amber);padding:6px 14px;white-space:nowrap}
   .runlink:hover{background:var(--amber);color:var(--turf);text-decoration:none}
   .missed{color:var(--flag)}
+  .dim{color:var(--chalk-dim)}
   .report{max-width:70ch}
   .report h1{font-size:24px;line-height:1.3;margin:22px 0 10px}
   .report h2,.report h3{font-family:var(--body);font-size:19px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--chalk);margin:26px 0 8px;display:block}
@@ -1028,6 +1029,8 @@ function render(state, got, failed){
   const standings = rosters.slice().sort((x,y)=>(y.settings?.wins||0)-(x.settings?.wins||0) || pf(y)-pf(x));
   const budget = league.settings?.waiver_budget||0;
   const myPlayers = [...(me.starters||[]), ...(me.players||[])].filter((v,i,a)=>a.indexOf(v)===i).map(id=>resolve(players,id)).filter(Boolean);
+  // IR players can't fill an active slot, so they don't count toward covering a bye.
+  const activeRoster = myPlayers.filter(p=>!(me.reserve||[]).map(String).includes(String(p.id)));
   const byeRows = {};
   if(byes) myPlayers.forEach(p=>{ const w=byes[p.team]; if(w && w>=wk) (byeRows[w]=byeRows[w]||[]).push(p); });
   html += `<div class="cols">
@@ -1035,10 +1038,19 @@ function render(state, got, failed){
     <table><thead><tr><th>Team</th><th class="r">Rec</th><th class="r">PF</th><th class="r">FAAB</th></tr></thead><tbody>
     ${standings.map(r=>`<tr class="${r.roster_id===CFG.me?'me':''}"><td>${esc(name(r.roster_id))}</td><td class="num">${rec(r.roster_id)}</td><td class="num">${pf(r).toFixed(2)}</td><td class="num">$${budget-(r.settings?.waiver_budget_used||0)}</td></tr>`).join('')}
     </tbody></table></section>
-    <section><h2>Byes ahead</h2><p class="sub">Weeks where you'll be short-handed, and who's out.</p>
-    <table><thead><tr><th>Week</th><th>Out</th></tr></thead><tbody>
-    ${!byes ? '<tr><td colspan="2">The NFL schedule didn’t load, so byes are unknown right now.</td></tr>'
-      : Object.keys(byeRows).map(Number).sort((a,b)=>a-b).map(w=>`<tr><td class="num" style="text-align:left">W${w}</td><td>${byeRows[w].map(p=>esc(p.name)+' <span style="color:var(--chalk-dim)">'+esc(p.pos)+'</span>').join(', ')}</td></tr>`).join('') || '<tr><td colspan="2">No byes left this season.</td></tr>'}
+    <section><h2>Byes ahead</h2><p class="sub">Weeks where you'll be short-handed, and who's out. A week marked in red is one you can't field a legal lineup for.</p>
+    <table><thead><tr><th>Week</th><th>Out</th><th class="r">Cover</th></tr></thead><tbody>
+    ${!byes ? '<tr><td colspan="3">The NFL schedule didn’t load, so byes are unknown right now.</td></tr>'
+      : Object.keys(byeRows).map(Number).sort((a,b)=>a-b).map(w=>{
+          // Same matching the heads-up and the reports use: whether the week is coverable is
+          // solved against the real slots, never guessed from which position is out.
+          const gaps = emptySlots(slots||[], activeRoster.filter(p=>byes[p.team]!==w));
+          return `<tr><td class="num" style="text-align:left">W${w}</td>
+            <td>${byeRows[w].map(p=>esc(p.name)+' <span style="color:var(--chalk-dim)">'+esc(p.pos)+'</span>').join(', ')}</td>
+            <td class="num">${gaps.length
+              ? `<span class="missed">no ${gaps.map(g=>esc(prettySlot(g))).join(', no ')}</span>`
+              : '<span class="dim">covered</span>'}</td></tr>`;
+        }).join('') || '<tr><td colspan="3">No byes left this season.</td></tr>'}
     </tbody></table></section></div>`;
 
   $('app').innerHTML = html;
