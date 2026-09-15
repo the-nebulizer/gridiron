@@ -509,7 +509,7 @@ function resolveDependencies(items){
       const p = edges[n][f];
       if(p==null) continue;
       const par = res(p), ps = par.state;
-      const s = BLOCKING[ps] ? 'waiting'
+      const s = BLOCKING[ps] ? (base==='open' ? 'waiting' : base)
               : ps==='done'  ? (f==='after' ? base : 'superseded')
               : (f==='after' ? 'gone' : base);   // gone · dismissed · stale · superseded
       const r = RANK[s] || 0;

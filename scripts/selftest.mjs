@@ -52,6 +52,7 @@ const P = {
   // free agents
   fa1: { id: 'fa1', name: 'Free One', position: 'TE', team: 'OOO', bye_week: 6, injury_status: null },
   fa2: { id: 'fa2', name: 'Free Two', position: 'K', team: 'PPP', bye_week: 9, injury_status: null },
+  fa3: { id: 'fa3', name: 'Free Three', position: 'WR', team: 'TTT', bye_week: 3, injury_status: null },
   // bench depth for the outlook fixture, on byes that collide with nothing
   // interesting — without it every single bye reads as an empty FLEX.
   rb4: { id: 'rb4', name: 'Rush Four', position: 'RB', team: 'QQQ', bye_week: 8, injury_status: null },
@@ -309,11 +310,247 @@ console.log('\nsequencing — four routines, one card');
   check('...and accepted once linked with if_not', r.code === 0, r.out);
 }
 {
+  // The compiler now treats an after/if_not target missing from the whole
+  // compiled set as reality moving on, not a report bug — reconcileLinks
+  // drops the link (with a warning) and the action stands on its own.
   const dir = await sandbox(fixture(), {
     '2026-09-15-waivers.md': block([{ kind: 'add', player: 'fa1', mode: 'waiver', faab: 5, urgency: 'now', after: 'nothing:like:this', why: 'Dangling reference.' }]),
   });
   const r = runActions(dir);
-  check('a dangling after reference is rejected', r.code === 1 && /unknown id/.test(r.out), r.out);
+  check('a dangling after reference is dropped rather than failing the compile', r.code === 0 && /link dropped/.test(r.out), r.out);
+  const written = JSON.parse(readFileSync(path.join(dir, 'reports', 'actions.json'), 'utf8'));
+  const action = written.actions.find((a) => a.player === 'fa1');
+  check('...and the compiled action carries no after field', !!action && !('after' in action), JSON.stringify(action));
+}
+{
+  // --check is the write-time gate on the one report the author is looking
+  // at right now, so the same dangling reference still fails outright there.
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-waivers.md': block([{ kind: 'add', player: 'fa1', mode: 'waiver', faab: 5, urgency: 'now', after: 'nothing:like:this', why: 'Dangling reference.' }]),
+  });
+  const r = runActions(dir, ['--check', 'reports/2026-09-15-waivers.md']);
+  check('...but --check on the same report still rejects it as an unknown id', r.code === 1 && /unknown id/.test(r.out), r.out);
+}
+
+console.log('\nsequencing — the seven fixes, pinned down permanently');
+
+{
+  // Rule 1: a chain of links, not just a direct one, keeps three actions
+  // that all consume Quinn Three out of conflict.
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-waivers.md': block([
+      { kind: 'add', id: 'w1', player: 'fa1', drop: 'qb3', mode: 'waiver', faab: 5, urgency: 'by_tuesday', why: 'First claim on Quinn Three.' },
+      { kind: 'add', id: 'w2', player: 'fa2', drop: 'qb3', mode: 'waiver', faab: 5, urgency: 'by_tuesday', if_not: 'w1', why: 'Fallback if w1 fails.' },
+    ]),
+    '2026-09-15-trades.md': block([
+      { kind: 'trade', with: 2, give: ['qb3'], get: ['opp1'], urgency: 'this_week', if_not: 'w2', why: 'Last resort if both waiver claims fail.' },
+    ]),
+  });
+  const r = runActions(dir);
+  check('a transitive chain of if_not links keeps three actions on one player out of conflict', r.code === 0, r.out);
+}
+{
+  // Control: break the chain and the same three actions collide.
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-waivers.md': block([
+      { kind: 'add', id: 'w1', player: 'fa1', drop: 'qb3', mode: 'waiver', faab: 5, urgency: 'by_tuesday', why: 'First claim on Quinn Three.' },
+      { kind: 'add', id: 'w2', player: 'fa2', drop: 'qb3', mode: 'waiver', faab: 5, urgency: 'by_tuesday', if_not: 'w1', why: 'Fallback if w1 fails.' },
+    ]),
+    '2026-09-15-trades.md': block([
+      { kind: 'trade', with: 2, give: ['qb3'], get: ['opp1'], urgency: 'this_week', why: 'Not linked to the waiver claims.' },
+    ]),
+  });
+  const r = runActions(dir);
+  check('...but only when every consumer is actually in the chain', r.code === 1 && /both use Quinn Three/.test(r.out), r.out);
+}
+{
+  // Rule 2: this set's own drop credits the open-bench-slot count, letting
+  // two slotless adds share the one slot it frees.
+  const snap = fixture();
+  snap.teams[0].bench = [P.qb3, P.rb4, P.rb5, P.wr4]; // 4 on bench, 5 BN slots: 1 open
+  const dir = await sandbox(snap, {
+    '2026-09-15-waivers.md': block([
+      { kind: 'drop', player: 'qb3', urgency: 'now', why: 'Makes room.' },
+      { kind: 'add', player: 'fa1', mode: 'waiver', faab: 5, urgency: 'by_tuesday', why: 'Needs a slot.' },
+      { kind: 'add', player: 'fa2', mode: 'waiver', faab: 5, urgency: 'by_tuesday', why: 'Needs a slot.' },
+    ]),
+  });
+  const r = runActions(dir);
+  check('a drop in the same set credits the open-bench-slot count', r.code === 0, r.out);
+}
+{
+  // Control: same two adds, no drop to credit — one open slot cannot hold two.
+  const snap = fixture();
+  snap.teams[0].bench = [P.qb3, P.rb4, P.rb5, P.wr4];
+  const dir = await sandbox(snap, {
+    '2026-09-15-waivers.md': block([
+      { kind: 'add', player: 'fa1', mode: 'waiver', faab: 5, urgency: 'by_tuesday', why: 'Needs a slot.' },
+      { kind: 'add', player: 'fa2', mode: 'waiver', faab: 5, urgency: 'by_tuesday', why: 'Needs a slot.' },
+    ]),
+  });
+  const r = runActions(dir);
+  check('...and without it, two slotless adds outrun the one open bench slot', r.code === 1 && /bench slot/.test(r.out), r.out);
+  check('...with the shortfall spelled out as arithmetic', /5 BN slot\(s\) - 4 on bench/.test(r.out), r.out);
+}
+{
+  // Rule 2, trade worlds: two adds waiting on an even trade need bench room
+  // the trade itself does not free — its give and get are the same size.
+  const snap = fixture();
+  snap.teams[0].bench = [P.qb3, P.rb4, P.rb5, P.wr4];
+  const dir = await sandbox(snap, {
+    '2026-09-15-trades.md': block([
+      { kind: 'trade', with: 2, give: ['qb3'], get: ['opp1'], urgency: 'this_week', why: 'Even trade.' },
+    ]),
+    '2026-09-15-waivers.md': block([
+      { kind: 'add', player: 'fa1', mode: 'waiver', faab: 5, urgency: 'by_tuesday', after: 'trades:trade:2', why: 'Only if the trade lands.' },
+      { kind: 'add', player: 'fa2', mode: 'waiver', faab: 5, urgency: 'by_tuesday', after: 'trades:trade:2', why: 'Only if the trade lands.' },
+    ]),
+  });
+  const r = runActions(dir);
+  check('two adds waiting on a trade that frees no net slot outrun its allowance', r.code === 1 && /waiting on trades:trade:2/.test(r.out), r.out);
+}
+{
+  // Same shape, but the trade gives up two for one — that net gain is
+  // exactly the second bench slot the two waiting adds need.
+  const snap = fixture();
+  snap.teams[0].bench = [P.qb3, P.rb4, P.rb5, P.wr4];
+  const dir = await sandbox(snap, {
+    '2026-09-15-trades.md': block([
+      { kind: 'trade', with: 2, give: ['qb3', 'rb4'], get: ['opp1'], urgency: 'this_week', why: 'Gives up two for one.' },
+    ]),
+    '2026-09-15-waivers.md': block([
+      { kind: 'add', player: 'fa1', mode: 'waiver', faab: 5, urgency: 'by_tuesday', after: 'trades:trade:2', why: 'Only if the trade lands.' },
+      { kind: 'add', player: 'fa2', mode: 'waiver', faab: 5, urgency: 'by_tuesday', after: 'trades:trade:2', why: 'Only if the trade lands.' },
+    ]),
+  });
+  const r = runActions(dir);
+  check('...and with that net gain counted in, the same two adds fit', r.code === 0, r.out);
+}
+{
+  // if_not is the only link Rule 2 treats as a shared claim on one slot.
+  const snap = fixture();
+  snap.teams[0].bench = [P.qb3, P.rb4, P.rb5, P.wr4];
+  const dir = await sandbox(snap, {
+    '2026-09-15-waivers.md': block([
+      { kind: 'add', id: 'a', player: 'fa1', mode: 'waiver', faab: 5, urgency: 'by_tuesday', why: 'Primary.' },
+      { kind: 'add', id: 'b', player: 'fa2', mode: 'waiver', faab: 5, urgency: 'by_tuesday', if_not: 'a', why: 'Fallback.' },
+    ]),
+  });
+  const r = runActions(dir);
+  check('if_not groups two slotless adds into one claim on the open slot', r.code === 0, r.out);
+}
+{
+  // Control: after does not merge them — both are expected to run, so both
+  // still want their own slot.
+  const snap = fixture();
+  snap.teams[0].bench = [P.qb3, P.rb4, P.rb5, P.wr4];
+  const dir = await sandbox(snap, {
+    '2026-09-15-waivers.md': block([
+      { kind: 'add', id: 'a', player: 'fa1', mode: 'waiver', faab: 5, urgency: 'by_tuesday', why: 'Primary.' },
+      { kind: 'add', id: 'b', player: 'fa2', mode: 'waiver', faab: 5, urgency: 'by_tuesday', after: 'a', why: 'Runs after a, not instead of it.' },
+    ]),
+  });
+  const r = runActions(dir);
+  check('...but after does not, since both actions are expected to run', r.code === 1 && /bench slot/.test(r.out), r.out);
+}
+{
+  // Two adds each if_not the SAME trade are still two separate claims — if
+  // the trade falls through, both still want a slot, so they are not grouped
+  // with each other just because they share a target.
+  const snap = fixture();
+  snap.teams[0].bench = [P.qb3, P.rb4, P.rb5, P.wr4];
+  const dir = await sandbox(snap, {
+    '2026-09-15-trades.md': block([
+      { kind: 'trade', with: 2, give: ['qb3'], get: ['opp1'], urgency: 'this_week', why: 'Even trade.' },
+    ]),
+    '2026-09-15-waivers.md': block([
+      { kind: 'add', player: 'fa1', mode: 'waiver', faab: 5, urgency: 'by_tuesday', if_not: 'trades:trade:2', why: 'If the trade falls through.' },
+      { kind: 'add', player: 'fa2', mode: 'waiver', faab: 5, urgency: 'by_tuesday', if_not: 'trades:trade:2', why: 'If the trade falls through.' },
+    ]),
+  });
+  const r = runActions(dir);
+  check('two adds if_not the same trade are not grouped with each other', r.code === 1 && /bench slot/.test(r.out), r.out);
+}
+{
+  // Rule 5: after-linked bids are not alternatives — both could land — so
+  // both count toward the projected spend.
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-waivers.md': block([
+      { kind: 'add', id: 'a', player: 'fa1', mode: 'waiver', faab: 60, urgency: 'by_tuesday', why: 'Primary bid.' },
+      { kind: 'add', id: 'b', player: 'fa2', mode: 'waiver', faab: 50, urgency: 'by_tuesday', after: 'a', why: 'Both can land.' },
+    ]),
+  });
+  const r = runActions(dir);
+  check('after-linked bids are not alternatives, so both count toward the projected spend', r.code === 0 && /could total \$110/.test(r.out), r.out);
+}
+{
+  // if_not-linked bids ARE alternatives, so that group counts once at its
+  // highest bid — alongside an unrelated third bid that counts on its own.
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-waivers.md': block([
+      { kind: 'add', id: 'a', player: 'fa1', mode: 'waiver', faab: 80, urgency: 'by_tuesday', why: 'Primary bid.' },
+      { kind: 'add', id: 'b', player: 'fa2', mode: 'waiver', faab: 90, urgency: 'by_tuesday', if_not: 'a', why: 'Alternative to a.' },
+      { kind: 'add', id: 'c', player: 'fa3', mode: 'waiver', faab: 70, urgency: 'by_tuesday', why: 'Unrelated bid.' },
+    ]),
+  });
+  const r = runActions(dir);
+  check('an if_not group counts once at its highest bid, alongside an unlinked bid',
+    r.code === 0 && /could total \$160/.test(r.out) && /max of a \$80 \/ b \$90/.test(r.out), r.out);
+}
+{
+  // Under budget: no warning at all.
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-waivers.md': block([
+      { kind: 'add', id: 'a', player: 'fa1', mode: 'waiver', faab: 30, urgency: 'by_tuesday', why: 'Primary bid.' },
+      { kind: 'add', id: 'b', player: 'fa2', mode: 'waiver', faab: 40, urgency: 'by_tuesday', if_not: 'a', why: 'Alternative to a.' },
+    ]),
+  });
+  const r = runActions(dir);
+  check('a bid group within budget prints no total-spend warning', r.code === 0 && !/could total/.test(r.out), r.out);
+}
+{
+  // Dedupe retarget: when the same trade appears in two reports, the
+  // compiler keeps the newer file's copy and must move any if_not pointed
+  // at the loser's id onto the winner's, instead of dropping it.
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-trades.md': block([
+      { kind: 'trade', with: 2, give: ['qb3'], get: ['opp1'], urgency: 'this_week', why: 'Original offer.' },
+    ]),
+    '2026-09-16-inactives.md': block([
+      { kind: 'trade', with: 2, give: ['qb3'], get: ['opp1'], urgency: 'this_week', why: 'Same offer, carried by the newer report.' },
+    ]),
+    '2026-09-15-waivers.md': block([
+      { kind: 'add', player: 'fa1', drop: 'qb3', mode: 'waiver', faab: 5, urgency: 'by_tuesday', if_not: 'trades:trade:2', why: 'Fallback if the trade dies.' },
+    ]),
+  });
+  const r = runActions(dir);
+  check('a dedupe loser retargets a link pointed at it, rather than dropping it', r.code === 0 && /link retargeted/.test(r.out), r.out);
+  const written = JSON.parse(readFileSync(path.join(dir, 'reports', 'actions.json'), 'utf8'));
+  const waiver = written.actions.find((a) => a.player === 'fa1');
+  check("...onto the winning report's id", waiver?.if_not === 'inactives:trade:2', JSON.stringify(waiver));
+}
+{
+  // --check names the routine from the filename; a name it can't match to
+  // any TYPE is now a hard error instead of a guessed fallback that could
+  // silently collide with, or silently dodge, this file's own prior report.
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-waivers.md': block([
+      { kind: 'add', player: 'fa1', drop: 'qb3', mode: 'waiver', faab: 5, urgency: 'by_tuesday', why: 'Case 7 fixture.' },
+    ]),
+  });
+  runActions(dir); // compile once so reports/actions.json holds this same drop under source "waivers"
+
+  await writeFile(path.join(dir, 'reports', 'draft-waivers.md'), block([
+    { kind: 'add', player: 'fa1', drop: 'qb3', mode: 'waiver', faab: 5, urgency: 'by_tuesday', why: 'Case 7 fixture.' },
+  ]));
+  const r1 = runActions(dir, ['--check', 'reports/draft-waivers.md']);
+  check('--check infers the source off a "-waivers.md" suffix, with no self-collision against its own prior report', r1.code === 0, r1.out);
+
+  await writeFile(path.join(dir, 'reports', 'draft.md'), block([
+    { kind: 'add', player: 'fa1', drop: 'qb3', mode: 'waiver', faab: 5, urgency: 'by_tuesday', why: 'Case 7 fixture.' },
+  ]));
+  const r2 = runActions(dir, ['--check', 'reports/draft.md']);
+  check('...but a filename that names no routine at all is rejected outright', r2.code === 1 && /can't tell which routine/.test(r2.out), r2.out);
 }
 
 // ---- 5. the forward view --------------------------------------------------
@@ -569,6 +806,13 @@ console.log('\ndashboard — dependency resolution');
   check('a cycle resolves instead of hanging', !!cyc.x && !!cyc.y, JSON.stringify(cyc));
   check('junk in the list is skipped, not thrown on',
     ctx.resolveDependencies([null, 'nope', {id:'ok', kind:'add', state:'open'}]).length === 1);
+
+  // Fix: a child whose own state is already gone/done must stay that way —
+  // an open (blocking) parent must not override it back to "waiting".
+  check('a fallback already gone stays gone even under a still-open parent',
+    R([{id:'t', kind:'trade', state:'open'}, {id:'w', kind:'add', state:'gone', if_not:'t'}]).w === 'gone');
+  check('a fallback already done stays done even under a still-open parent',
+    R([{id:'t', kind:'trade', state:'open'}, {id:'w', kind:'add', state:'done', if_not:'t'}]).w === 'done');
 }
 
 // ---- 10. the modules must be importable without doing anything ------------

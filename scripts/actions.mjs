@@ -724,17 +724,16 @@ function finalizeAction(action, source, report, week) {
 
 // ---- sequencing: after/if_not resolution, cycle detection, conflict rules ----
 
-// Infer the source type from a report's filename, per the `-<type>.md`
-// suffix rule. Falls back to whatever follows the last "-" (or the whole
-// basename) for files that don't follow the YYYY-MM-DD-<type>.md convention,
-// so a check against an ad-hoc file still gets a stable, self-consistent
-// source string for generating same-file ids.
+// Infer the source type from a report's filename: `<date>-<type>.md`,
+// `<anything>-<type>.md` or bare `<type>.md`, where <type> is one of TYPES.
+// Returns null for anything else. The source names which routine's actions
+// a --check replaces in reports/actions.json, so it must be a real routine
+// name — an ad-hoc fallback like "draft" would leave the real waivers
+// actions in the conflict set and the draft would collide with itself.
 function inferSource(basename) {
-  const m = basename.match(/^\d{4}-\d{2}-\d{2}-([a-zA-Z0-9_]+)\.md$/);
-  if (m) return m[1];
-  const m2 = basename.match(/-([a-zA-Z0-9_]+)\.md$/);
-  if (m2) return m2[1];
-  return basename.replace(/\.md$/, '');
+  const re = new RegExp(`(?:^|-)(${TYPES.join('|')})\\.md$`);
+  const m = basename.match(re);
+  return m ? m[1] : null;
 }
 
 async function loadActionsJson() {
@@ -811,19 +810,66 @@ function resolveLinksAndDetectProblems(actions) {
   return { problems: [] };
 }
 
-// Two actions are "linked" for the conflict rules when one directly points
-// at the other via after or if_not (either direction, either field).
-function directlyLinked(a, b) {
-  return a.after === b.id || a.if_not === b.id || b.after === a.id || b.if_not === a.id;
+// ---- link reconciliation: remap ids superseded by dedupe, drop the rest ----
+// Dedupe (in compile()) can make an after/if_not target disappear from the
+// compiled set in two different ways, and they need different treatment:
+//   - the target was a dedupe LOSER: the same move is still in the compiled
+//     set, just under the winner's id (a newer report of the same kind+
+//     player/with). `remap` carries loser id -> { winner, report }; the link
+//     is retargeted, not dropped, because the dependency still holds.
+//   - the target isn't present under any id: the report that carried it was
+//     superseded by a newer report from its own source that simply no longer
+//     contains that action (this week's trades report dropped an offer last
+//     week's waivers report still points `if_not` at). That's not a broken
+//     link for Ben to fix — see docs/ACTIONS.md "Sequencing" — so the field
+//     is dropped and the action stands on its own.
+// Pure (no I/O, no process.exit) so it can be unit-tested directly; compile()
+// prints `notes` and `warnings` to stderr.
+function reconcileLinks(finalActions, remap) {
+  const notes = [];
+  const warnings = [];
+
+  const retargeted = finalActions.map((a) => {
+    const out = { ...a };
+    for (const field of ['after', 'if_not']) {
+      const val = out[field];
+      if (val === undefined) continue;
+      const hit = remap.get(val);
+      if (hit) {
+        notes.push(
+          `action "${out.id}": ${field} "${val}" was superseded by "${hit.winner}" from ${hit.report}; link retargeted`
+        );
+        out[field] = hit.winner;
+      }
+    }
+    return out;
+  });
+
+  const ids = new Set(retargeted.map((a) => a.id));
+  const reconciled = retargeted.map((a) => {
+    const out = { ...a };
+    for (const field of ['after', 'if_not']) {
+      const val = out[field];
+      if (val === undefined || ids.has(val)) continue;
+      warnings.push(
+        `action "${out.id}": ${field} references "${val}" which is not in the compiled set (the report that carried it has been superseded or its action expired); link dropped, action stands on its own`
+      );
+      delete out[field];
+    }
+    return out;
+  });
+
+  return { actions: reconciled, notes, warnings };
 }
 
-// Union-find over after/if_not edges, treated as undirected, so a chain of
-// links (A after B, B if_not C) groups A/B/C together even though A and C
-// aren't directly linked. Used only for the bench-slot rule, where the
-// contract explicitly counts transitive links.
-function groupLinked(actions) {
+// Union-find over a chosen set of edges, treated as undirected: an edge
+// a[field] -> a.id is only added when BOTH endpoints are in `memberIds` and
+// `field` is one of `fields`. This lets each rule below draw its own graph
+// (e.g. "if_not edges between slotless adds only") without the rule having
+// to hand-roll union-find. Returns the `find` function; two ids are in the
+// same component iff `find(x) === find(y)`.
+function componentsOver(actions, memberIds, fields) {
   const parent = new Map(actions.map((a) => [a.id, a.id]));
-  const ids = new Set(parent.keys());
   function find(x) {
     while (parent.get(x) !== x) {
       parent.set(x, parent.get(parent.get(x)));
@@ -832,15 +878,26 @@ function groupLinked(actions) {
     return x;
   }
   function union(x, y) {
-    if (!ids.has(x) || !ids.has(y)) return;
+    if (!parent.has(x) || !parent.has(y)) return;
     const rx = find(x), ry = find(y);
     if (rx !== ry) parent.set(rx, ry);
   }
   for (const a of actions) {
-    if (a.after !== undefined) union(a.id, a.after);
-    if (a.if_not !== undefined) union(a.id, a.if_not);
+    for (const field of fields) {
+      const val = a[field];
+      if (val === undefined) continue;
+      if (memberIds.has(a.id) && memberIds.has(val)) union(a.id, val);
+    }
   }
   return find;
+}
+
+// Union-find over after/if_not edges, treated as undirected, so a chain of
+// links (A after B, B if_not C) groups A/B/C together even though A and C
+// aren't directly linked. The all-actions/all-fields case of componentsOver.
+function groupLinked(actions) {
+  const allIds = new Set(actions.map((a) => a.id));
+  return componentsOver(actions, allIds, ['after', 'if_not']);
 }
 
 // The three conflict rules from docs/ACTIONS.md "Sequencing", run over a
@@ -856,8 +913,12 @@ async function checkConflictRules(allActions, snapshot, index) {
   // the live ones.
   const actions = allActions.filter((a) => a.state === undefined || a.state === 'open');
 
-  // Rule 1: two actions that consume the same rostered player must be
-  // directly linked.
+  // Rule 1: two actions that consume the same rostered player are fine as
+  // long as they sit in the same after/if_not component — any path of
+  // links, not just a direct one. A correctly sequenced fallback chain
+  // (a <- b if_not a <- c if_not b, all touching the same player) is not a
+  // conflict just because a and c aren't directly linked to each other.
+  const find1 = groupLinked(actions);
   for (let i = 0; i < actions.length; i++) {
     for (let j = i + 1; j < actions.length; j++) {
       const a = actions[i], b = actions[j];
@@ -866,7 +927,7 @@ async function checkConflictRules(allActions, snapshot, index) {
       if (!aC.length || !bC.length) continue;
       const overlap = aC.filter((id) => bC.includes(id));
       if (!overlap.length) continue;
-      if (directlyLinked(a, b)) continue;
+      if (find1(a.id) === find1(b.id)) continue;
       for (const pid of overlap) {
         const resolved = await resolvePlayer(index, pid);
         const name = resolved?.name ?? pid;
@@ -875,20 +936,84 @@ async function checkConflictRules(allActions, snapshot, index) {
     }
   }
 
-  // Rule 2: adds with no drop (needs_slot) that aren't linked (transitively)
-  // to each other must not exceed the open bench slots.
+  // Rule 2: adds with no drop (needs_slot) must not outnumber the bench
+  // slots that will actually be open.
+  //
+  // Baseline open slots credits this set's own `drop` and `ir` actions
+  // (they free a slot) and debits its `activate` actions (they fill one) —
+  // trades are NOT credited here, since whether an offer lands is unknown.
+  // A slotless add that is `after` a trade instead gets its own
+  // conditional "world": follow the after chain to the trade it is waiting
+  // on, and check it against an allowance that includes *that* trade's net
+  // roster-size effect (give.length - get.length), since if the trade
+  // lands, it does change the count.
+  //
+  // Mutual exclusion (adds that cover the same slot) is if_not links
+  // between slotless adds themselves — after never merges two adds into
+  // one group (both run), and an add if_not a trade doesn't group with
+  // another add if_not the same trade (each is its own claim on a slot;
+  // if the trade falls through both still want a slot).
   const needsSlotActions = actions.filter((a) => a.kind === 'add' && a.needs_slot);
   if (needsSlotActions.length) {
-    const find = groupLinked(actions);
-    const groups = new Set(needsSlotActions.map((a) => find(a.id)));
     const me = snapshot.teams.find((t) => t.roster_id === snapshot.my_roster_id);
     const bnCount = (snapshot.league.roster_positions ?? []).filter((p) => p === 'BN').length;
     const benchLen = me?.bench.length ?? 0;
-    const openSlots = bnCount - benchLen;
-    if (groups.size > openSlots) {
-      errors.push(
-        `${needsSlotActions.length} add(s) needing an open bench slot form ${groups.size} unlinked group(s) (${needsSlotActions.map((a) => a.id).join(', ')}), but only ${openSlots} bench slot(s) are open (${bnCount} BN slot(s) - ${benchLen} on bench); link them with after/if_not or add a drop`
-      );
+    const dropCount = actions.filter((a) => a.kind === 'drop').length;
+    const irCount = actions.filter((a) => a.kind === 'ir').length;
+    const activateCount = actions.filter((a) => a.kind === 'activate').length;
+    const openSlots = bnCount - benchLen + dropCount + irCount - activateCount;
+
+    const creditParts = [];
+    if (dropCount) creditParts.push(`+ ${dropCount} drop${dropCount === 1 ? '' : 's'}`);
+    if (irCount) creditParts.push(`+ ${irCount} ir`);
+    if (activateCount) creditParts.push(`- ${activateCount} activate${activateCount === 1 ? '' : 's'}`);
+    const creditStr = creditParts.length ? ` ${creditParts.join(' ')}` : '';
+
+    const byId = new Map(actions.map((a) => [a.id, a]));
+    function worldOf(action) {
+      let cur = action;
+      const visited = new Set();
+      while (cur.after !== undefined) {
+        if (visited.has(cur.id)) return null; // cycle guard; shouldn't happen post cycle-check
+        visited.add(cur.id);
+        const parent = byId.get(cur.after);
+        if (!parent) return null; // dangling; treat as unconditional
+        if (parent.kind === 'trade') return parent.id;
+        cur = parent;
+      }
+      return null;
+    }
+
+    const memberIds = new Set(needsSlotActions.map((a) => a.id));
+    const findGroup = componentsOver(actions, memberIds, ['if_not']);
+
+    const worlds = new Map(); // world (null or trade id) -> add ids
+    for (const a of needsSlotActions) {
+      const w = worldOf(a);
+      if (!worlds.has(w)) worlds.set(w, []);
+      worlds.get(w).push(a.id);
+    }
+
+    for (const [world, ids] of worlds) {
+      const groups = new Set(ids.map((id) => findGroup(id)));
+      let allowance;
+      if (world === null) {
+        allowance = openSlots;
+      } else {
+        const trade = byId.get(world);
+        allowance = openSlots + (trade?.give?.length ?? 0) - (trade?.get?.length ?? 0);
+      }
+      if (groups.size > allowance) {
+        if (world === null) {
+          errors.push(
+            `${ids.length} add(s) needing an open bench slot form ${groups.size} unlinked group(s) (${ids.join(', ')}), but only ${allowance} bench slot(s) are open (${bnCount} BN slot(s) - ${benchLen} on bench${creditStr}); link them with if_not or add a drop`
+          );
+        } else {
+          errors.push(
+            `${ids.length} add(s) waiting on ${world} (${ids.join(', ')}) need ${groups.size} bench slot(s) but only ${allowance} would be open if it lands; link them with if_not or add a drop`
+          );
+        }
+      }
     }
   }
 
@@ -926,17 +1051,40 @@ async function checkConflictRules(allActions, snapshot, index) {
     }
   }
 
-  // Rule 5: the faab of adds not directly linked to another add should not
-  // exceed faab_remaining. Warning only — Sleeper just skips an unfunded claim.
+  // Rule 5: projected FAAB spend should not exceed faab_remaining. Waiver
+  // adds linked by if_not to each other are alternatives — only the most
+  // expensive one in that group can actually be claimed, so the group
+  // counts once, at its max bid. after-linked adds are NOT alternatives
+  // (both run), so each contributes its own bid. Warning only — Sleeper
+  // just skips a claim it can't fund.
   const waiverAdds = actions.filter((a) => a.kind === 'add' && a.mode === 'waiver' && Number.isInteger(a.faab));
-  const unlinkedAdds = waiverAdds.filter((a) => !waiverAdds.some((b) => b.id !== a.id && directlyLinked(a, b)));
-  const faabSum = unlinkedAdds.reduce((s, a) => s + a.faab, 0);
-  const me = snapshot.teams.find((t) => t.roster_id === snapshot.my_roster_id);
-  const cap = me?.faab_remaining ?? 0;
-  if (unlinkedAdds.length && faabSum > cap) {
-    warnings.push(
-      `unlinked waiver add(s) [${unlinkedAdds.map((a) => `${a.id} $${a.faab}`).join(', ')}] total $${faabSum}, more than faab_remaining ($${cap})`
-    );
+  if (waiverAdds.length) {
+    const memberIds = new Set(waiverAdds.map((a) => a.id));
+    const findGroup = componentsOver(actions, memberIds, ['if_not']);
+    const groups = new Map(); // group root -> waiver adds
+    for (const a of waiverAdds) {
+      const g = findGroup(a.id);
+      if (!groups.has(g)) groups.set(g, []);
+      groups.get(g).push(a);
+    }
+    let faabSum = 0;
+    const parts = [];
+    for (const group of groups.values()) {
+      const top = group.reduce((m, a) => (a.faab > m.faab ? a : m), group[0]);
+      faabSum += top.faab;
+      parts.push(
+        group.length === 1
+          ? `${top.id} $${top.faab}`
+          : `max of ${group.map((a) => `${a.id} $${a.faab}`).join(' / ')}`
+      );
+    }
+    const me = snapshot.teams.find((t) => t.roster_id === snapshot.my_roster_id);
+    const cap = me?.faab_remaining ?? 0;
+    if (faabSum > cap) {
+      warnings.push(
+        `waiver bids could total $${faabSum} (${parts.join(', ')}), more than faab_remaining ($${cap})`
+      );
+    }
   }
 
   return { errors, warnings };
@@ -1000,6 +1148,15 @@ async function compile() {
   // compare by type name instead, which is an accident of alphabetization,
   // not a real recency signal. That can't be resolved from filenames alone,
   // so at least say it happened instead of picking one in silence.
+  // Same id rule finalizeAction uses, applied to a pre-finalize collected
+  // entry — needed here so a dedupe loser's id can be recorded before it's
+  // dropped from byKey.
+  const computeId = (entry) => {
+    const idKey = entry.action.kind === 'trade' ? entry.action.with : entry.action.player;
+    return entry.action.id ?? `${entry.source}:${entry.action.kind}:${idKey}`;
+  };
+
+  const remap = new Map(); // loser id -> { winner: winner id, report: winner's report file }
   const byKey = new Map();
   for (const entry of collected) {
     const key = entry.action.kind === 'trade' ? `trade:${entry.action.with}` : `${entry.action.kind}:${entry.action.player}`;
@@ -1015,13 +1172,25 @@ async function compile() {
           `actions.mjs: warning — same-day duplicate action (${key}) in ${existing.report} and ${entry.report}; keeping ${winner.report} (alphabetical tie-break, not true recency), dropping ${loser.report}`
         );
       }
+      remap.set(computeId(loser), { winner: computeId(winner), report: winner.report });
       byKey.set(key, winner);
     }
   }
-  const finalActions = [...byKey.values()].map((e) => finalizeAction(e.action, e.source, e.report, e.week));
+  const deduped = [...byKey.values()].map((e) => finalizeAction(e.action, e.source, e.report, e.week));
 
-  // Resolve after/if_not across the full compiled set: dangling refs and
-  // cycles are hard errors, same as any other validation failure.
+  // A link can point at an id dedupe just removed. Retarget links to a
+  // dedupe loser onto the winner that replaced it, then drop (with a
+  // warning) any link that still doesn't resolve — see reconcileLinks above
+  // and docs/ACTIONS.md "Sequencing". check() does neither of these: there
+  // the author is looking at one report and can fix a bad reference by hand,
+  // so a dangling link stays a hard error instead of being silently dropped.
+  const { actions: finalActions, notes, warnings: linkWarnings } = reconcileLinks(deduped, remap);
+  for (const n of notes) console.error(`actions.mjs: note — ${n}`);
+  for (const w of linkWarnings) console.error(`actions.mjs: warning — ${w}`);
+
+  // Resolve after/if_not across the full compiled set: dangling refs (any
+  // that survived reconcileLinks — there shouldn't be any) and cycles are
+  // hard errors, same as any other validation failure.
   const linkResult = resolveLinksAndDetectProblems(finalActions);
   if (linkResult.problems.length) {
     console.error('actions.mjs: validation failed\n' + linkResult.problems.map((p) => `  - ${p}`).join('\n'));
@@ -1108,6 +1277,12 @@ async function check(fileArg) {
   // *other-source* actions only — the source being checked is about to
   // replace whatever it currently holds there.
   const source = inferSource(path.basename(filePath));
+  if (source === null) {
+    console.error(
+      `${fileArg}: can't tell which routine this report belongs to — name it <date>-<type>.md or <anything>-<type>.md, where <type> is one of ${TYPES.join(', ')}`
+    );
+    process.exit(1);
+  }
   const reportName = path.basename(filePath);
   const localActions = result.actions.map((a) => finalizeAction(a, source, reportName, block.week));
   const compiledActions = await loadActionsJson();
