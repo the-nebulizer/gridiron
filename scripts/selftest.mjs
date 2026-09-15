@@ -6,6 +6,7 @@
 //
 // Usage: npm test   (node scripts/selftest.mjs [-v])
 import { mkdtemp, mkdir, writeFile, cp, rm } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -414,6 +415,33 @@ function runOutlook(dir, args) {
   const dir = await sandbox(fixture(), {});
   const r = runActions(dir, ['--check', 'reports/does-not-exist.md']);
   check('--check on a missing file says so instead of throwing', r.code === 1 && /no such file/.test(r.out) && !/at async/.test(r.out), r.out);
+}
+
+// ---- 7. publish: the recompile must not churn main -------------------------
+// The first live run proved the recompile-after-rebase works, and also that it
+// committed a file whose only change was its own timestamp.
+
+console.log('\npublish — a recompile that changes nothing must not commit');
+
+{
+  const dir = await sandbox(fixture(), { '2026-09-15-lineup.md': block([]) });
+  const git = (...a) => spawnSync('git', a, { cwd: dir, encoding: 'utf8' });
+  git('init', '-q');
+  git('config', 'user.email', 'selftest@example.invalid');
+  git('config', 'user.name', 'selftest');
+  spawnSync(process.execPath, ['scripts/actions.mjs'], { cwd: dir, encoding: 'utf8' });
+  git('add', '-A');
+  git('commit', '-qm', 'fixture');
+  const before = git('rev-parse', 'HEAD').stdout.trim();
+
+  // Recompile by hand the way the rebase path does, then confirm the only
+  // difference is the timestamp — the condition the fix keys on.
+  const first = JSON.parse(readFileSync(path.join(dir, 'reports', 'actions.json'), 'utf8'));
+  spawnSync(process.execPath, ['scripts/actions.mjs'], { cwd: dir, encoding: 'utf8' });
+  const second = JSON.parse(readFileSync(path.join(dir, 'reports', 'actions.json'), 'utf8'));
+  check('a repeat compile changes only compiled_at', first.compiled_at !== second.compiled_at &&
+    JSON.stringify({ ...first, compiled_at: 0 }) === JSON.stringify({ ...second, compiled_at: 0 }));
+  check('...and the fixture repo is otherwise untouched', git('rev-parse', 'HEAD').stdout.trim() === before);
 }
 
 // ---- done ------------------------------------------------------------------

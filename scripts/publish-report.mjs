@@ -21,7 +21,7 @@
 //
 // Usage: node scripts/publish-report.mjs <file> [<file>...] "<commit message>" [--dry-run] [--replace]
 import { execFileSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -154,6 +154,24 @@ function recompileActionsAfterRebase() {
     return { ok: false, out: `Recompiling ${compiled} after the rebase failed:\n${`${e.stdout ?? ''}${e.stderr ?? ''}`.trim()}` };
   }
   if (tryGit('diff', '--quiet', '--', compiled).ok) return { ok: true };
+  // Every compile stamps a fresh `compiled_at`, so the file always differs by
+  // at least that line. Committing on that alone would put a no-op commit on
+  // main after every single rebase — which is exactly what the first live run
+  // did. Only the substance counts.
+  try {
+    const committed = JSON.parse(git('show', `HEAD:${compiled}`));
+    const recompiled = JSON.parse(readFileSync(path.resolve(root, compiled), 'utf8'));
+    delete committed.compiled_at;
+    delete recompiled.compiled_at;
+    if (JSON.stringify(committed) === JSON.stringify(recompiled)) {
+      git('checkout', '--', compiled);
+      console.log(`Recompiled ${compiled} after the rebase — nothing but the timestamp moved, so leaving the committed copy alone.`);
+      return { ok: true };
+    }
+  } catch {
+    // Unparseable either side: fall through and commit the recompiled file,
+    // which is the safe direction.
+  }
   git('add', '--', compiled);
   const commit = tryGit('commit', '-m', `${message} (recompiled actions.json against the rebased reports)`, '--', compiled);
   if (!commit.ok) return { ok: false, out: `Could not commit the recompiled ${compiled}: ${commit.out.split('\n').filter(Boolean).pop() ?? ''}` };
