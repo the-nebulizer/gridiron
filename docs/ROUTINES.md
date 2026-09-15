@@ -18,7 +18,7 @@ The five scheduled routines live in the claude.ai routines UI, not in this repo.
 
 **Keep the blocks below in step with the live prompts.** They drifted once already: the paste-in text omitted `reports/actions.json` from the publish command long after the live prompts had it, so re-pasting from this page would have silently un-fixed the card.
 
-Times: Central is CDT (UTC-5) until clocks fall back on **Sunday Nov 1, 2026**, then CST (UTC-6). Cron is evaluated in UTC, so every routine drifts an hour earlier in local time on Nov 1 unless its cron is changed.
+Times: Central is CDT (UTC-5) until clocks fall back on **Sunday Nov 1, 2026**, then CST (UTC-6). Cron is evaluated in UTC, so every routine drifts an hour earlier in local time on Nov 1. **The schedules below are chosen so that drift never matters** — each one works in both regimes, so nothing needs touching on Nov 1 or ever again. The only routine where the hour is load-bearing is the Sunday inactives check, which has to land after inactives post (11:30am ET, fixed, never shifts relative to kickoff) and before the 1pm ET kickoff: `40 16 * * 0` is 11:40am CDT / 10:40am CST, inside that window in both. Verified against the calendar, not eyeballed.
 
 ## What was tried and doesn't work
 
@@ -28,8 +28,8 @@ The two disabled leftovers from that experiment (`roster-change watcher (v2)`, `
 
 ## Three edits that need no pasting (do these first)
 
-1. **Sunday inactives cron → `40 15 * * 0`** (10:40am CDT; `40 16 * * 0` from Nov 1), **and model → Haiku 4.5.** It currently fires at 10:06am, before inactives post at 10:30. The job is a lookup — "is this starter inactive today?" — not a judgment call.
-2. **Roster watcher: cron → `30 12,22 * * *`** (7:30am and 5:30pm, two runs a day instead of sixteen) **and model → Haiku 4.5.** Its normal run is two scripts and a stop; it doesn't need Sonnet. This one change removes ~85% of the weekly spend.
+1. **Sunday inactives cron → `40 16 * * 0`**, once, for the whole season (11:40am CDT now, 10:40am CST from Nov 1 — after inactives post and before kickoff in both), **and model → Haiku 4.5.** It currently fires at 10:06am, before inactives post at 10:30. The job is a lookup — "is this starter inactive today?" — not a judgment call.
+2. **Roster watcher: cron → `30 12,17,23 * * *`** (7:30am / 12:30pm / 6:30pm CDT; an hour earlier from Nov 1 — still three sensible daytime runs instead of sixteen) **and model → Haiku 4.5.** Its normal run is two scripts and a stop; it doesn't need Sonnet. This one change removes ~85% of the weekly spend. It also stops a quiet date bug: the current 0–3 UTC runs happen at 7–10pm Central but write reports dated *tomorrow*, because the session clock is UTC. Every hour in the new set falls on the same calendar day in both zones.
 3. **Email notifications on, all five.** They're all off, which is how five reports went missing without anyone noticing.
 
 ## Which model, and why
@@ -52,7 +52,7 @@ Never Opus for any of these. Measured per-run usage on Sonnet: waivers ≈ 2.1M 
 |---|---|---|---|---|---|---|
 | Waivers | `trig_018jkMrmz2vDLU6qQdiGeKZE` | `0 12 * * 2` | Tue 7:00am | Tue 6:00am | FAAB report before Wednesday processing | Keep. Step 5 + bye phrase pasted in 2026-09-14. |
 | Lineup | `trig_01DxqQ5pTd1sJRc8CSnX4YHy` | `0 12 * * 4` | Thu 7:00am | Thu 6:00am | Start/sit before Thursday night | Keep. Step 5 pasted in 2026-09-14. |
-| Inactives | `trig_01WEymfugQorRLQeP2YLdvqx` | `0 15 * * 0` | Sun 10:00am (fires ~10:06) | Sun 9:00am | Game-day inactives before the early slate | **Move later** — cron still pending. Step 5 + opening sentence pasted in 2026-09-14. |
+| Inactives | `trig_01WEymfugQorRLQeP2YLdvqx` | `0 15 * * 0` | Sun 10:00am (fires ~10:06) | Sun 9:00am | Game-day inactives before the early slate | **Set to `40 16 * * 0`** — one change, good all season. Step 5 + opening sentence pasted in 2026-09-14. |
 | Trades | `trig_01Jr9ik2fKEiwcs4yaS99ZeQ` | `0 12 * * 1` | Mon 7:00am | Mon 6:00am | Weekly trade hunt through the W11 deadline | Keep. Step 5 + bye phrase pasted in 2026-09-14. |
 | Roster watcher | `trig_01DTuqiqG69gfwSjFfW65vah` | `0 0-3,12-23 * * *` | hourly 7pm–10pm and 7am–6pm (fires ~:02) | hourly 6pm–9pm and 6am–5pm | Re-run the four reports when the roster changes | **Cut frequency or shift off the hour** — cron/model still pending. Steps 1–3, 4, 5, 7 pasted in 2026-09-14. |
 
@@ -64,8 +64,7 @@ The routine fires at about 10:06am Central. Official inactives post **90 minutes
 
 Fix the schedule:
 
-- Through Oct 25: `40 15 * * 0` (10:40am CDT — ten minutes after the early-slate inactives post)
-- From Nov 1: `40 16 * * 0` (10:40am CST)
+- `40 16 * * 0`, and leave it. That is 11:40am CDT through Oct 25 and 10:40am CST from Nov 1 — after inactives post (10:30am Central, both regimes) and before the noon-Central kickoff, both regimes. The earlier plan of `40 15` now and `40 16` later was one more thing to remember on Nov 1; a single value that works either side of the clock change is strictly better.
 
 Late-slate and Sunday-night inactives still post after the report runs; the report should say so and tell Ben which of his starters are in later games, rather than pretending it has covered them.
 
@@ -75,7 +74,7 @@ Sixteen runs a day, 112 sessions a week, and in nine days it has detected **zero
 
 Pick one:
 
-- **Preferred:** 2–3 runs a day, e.g. `30 12,17,23 * * *` (7:30am, 12:30pm, 6:30pm CDT). Roster moves are manual in the Sleeper app, and the dashboard already shows league activity live, so hourly polling buys almost nothing.
+- **Preferred:** `30 12,17,23 * * *` (7:30am, 12:30pm, 6:30pm CDT; an hour earlier from Nov 1). Roster moves are manual in the Sleeper app, and the dashboard already shows league activity live, so hourly polling buys almost nothing. Every one of those hours is the same calendar day in UTC and in Central, so reports get dated the day they were written — the current 0–3 UTC runs are Tuesday-evening runs that write Wednesday-dated files.
 - **Minimum:** keep the hours but move it off the hour: `30 0-3,12-23 * * *`. That alone stops it colliding with the weekly runs.
 
 ## Problem 3 — reports were being stranded (partly fixed)
@@ -184,9 +183,9 @@ Each report opens with a single quoted line written for Ben: "> Refreshed <Month
 - [ ] Re-paste step 7 into the watcher (2026-09-15 version above — it now uses publish-report.mjs, which recompiles actions.json after a rebase; the hand-written git block could not)
 - [ ] Add the `--check` sentence (2026-09-15) to step 4 of all four weekly prompts
 - [x] Watcher steps 1–3 reordered so UNCHANGED runs read nothing (pasted in 2026-09-14)
-- [ ] Inactives cron → `40 15 * * 0` now, `40 16 * * 0` from Nov 1
-- [ ] Watcher cron → `30 12,17,23 * * *` (or at least `30 0-3,12-23 * * *`)
+- [ ] Inactives cron → `40 16 * * 0` (once; works all season)
+- [ ] Watcher cron → `30 12,17,23 * * *`
 - [ ] Email notifications on, all five
 - [x] Paste step 5 into Waivers, Lineup, Trades, Inactives; plus the bye/inactives phrase edits (done 2026-09-14)
 - [x] Paste steps 4, 5, 7 into the watcher (done 2026-09-14, including the `actions.mjs` compile step)
-- [ ] On Nov 1: decide whether the Tue/Thu/Mon 7am runs should stay 7am local (`0 13 * * 2`, etc.) or are fine at 6am
+- ~~On Nov 1: decide whether the Tue/Thu/Mon 7am runs should stay 7am local~~ — 6am is fine; nothing about those three depends on the hour. Nothing on this list needs revisiting on Nov 1.
