@@ -41,6 +41,10 @@ node scripts/publish-report.mjs reports/<file>.md reports/actions.json "report: 
 
 It commits, pushes `HEAD:main`, rebases once if main moved, and if it still can't get there, pushes a branch and tells you to open a PR. **Never end a run with the report only on a session branch, and never end one silently — the final message must say where the report landed.**
 
+## Sequencing
+
+Every routine reads `reports/actions.json` before writing. Open actions from the other routines are standing commitments this week, not suggestions to override. Conflicts over the same player get linked with `after` / `if_not` per `docs/ACTIONS.md`, and the compiler refuses to write `reports/actions.json` when a conflict is left unlinked.
+
 ## Usage discipline
 
 Ben is on a usage-metered plan. The dashboard costs nothing; every scheduled run costs tokens. Read only what the task needs (the watcher runs its two scripts before reading anything else and stops on UNCHANGED); web-research only the handful of candidates a decision turns on, never the whole trending list; and mechanical jobs — the inactives lookup, the roster watcher — belong on Haiku, judgment jobs on Sonnet, nothing on Opus. Model choice lives in each routine's settings (`docs/ROUTINES.md`).

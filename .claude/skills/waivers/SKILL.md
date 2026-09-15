@@ -22,7 +22,8 @@ Not every question is the Tuesday report. When Ben asks about a single player, o
 4. **Which way is the market moving?** The snapshot carries Sleeper-wide adds AND drops. A player being dropped by tens of thousands is a signal; so is the reverse. Report the net, not just the add count — they run in both directions and the add count alone flatters a player everyone is cutting.
 5. **Is he actually rosterable?** A player on IR or PUP can't fill an active spot.
 
-6. Write the report to `reports/YYYY-MM-DD-waivers.md`, action block first per `docs/ACTIONS.md`, e.g.:
+6. **Check standing commitments first.** Read `reports/actions.json` (per `docs/ACTIONS.md`) before naming a drop: never propose dropping a player who appears in an open `trade` action's `give` list, or who is `consumes`-listed by another open action, unless this claim is explicitly `if_not` that action. If a claim's drop only works because a pending trade offer falls through, say so in `why`, set `if_not` to that trade's id, and note that waivers process Wednesday whether or not the offer has been answered — so the claim's drop must be someone not in any open offer, or the claim is a fallback only.
+7. Write the report to `reports/YYYY-MM-DD-waivers.md`, action block first per `docs/ACTIONS.md`, e.g.:
    ```actions
    { "week": 2, "verdict": "Add Justice Hill now; drop Bryce Young to make room.",
      "next_check": "Lineup, Thu 7am",

@@ -59,7 +59,9 @@ Common fields:
 | `urgency` | enum | `now` · `before_kickoff` · `by_tuesday` · `this_week` · `optional` (sort order, highest first) |
 | `deadline_label` | string | Optional. Human deadline, e.g. `"before Sun 1:00pm ET"`. Card falls back to a default per urgency. |
 | `why` | string | One sentence, at most 200 characters. Required. |
-| `id` | string | Optional. Compiler generates `<source>:<kind>:<player>` when absent. |
+| `id` | string | Optional. Compiler generates `<source>:<kind>:<player>` (`<source>:trade:<with>` for trades) when absent. |
+| `after` | string | Optional. Id of an action that must be **done** before this one makes sense. The card nests this under it as "Then". |
+| `if_not` | string | Optional. Id of an action this one is the **fallback** for: do this only if that one is declined, dismissed, or no longer possible. The card nests this under it as "If that falls through". |
 
 Per-kind fields and validation (all checked against `data/league/snapshot.json`):
 
@@ -73,6 +75,38 @@ Per-kind fields and validation (all checked against `data/league/snapshot.json`)
 | `trade` | `with` (roster_id), `give` (ids), `get` (ids), `message` (sendable offer text, optional) | `with` ≠ my roster_id; every `give` on my roster; every `get` on `with`'s roster | every `get` on my roster. The page cannot see pending offers, so trades also get a manual "dismiss" on the card. |
 
 Prefer one `start` with `for` over a separate bench instruction. Never emit an action that leaves a starting slot empty.
+
+### Sequencing — the standing order and explicit dependencies
+
+Actions from four routines land on one card, so they must not contradict each other. Two mechanisms, both enforced by the compiler:
+
+**The standing order** (fixed, printed on the card, the same every week):
+
+1. **Lineup moves before their kickoff.** Free, time-locked, never wait on anything.
+2. **Waiver claims by Tuesday night.** They never wait for a trade. Claims process Wednesday morning in bid order.
+3. **Trade offers, any time.** A player you have offered is locked in Sleeper until the other manager answers, and there is no deadline on that answer (this league's trade review is 0 days, so an accepted offer processes at once). An offer sent Monday can still be pending on Wednesday morning, so **any player in an open offer is unavailable as a drop for that week's claims**.
+
+**Explicit dependencies** (`after` / `if_not`, above) whenever two actions touch the same resource. The compiler rejects a set of actions that conflicts without a link:
+
+- Two open actions that **consume the same rostered player** (as `drop`, `give`, `for`, or the subject of `ir` / `activate` / `drop`) must be linked by `after` or `if_not` in one direction.
+- Adds with no `drop` that are not linked to each other must not exceed the open bench slots.
+- The bids of unlinked adds should not exceed `faab_remaining` (warning only; Sleeper skips a claim it cannot fund).
+- `after` / `if_not` must reference an action that exists in the compiled set (any source), and must not form a cycle.
+
+**Every routine reads `reports/actions.json` before writing.** Open actions from the *other* sources are standing commitments this week. A new report either avoids their resources or links to them explicitly — a waivers report must not name a drop who sits in an open trade offer unless the claim is `if_not` that trade; a trades report should prefer offers that do not include the player this week's claim intends to drop, and must say so in `why` when it cannot.
+
+How the card treats a dependent action:
+
+| link | parent state | dependent shows as |
+|---|---|---|
+| `after` | open | nested under the parent, "Then:", not counted as open |
+| `after` | done | promoted to open |
+| `after` | gone / dismissed | gone |
+| `if_not` | open | nested under the parent, "If that falls through:", not counted as open |
+| `if_not` | done | superseded, shelved |
+| `if_not` | gone / dismissed | promoted to open |
+
+Open primary actions are numbered in the standing order (lineup, then claims, then trades; urgency within each), and the card's header carries the three-line standing order so the numbering is never a surprise.
 
 ## 2. The compiler — `scripts/actions.mjs`
 
@@ -88,6 +122,7 @@ Behaviour:
 - Picks the newest `reports/YYYY-MM-DD-<type>.md` for each type in `waivers`, `lineup`, `trades`, `inactives`. A missing type is fine; a report without a block, or a block that fails any rule above, is an error and the script exits non-zero without writing.
 - Marks a source `stale: true` when its `week` is behind `snapshot.week` (informational). Drops only `start` actions whose `week` is behind `snapshot.week`; every other kind is kept. Every compiled action carries its `week`.
 - Dedupes across sources by `kind` + `player`, keeping the action from the newest report file.
+- Resolves `after` / `if_not` across all sources, rejects dangling references and cycles, and enforces the conflict rules in "Sequencing" above. Every compiled action carries `after` / `if_not` when set, plus `consumes` (the rostered ids it uses up) so the page can explain a conflict.
 - Writes `reports/actions.json`:
 
 ```json
@@ -116,7 +151,9 @@ Behaviour:
 
 Sits above the scorebug. Reads `reports/actions.json` from raw.githubusercontent.com with a cache-buster on every refresh. Then, per action, against the **live** Sleeper rosters just fetched:
 
-- `open` — the move is still valid and not yet made. Sorted by urgency, then by report date (newest first).
+- `open` — the move is still valid and not yet made. Primary actions are numbered in the standing order (lineup, claims, trades), then by urgency, then report date (newest first). Dependents (`after` / `if_not`) nest under their parent per the Sequencing table and are not counted as open until promoted.
+- `waiting` — a dependent whose parent is still open. Nested, muted.
+- `superseded` — an `if_not` fallback whose parent was done. Shelved with done.
 - `done` — the live test in the table above passes. Collapsed under a "Done" toggle, together with `gone` (below).
 - `gone` — the move is no longer possible: an `add` whose player is now on someone else's roster (shown with the owner's name), or a `start` / `ir` / `activate` / `drop` whose player has left my roster. Shelved under the same toggle as `done`, counted separately, never shown as an instruction.
 - `stale` — a `start` action whose `week` is behind the live NFL week. Hidden. Other kinds never go stale by week.

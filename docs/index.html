@@ -53,9 +53,9 @@
   .donow .dhead h2{margin:0}
   .dcount{font-family:var(--mono);font-size:13px;color:var(--chalk-dim)}
   .dcount b{color:var(--amber);font-weight:500}
-  .act{display:grid;grid-template-columns:16px 1fr auto;gap:3px 12px;padding:14px 22px;border-bottom:1px solid var(--line)}
+  .act{display:grid;grid-template-columns:18px 1fr auto;gap:3px 12px;padding:14px 22px;border-bottom:1px solid var(--line)}
   .act:last-child{border-bottom:0}
-  .act .glyph{font-size:14px;line-height:1.6;color:var(--amber)}
+  .act .glyph{font-family:var(--mono);font-size:14px;line-height:1.6;color:var(--amber)}
   .act.done .glyph{color:var(--chalk-dim)}
   .act.gone .glyph{color:var(--flag)}
   .act .move{font-weight:600;font-size:18px;min-width:0}
@@ -64,6 +64,19 @@
   .act .chip{font-family:var(--mono);font-size:12px;color:var(--amber);border:1px solid var(--line);padding:2px 9px;white-space:nowrap;align-self:start;justify-self:end}
   .act.done .chip,.act.gone .chip{color:var(--chalk-dim)}
   .act .why{grid-column:2/-1;font-size:16px;color:var(--chalk-dim)}
+  /* the standing order: fixed furniture under the header, so the numbering is never a surprise */
+  .donow .standing{padding:9px 22px;border-bottom:1px solid var(--line);background:var(--pitch-2);
+    font-family:var(--mono);font-size:11.5px;line-height:1.55;color:var(--chalk-dim);opacity:.8}
+  .donow .standing span{display:block;overflow-wrap:anywhere}
+  /* dependents: drawn under the action they wait on, indented with padding — no extra columns */
+  .act.waiting .glyph,.act.superseded .glyph{color:var(--chalk-dim)}
+  .act.waiting .move,.act.superseded .move{color:var(--chalk-dim);font-weight:500}
+  .act .lead{font-family:var(--mono);font-size:12px;font-weight:400;letter-spacing:.04em;color:var(--chalk-dim)}
+  .act .note{grid-column:2/-1;font-family:var(--mono);font-size:12px;color:var(--chalk-dim)}
+  .act.nest{border-bottom-style:dotted}
+  .act.nest-1{padding-left:46px}
+  .act.nest-2{padding-left:70px}
+  .act.nest-3{padding-left:94px}
   /* the sendable offer text, folded away until Ben wants to copy it */
   .act .offer{grid-column:2/-1;margin-top:5px}
   .act .offer summary{font-family:var(--mono);font-size:12px;color:var(--chalk-dim);cursor:pointer;list-style:none}
@@ -176,9 +189,12 @@
     .lineup.solo .head,.lineup.solo .slotrow{grid-template-columns:52px 1fr}
     .brief{padding:6px 16px 18px}
     .move .when{margin-left:0}
-    .act{grid-template-columns:16px 1fr;padding:13px 16px}
+    .act{grid-template-columns:18px 1fr;padding:13px 16px}
     .act .chip{grid-column:2;justify-self:start;margin-top:2px}
-    .donow .dhead,.donow .none,.drift,.donedrop summary,.heads .htitle,.heads .item{padding-left:16px;padding-right:16px}
+    .act.nest-1{padding-left:34px}
+    .act.nest-2{padding-left:52px}
+    .act.nest-3{padding-left:70px}
+    .donow .dhead,.donow .none,.donow .standing,.drift,.donedrop summary,.heads .htitle,.heads .item{padding-left:16px;padding-right:16px}
   }
   @media (prefers-reduced-motion:no-preference){
     .donow{animation:drop .35s ease-out}
@@ -411,6 +427,102 @@ const urgRank = (u)=>{ const i = URGENCY.indexOf(u); return i<0 ? URGENCY.length
 const dismissKey = (a)=> `${a.id||''}|${a.report||''}`;
 const titleCase = (s)=> String(s||'').charAt(0).toUpperCase()+String(s||'').slice(1);
 const prettySlot = (s)=> String(s||'').replace('SUPER_FLEX','SUPERFLEX');
+// The standing order, printed on the card. Fixed text: the same three lines every week, so the
+// numbering on the rows below is never a surprise.
+const STANDING = [
+  '1 Lineup moves before their kickoff.',
+  '2 Waiver claims by Tuesday night — they never wait for a trade.',
+  "3 Trade offers any time — a player you've offered is locked until they answer, so he can't be your drop this week.",
+];
+// ...and the same order as a sort key: lineup first, then the roster moves that ride on
+// Wednesday's claims, then trades. A kind the compiler shouldn't emit sorts last, never first.
+const KIND_RANK = {start:0, add:1, drop:1, ir:1, activate:1, trade:2};
+const kindRank = (k)=> KIND_RANK[k]==null ? 3 : KIND_RANK[k];
+
+/* Dependency resolution. Items arrive carrying the base state actionState gave them; `after` and
+   `if_not` name another action in the same compiled file. Pure, and re-runnable: the base state
+   is kept on the item, so dismissing a trade can re-resolve the whole set on the spot. */
+const BLOCKING = {open:1, waiting:1};
+function resolveDependencies(items){
+  const list = (Array.isArray(items) ? items : []).filter(i=>i && typeof i==='object');
+  const idx = new Map();
+  list.forEach((i,n)=>{ const k = i.id==null ? '' : String(i.id); if(k && !idx.has(k)) idx.set(k,n); });
+  // A parent that isn't in the file is no parent at all: the child stands as a primary rather
+  // than waiting forever on something the card can never show.
+  const edgeTo = (i,n,field)=>{
+    const raw = i[field]; if(raw==null || raw==='') return null;
+    const p = idx.get(String(raw));
+    return (p==null || p===n) ? null : p;
+  };
+  const edges = list.map((i,n)=>({after:edgeTo(i,n,'after'), if_not:edgeTo(i,n,'if_not')}));
+  // Break the link that closes a loop, so a cycle can hang neither the resolver nor the renderer.
+  const seen = new Array(list.length).fill(0);
+  const walk = (n)=>{
+    seen[n] = 1;
+    for(const f of ['after','if_not']){
+      const p = edges[n][f];
+      if(p==null) continue;
+      if(seen[p]===1) edges[n][f] = null;        // back edge
+      else if(seen[p]===0) walk(p);
+    }
+    seen[n] = 2;
+  };
+  list.forEach((_,n)=>{ if(seen[n]===0) walk(n); });
+
+  // When an action has both links, the more restrictive outcome wins.
+  const RANK = {waiting:3, gone:2, superseded:1};
+  const memo = new Array(list.length);
+  const res = (n)=>{
+    if(memo[n]) return memo[n];
+    const i = list[n];
+    const base = i.base_state || i.state || 'open';
+    let state = base, parent = null, link = null, rank = 0;
+    for(const f of ['after','if_not']){
+      const p = edges[n][f];
+      if(p==null) continue;
+      const par = res(p), ps = par.state;
+      const s = BLOCKING[ps] ? 'waiting'
+              : ps==='done'  ? (f==='after' ? base : 'superseded')
+              : (f==='after' ? 'gone' : base);   // gone · dismissed · stale · superseded
+      const r = RANK[s] || 0;
+      if(r > rank){ rank = r; state = s; parent = par; link = f; }
+    }
+    // Only a waiting dependent is drawn under its parent; promoted, gone and superseded ones
+    // stand (or are shelved) on their own.
+    const nested = state==='waiting' && !!parent;
+    const out = {...i, base_state:base, state,
+      parent_id: nested ? (parent.id==null ? null : String(parent.id)) : null,
+      link: nested ? link : null,
+      depth: nested ? (parent.depth||0) + 1 : 0};
+    memo[n] = out;
+    return out;
+  };
+  return list.map((_,n)=>res(n));
+}
+
+// The rostered ids an action uses up, as the compiler wrote them.
+const consumesOf = (a)=> (Array.isArray(a && a.consumes) ? a.consumes : [])
+  .map(x=> x==null ? '' : String(x)).filter(Boolean);
+// Turn one of those ids back into a name using whatever field the action spent it in.
+function resourceName(a, id){
+  if(!a || typeof a!=='object') return '';
+  const S = (x)=> x==null ? '' : String(x);
+  if(S(a.drop)===id   && a.drop_name) return a.drop_name;
+  if(S(a.for)===id    && a.for_name)  return a.for_name;
+  if(S(a.player)===id && a.name)      return a.name;
+  const pick = (ids, names)=>{
+    const n = (Array.isArray(ids) ? ids.map(S) : []).indexOf(id);
+    return (n>=0 && Array.isArray(names) && names[n]) ? names[n] : '';
+  };
+  return pick(a.give, a.give_names) || pick(a.get, a.get_names) || '';
+}
+// Why these two are linked at all: they are both spending the same player.
+function sharedNote(child, parent){
+  const mine = new Set(consumesOf(parent));
+  const shared = consumesOf(child).filter(id=>mine.has(id));
+  if(!shared.length) return '';
+  return 'both use ' + shared.map(id=> resourceName(child,id) || resourceName(parent,id) || id).join(' and ');
+}
 
 /* live = {week, players:Set(my ids), starters:[], reserve:[],
            ownerOf(id)->name|null, dismissed:Set(keys)} */
@@ -475,8 +587,14 @@ function actionHeadline(i){
   return `${esc(titleCase(i.kind||'—'))} ${nm(i.name,i.pos,i.team)}`.trim();
 }
 
-function actionRow(i, m){
-  const glyph = i.state==='done' ? '✓' : i.state==='gone' ? '✕' : '●';
+/* o = {num} for a numbered primary, or {depth, parent} for a dependent drawn under it. */
+function actionRow(i, m, o){
+  o = o || {};
+  const nested = !!o.parent;
+  const depth = Math.max(0, Math.min(3, Math.round(Number(o.depth)||0)));
+  // A numbered primary carries its place in the standing order; a dependent carries a muted hook.
+  const glyph = i.state==='done' ? '✓' : i.state==='gone' ? '✕' : i.state==='superseded' ? '⊘'
+    : o.num ? String(o.num) : nested ? '↳' : '●';
   const chip = i.deadline_label || DEADLINE[i.urgency] || 'when you can';
   const date = (String(i.report||'').match(/^\d{4}-\d{2}-\d{2}/)||[String(i.report||'').replace(/\.md$/,'')])[0];
   const dism = (i.kind==='trade' && i.state==='open')
@@ -487,35 +605,72 @@ function actionRow(i, m){
   // the trade is still his to send, so it's folded away on a live open trade and nowhere else.
   const offer = (i.kind==='trade' && i.state==='open' && typeof i.message==='string' && i.message.trim())
     ? `<details class="offer"><summary>Offer message</summary><pre>${esc(i.message)}</pre></details>` : '';
-  return `<div class="act ${esc(i.state)}">
-      <div class="glyph" aria-hidden="true">${glyph}</div>
-      <div class="move">${actionHeadline(i)}</div>
+  // What the link means, in Ben's words: do this next, or do this instead.
+  const lead = nested
+    ? `<span class="lead">${i.link==='if_not' ? 'If that falls through:' : 'Then:'}</span> ` : '';
+  const note = nested ? sharedNote(i, o.parent) : '';
+  return `<div class="act ${esc(i.state)}${depth ? ` nest nest-${depth}` : ''}">
+      <div class="glyph" aria-hidden="true">${esc(glyph)}</div>
+      <div class="move">${lead}${actionHeadline(i)}</div>
       <div class="chip">${esc(chip)}</div>
       ${i.why ? `<div class="why">${esc(i.why)}</div>` : ''}
+      ${note ? `<div class="note">${esc(note)}</div>` : ''}
       ${offer}
       <div class="src"><span>${src}</span>${dism}</div>
     </div>`;
 }
 
-/* m = {ok, week, now, league, items:[action+state],
+/* m = {ok, week, now, league, items:[action+state, resolved by resolveDependencies],
         alerts:[actionItems() output], nextCheck, drift} */
 function renderDoNow(m){
   const items = (m.items||[]).filter(i=>i.state!=='stale' && i.state!=='dismissed');
-  const open = items.filter(i=>i.state==='open')
-    .sort((a,b)=> urgRank(a.urgency)-urgRank(b.urgency) || String(b.report||'').localeCompare(String(a.report||'')));
-  const shelved = items.filter(i=>i.state==='done' || i.state==='gone');
+  // Primaries are everything open that isn't hanging off another action, numbered in the
+  // standing order: lineup, then claims, then trades; urgency, then report date, within each.
+  const open = items.filter(i=>i.state==='open' && !i.parent_id)
+    .sort((a,b)=> kindRank(a.kind)-kindRank(b.kind)
+               || urgRank(a.urgency)-urgRank(b.urgency)
+               || String(b.report||'').localeCompare(String(a.report||'')));
+  const shelved = items.filter(i=>i.state==='done' || i.state==='gone' || i.state==='superseded');
   const alerts = m.alerts||[];
 
-  let body = open.length
-    ? open.map(i=>actionRow(i,m)).join('')
-    : `<div class="none">${ m.ok===false
+  // Waiting dependents hang under their parent. They are not instructions yet, so they are
+  // drawn muted and are not counted in the "n open" chip.
+  const kidsOf = new Map();
+  items.filter(i=>i.state==='waiting' && i.parent_id!=null && i.parent_id!=='').forEach(i=>{
+    const k = String(i.parent_id);
+    if(!kidsOf.has(k)) kidsOf.set(k, []);
+    kidsOf.get(k).push(i);
+  });
+  const drawn = new Set();
+  const branch = (parent, depth)=>{
+    const kids = (kidsOf.get(parent.id==null ? '' : String(parent.id))||[])
+      .filter(k=>!drawn.has(k))
+      .sort((a,b)=> (a.link==='after'?0:1)-(b.link==='after'?0:1) || urgRank(a.urgency)-urgRank(b.urgency));
+    return kids.map(k=>{ drawn.add(k); return actionRow(k, m, {depth, parent}) + branch(k, depth+1); }).join('');
+  };
+  let rows = open.map((i,n)=>{ drawn.add(i); return actionRow(i, m, {num:n+1}) + branch(i, 1); }).join('');
+  // A dependent whose parent isn't on the card at all (a malformed file) is still shown, flat,
+  // rather than silently dropped.
+  const byId = new Map();
+  items.forEach(i=>{ const k = i.id==null ? '' : String(i.id); if(k && !byId.has(k)) byId.set(k,i); });
+  items.filter(i=>i.state==='waiting' && !drawn.has(i)).forEach(i=>{
+    drawn.add(i);
+    rows += actionRow(i, m, {depth:1, parent: byId.get(String(i.parent_id)) || {}});
+  });
+
+  let body = rows
+    || `<div class="none">${ m.ok===false
         ? 'No actions compiled yet — the next routine run writes them.'
         : `<b>Nothing to do.</b> <span class="next">Next: ${esc(m.nextCheck||'Waivers run Tue 7am')}</span>` }</div>`;
 
-  // "Done" and "gone" are not the same news: a move you made vs one you can no longer make.
+  // "Done", "gone" and "superseded" are three different pieces of news: a move you made, one you
+  // can no longer make, and a fallback you no longer need.
   if(shelved.length){
-    const nDone = shelved.filter(i=>i.state==='done').length, nGone = shelved.length - nDone;
-    const label = [nDone?`Done (${nDone})`:'', nGone?`no longer possible (${nGone})`:''].filter(Boolean).join(' · ');
+    const nDone = shelved.filter(i=>i.state==='done').length;
+    const nGone = shelved.filter(i=>i.state==='gone').length;
+    const nSup  = shelved.length - nDone - nGone;
+    const label = [nDone?`Done (${nDone})`:'', nGone?`no longer possible (${nGone})`:'',
+                   nSup?`superseded (${nSup})`:''].filter(Boolean).join(' · ');
     body += `<details class="donedrop"><summary>${label}</summary>${shelved.map(i=>actionRow(i,m)).join('')}</details>`;
   }
 
@@ -526,11 +681,13 @@ function renderDoNow(m){
 
   if(m.drift) body += `<div class="drift">Your roster has changed since these were written — the watcher re-runs within the hour.</div>`;
 
+  const standing = `<div class="standing">${STANDING.map(l=>`<span>${esc(l)}</span>`).join('')}</div>`;
+
   return `<div class="donow" id="donow">
       <div class="dhead">
         <div class="dtitle"><h2>Do now</h2><span class="dcount">Week ${esc(m.week)} · <b>${open.length} open</b></span></div>
         <a class="runlink" href="https://sleeper.com/leagues/${esc(m.league)}" target="_blank" rel="noopener">Open Sleeper ↗</a>
-      </div>${body}</div>`;
+      </div>${standing}${body}</div>`;
 }
 /* ——— end do-now pure ——— */
 
@@ -581,7 +738,9 @@ function wireDismiss(m){
   document.querySelectorAll('[data-dismiss]').forEach(b=>b.addEventListener('click', ()=>{
     const key = b.dataset.dismiss;
     rememberDismiss(key);
-    m.items = m.items.map(i=> dismissKey(i)===key ? {...i, state:'dismissed'} : i);
+    // Re-resolve: a dismissed trade promotes the claim that was waiting behind it, right now.
+    m.items = resolveDependencies(m.items.map(i=> dismissKey(i)===key
+      ? {...i, state:'dismissed', base_state:'dismissed'} : i));
     const el = $('donow');
     if(el){ el.outerHTML = renderDoNow(m); wireDismiss(m); }
   }));
@@ -768,15 +927,16 @@ function render(state, got, failed){
     reserve:(me.reserve||[]).map(String), ownerOf, dismissed:dismissedSet() };
   // A malformed actions.json is a bad data file, not a reason to blank the whole page.
   const rawActions = actionsDoc && Array.isArray(actionsDoc.actions) ? actionsDoc.actions : [];
-  const verified = rawActions.filter(a=>a && typeof a==='object').map(a=>{
+  const verified = resolveDependencies(rawActions.filter(a=>a && typeof a==='object').map(a=>{
     const src = actionsDoc.sources && actionsDoc.sources[a.source];
     const w = a.week!=null ? a.week : (src && src.week!=null ? src.week : actionsDoc.week);
     const item = {...a, week: w==null ? wk : w, id: a.id || `${a.source||'?'}:${a.kind}:${a.player||''}`};
     return {...item, ...actionState(item, live)};
-  });
+  }));
   // A player the routines have already turned into an OPEN instruction doesn't also need a
   // heads-up. Alerts flagged `keep` (an injured starter) are never silenced this way.
-  const spokenFor = new Set(verified.filter(i=>i.state==='open' && i.player).map(i=>String(i.player)));
+  const spokenFor = new Set(verified
+    .filter(i=>(i.state==='open' || i.state==='waiting') && i.player).map(i=>String(i.player)));
   const doNow = {
     ok: !!actionsDoc, week: wk, league: CFG.league,
     now: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),

@@ -10,6 +10,7 @@ description: Build this week's start/sit recommendation for Ben's team from a fr
 3. Web-research ONLY: injury/inactive news for my players and close calls, and current-week expert consensus for players within ~2 ranking spots of each other. Roster facts come from the snapshot alone.
 4. Decide each slot in **this league's scoring**: superflex + 6-pt pass TDs (a healthy starting QB in SUPER_FLEX nearly always beats any WR/TE), half-PPR.
 5. Frame close calls by win probability: projected favorite → prefer floor; underdog → prefer ceiling. Say which framing you used.
+5b. Read `reports/actions.json` first (per `docs/ACTIONS.md`): a `start` action must not name as `for` a player who sits in an open trade offer's `give` list — the move is still legal in Sleeper, but say in the report that the player may leave — and lineup moves are always step 1 of the standing order, so a `start` action never carries `after`.
 6. Output: the full legal 10-slot lineup (QB, RB, RB, WR, WR, TE, FLEX, SUPER_FLEX, K, DEF); for every change from current starters, one sentence of reasoning; flag any Questionable/Doubtful starter with the bench pivot to make before kickoff (lineup changes are manual in the Sleeper app).
 7. Write the report to `reports/YYYY-MM-DD-lineup.md`, action block first per `docs/ACTIONS.md`, e.g.:
    ```actions

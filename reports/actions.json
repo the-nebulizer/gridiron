@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-09-14T23:51:39.231Z",
+  "compiled_at": "2026-09-15T03:06:14.916Z",
   "season": "2026",
   "week": 1,
   "games_have_started": true,
@@ -30,7 +30,7 @@
     "waivers": {
       "report": "2026-09-14-waivers.md",
       "week": 2,
-      "verdict": "Claim Devaughn Vele now; a smaller speculative claim on Michael Mayer (dropping Jakobi Meyers) is optional.",
+      "verdict": "Claim Vele now; send the Cousins + Meyers offer to Tally241; only if that's declined by Tuesday night, claim Mayer by dropping Meyers.",
       "next_check": "Lineup, Thu 7am",
       "stale": false
     },
@@ -69,6 +69,8 @@
       "team": "NO",
       "mode": "waiver",
       "faab": 15,
+      "consumes": [],
+      "needs_slot": true,
       "urgency": "by_tuesday",
       "deadline_label": "claims process Wed morning",
       "why": "Vele is New Orleans's real WR2 by role with Tyson out, and the best add on this week's board."
@@ -79,6 +81,7 @@
       "report": "2026-09-14-waivers.md",
       "kind": "add",
       "week": 2,
+      "if_not": "trades:trade:8",
       "player": "9482",
       "name": "Michael Mayer",
       "pos": "TE",
@@ -87,9 +90,12 @@
       "drop_name": "Jakobi Meyers",
       "mode": "waiver",
       "faab": 6,
+      "consumes": [
+        "5947"
+      ],
       "urgency": "optional",
       "deadline_label": "claims process Wed morning",
-      "why": "Mayer's expanded role may only last as long as Bowers is out, so it's a smaller speculative bid."
+      "why": "Meyers is offered in the Cousins trade and can't be dropped while it's pending — fallback if Tally241 declines by Tuesday night."
     },
     {
       "id": "trades:trade:8",
@@ -114,6 +120,10 @@
         "Aaron Jones"
       ],
       "message": "Hey — I've got more QB depth than I need and saw you're thin behind Maye/Nix. Would you do Kirk Cousins + Jakobi Meyers for Aaron Jones? Cousins is Vegas's actual Week 1 starter, so it's a real QB2/bye-week option for you, not a stash. I could use another back with an actual role given how thin my RB room is right now.",
+      "consumes": [
+        "1166",
+        "5947"
+      ],
       "urgency": "this_week",
       "why": "Cousins is a real starting QB for a team with no backup, and it turns your extra depth into a running back with an actual role."
     },
@@ -138,6 +148,9 @@
         "Brian Robinson"
       ],
       "message": "You're carrying zero backup QB behind Lawrence/Love — I've got extra arms. Would you take Bryce Young for Brian Robinson? He's a real handcuff play for you and I could use another running back given how thin my bench is there right now.",
+      "consumes": [
+        "9228"
+      ],
       "urgency": "optional",
       "why": "A cheaper fallback shot at the same running back fix, costing only your lowest-value quarterback stash."
     }

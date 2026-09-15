@@ -189,6 +189,14 @@ async function validateAndBuildAction(action, i, snapshot, index, problems) {
     push(`(${kind}) id must be a non-empty string when present`);
     bad = true;
   }
+  if (action.after !== undefined && !isNonEmptyString(action.after)) {
+    push(`(${kind}) after must be a non-empty string when present`);
+    bad = true;
+  }
+  if (action.if_not !== undefined && !isNonEmptyString(action.if_not)) {
+    push(`(${kind}) if_not must be a non-empty string when present`);
+    bad = true;
+  }
 
   const myId = snapshot.my_roster_id;
   const myIds = index.teamIds.get(myId) ?? new Set();
@@ -201,6 +209,8 @@ async function validateAndBuildAction(action, i, snapshot, index, problems) {
     deadline_label: action.deadline_label,
     why: action.why,
     id: isNonEmptyString(action.id) ? action.id : undefined,
+    after: isNonEmptyString(action.after) ? action.after : undefined,
+    if_not: isNonEmptyString(action.if_not) ? action.if_not : undefined,
   };
 
   if (kind !== 'trade') {
@@ -404,6 +414,26 @@ async function validateAndBuildAction(action, i, snapshot, index, problems) {
     }
   }
 
+  // ---- consumes: the rostered player ids this action uses up ----
+  // (drop's own player, add's drop if any, trade's give, for's benched
+  // starter, ir/activate's subject). Empty array when none. `add` also
+  // flags needs_slot when it has no drop, since it will occupy an open
+  // bench spot rather than replace someone.
+  if (kind === 'drop') {
+    out.consumes = out.player !== undefined ? [out.player] : [];
+  } else if (kind === 'add') {
+    out.consumes = out.drop !== undefined ? [out.drop] : [];
+    if (out.drop === undefined) out.needs_slot = true;
+  } else if (kind === 'start') {
+    out.consumes = out.for !== undefined ? [out.for] : [];
+  } else if (kind === 'ir' || kind === 'activate') {
+    out.consumes = out.player !== undefined ? [out.player] : [];
+  } else if (kind === 'trade') {
+    out.consumes = out.give !== undefined ? [...out.give] : [];
+  } else {
+    out.consumes = [];
+  }
+
   return bad ? null : out;
 }
 
@@ -474,6 +504,8 @@ function finalizeAction(action, source, report, week) {
   const idKey = action.kind === 'trade' ? action.with : action.player;
   const id = action.id ?? `${source}:${action.kind}:${idKey}`;
   const out = { id, source, report, kind: action.kind, week };
+  if (action.after !== undefined) out.after = action.after;
+  if (action.if_not !== undefined) out.if_not = action.if_not;
   if (action.player !== undefined) {
     out.player = action.player;
     out.name = action.name;
@@ -504,10 +536,194 @@ function finalizeAction(action, source, report, week) {
     out.get_names = action.get_names;
   }
   if (action.message !== undefined) out.message = action.message;
+  out.consumes = action.consumes ?? [];
+  if (action.needs_slot) out.needs_slot = true;
   out.urgency = action.urgency;
   if (action.deadline_label !== undefined) out.deadline_label = action.deadline_label;
   out.why = action.why;
   return out;
+}
+
+// ---- sequencing: after/if_not resolution, cycle detection, conflict rules ----
+
+// Infer the source type from a report's filename, per the `-<type>.md`
+// suffix rule. Falls back to whatever follows the last "-" (or the whole
+// basename) for files that don't follow the YYYY-MM-DD-<type>.md convention,
+// so a check against an ad-hoc file still gets a stable, self-consistent
+// source string for generating same-file ids.
+function inferSource(basename) {
+  const m = basename.match(/^\d{4}-\d{2}-\d{2}-([a-zA-Z0-9_]+)\.md$/);
+  if (m) return m[1];
+  const m2 = basename.match(/-([a-zA-Z0-9_]+)\.md$/);
+  if (m2) return m2[1];
+  return basename.replace(/\.md$/, '');
+}
+
+async function loadActionsJson() {
+  try {
+    const raw = await readFile(path.join(reportsDir, 'actions.json'), 'utf8');
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed.actions) ? parsed.actions : [];
+  } catch {
+    return [];
+  }
+}
+
+// Directed-graph cycle detection over after/if_not edges (an action points
+// at the action it depends on / is a fallback for). `actions` must each
+// carry `id`, and optionally `after` / `if_not`. Edges to ids outside the
+// set are ignored here — those are dangling references, reported separately.
+function findCycle(actions) {
+  const byId = new Map(actions.map((a) => [a.id, a]));
+  const edgesOf = (id) => {
+    const a = byId.get(id);
+    const out = [];
+    if (a.after !== undefined && byId.has(a.after)) out.push(a.after);
+    if (a.if_not !== undefined && byId.has(a.if_not)) out.push(a.if_not);
+    return out;
+  };
+  const WHITE = 0, GRAY = 1, BLACK = 2;
+  const color = new Map(actions.map((a) => [a.id, WHITE]));
+  let cyclePath = null;
+
+  function dfs(id, stack) {
+    color.set(id, GRAY);
+    stack.push(id);
+    for (const next of edgesOf(id)) {
+      if (color.get(next) === GRAY) {
+        const idx = stack.indexOf(next);
+        cyclePath = stack.slice(idx).concat(next);
+        return true;
+      }
+      if (color.get(next) === WHITE && dfs(next, stack)) return true;
+    }
+    stack.pop();
+    color.set(id, BLACK);
+    return false;
+  }
+
+  for (const a of actions) {
+    if (color.get(a.id) === WHITE && dfs(a.id, [])) return cyclePath;
+  }
+  return null;
+}
+
+// Dangling-reference + cycle check over a set of already-finalized actions
+// (each with `id`, optional `after` / `if_not`). Used both at compile time
+// (full compiled set) and at check time (the file's own actions plus every
+// id currently in reports/actions.json).
+function resolveLinksAndDetectProblems(actions) {
+  const problems = [];
+  const byId = new Map(actions.map((a) => [a.id, a]));
+  for (const a of actions) {
+    if (a.after !== undefined && !byId.has(a.after)) {
+      problems.push(`action "${a.id}": after references unknown id "${a.after}"`);
+    }
+    if (a.if_not !== undefined && !byId.has(a.if_not)) {
+      problems.push(`action "${a.id}": if_not references unknown id "${a.if_not}"`);
+    }
+  }
+  if (problems.length) return { problems };
+
+  const cycle = findCycle(actions);
+  if (cycle) {
+    problems.push(`cycle detected in after/if_not links: ${cycle.join(' -> ')}`);
+    return { problems };
+  }
+  return { problems: [] };
+}
+
+// Two actions are "linked" for the conflict rules when one directly points
+// at the other via after or if_not (either direction, either field).
+function directlyLinked(a, b) {
+  return a.after === b.id || a.if_not === b.id || b.after === a.id || b.if_not === a.id;
+}
+
+// Union-find over after/if_not edges, treated as undirected, so a chain of
+// links (A after B, B if_not C) groups A/B/C together even though A and C
+// aren't directly linked. Used only for the bench-slot rule, where the
+// contract explicitly counts transitive links.
+function groupLinked(actions) {
+  const parent = new Map(actions.map((a) => [a.id, a.id]));
+  const ids = new Set(parent.keys());
+  function find(x) {
+    while (parent.get(x) !== x) {
+      parent.set(x, parent.get(parent.get(x)));
+      x = parent.get(x);
+    }
+    return x;
+  }
+  function union(x, y) {
+    if (!ids.has(x) || !ids.has(y)) return;
+    const rx = find(x), ry = find(y);
+    if (rx !== ry) parent.set(rx, ry);
+  }
+  for (const a of actions) {
+    if (a.after !== undefined) union(a.id, a.after);
+    if (a.if_not !== undefined) union(a.id, a.if_not);
+  }
+  return find;
+}
+
+// The three conflict rules from docs/ACTIONS.md "Sequencing", run over a
+// combined set of finalized actions (compile: the whole compiled set;
+// check: the file's own actions plus reports/actions.json's other-source
+// actions). Returns { errors, warnings } — errors fail the run, the faab
+// warning does not.
+async function checkConflictRules(actions, snapshot, index) {
+  const errors = [];
+  const warnings = [];
+
+  // Rule 1: two actions that consume the same rostered player must be
+  // directly linked.
+  for (let i = 0; i < actions.length; i++) {
+    for (let j = i + 1; j < actions.length; j++) {
+      const a = actions[i], b = actions[j];
+      const aC = a.consumes ?? [];
+      const bC = b.consumes ?? [];
+      if (!aC.length || !bC.length) continue;
+      const overlap = aC.filter((id) => bC.includes(id));
+      if (!overlap.length) continue;
+      if (directlyLinked(a, b)) continue;
+      for (const pid of overlap) {
+        const resolved = await resolvePlayer(index, pid);
+        const name = resolved?.name ?? pid;
+        errors.push(`actions ${a.id} and ${b.id} both use ${name}; link them with after/if_not`);
+      }
+    }
+  }
+
+  // Rule 2: adds with no drop (needs_slot) that aren't linked (transitively)
+  // to each other must not exceed the open bench slots.
+  const needsSlotActions = actions.filter((a) => a.kind === 'add' && a.needs_slot);
+  if (needsSlotActions.length) {
+    const find = groupLinked(actions);
+    const groups = new Set(needsSlotActions.map((a) => find(a.id)));
+    const me = snapshot.teams.find((t) => t.roster_id === snapshot.my_roster_id);
+    const bnCount = (snapshot.league.roster_positions ?? []).filter((p) => p === 'BN').length;
+    const benchLen = me?.bench.length ?? 0;
+    const openSlots = bnCount - benchLen;
+    if (groups.size > openSlots) {
+      errors.push(
+        `${needsSlotActions.length} add(s) needing an open bench slot form ${groups.size} unlinked group(s) (${needsSlotActions.map((a) => a.id).join(', ')}), but only ${openSlots} bench slot(s) are open (${bnCount} BN slot(s) - ${benchLen} on bench); link them with after/if_not or add a drop`
+      );
+    }
+  }
+
+  // Rule 3: the faab of adds not directly linked to another add should not
+  // exceed faab_remaining. Warning only — Sleeper just skips an unfunded claim.
+  const waiverAdds = actions.filter((a) => a.kind === 'add' && a.mode === 'waiver' && Number.isInteger(a.faab));
+  const unlinkedAdds = waiverAdds.filter((a) => !waiverAdds.some((b) => b.id !== a.id && directlyLinked(a, b)));
+  const faabSum = unlinkedAdds.reduce((s, a) => s + a.faab, 0);
+  const me = snapshot.teams.find((t) => t.roster_id === snapshot.my_roster_id);
+  const cap = me?.faab_remaining ?? 0;
+  if (unlinkedAdds.length && faabSum > cap) {
+    warnings.push(
+      `unlinked waiver add(s) [${unlinkedAdds.map((a) => `${a.id} $${a.faab}`).join(', ')}] total $${faabSum}, more than faab_remaining ($${cap})`
+    );
+  }
+
+  return { errors, warnings };
 }
 
 // ---- compile mode ----
@@ -581,6 +797,22 @@ async function compile() {
   }
   const finalActions = [...byKey.values()].map((e) => finalizeAction(e.action, e.source, e.report, e.week));
 
+  // Resolve after/if_not across the full compiled set: dangling refs and
+  // cycles are hard errors, same as any other validation failure.
+  const linkResult = resolveLinksAndDetectProblems(finalActions);
+  if (linkResult.problems.length) {
+    console.error('actions.mjs: validation failed\n' + linkResult.problems.map((p) => `  - ${p}`).join('\n'));
+    process.exit(1);
+  }
+
+  // Enforce the conflict rules over the whole compiled set.
+  const conflict = await checkConflictRules(finalActions, snapshot, index);
+  if (conflict.errors.length) {
+    console.error('actions.mjs: validation failed\n' + conflict.errors.map((p) => `  - ${p}`).join('\n'));
+    process.exit(1);
+  }
+  for (const w of conflict.warnings) console.error(`actions.mjs: warning — ${w}`);
+
   const output = {
     compiled_at: new Date().toISOString(),
     season: snapshot.season,
@@ -592,8 +824,9 @@ async function compile() {
   };
 
   await writeFile(path.join(reportsDir, 'actions.json'), JSON.stringify(output, null, 2));
+  const dependentCount = finalActions.filter((a) => a.after !== undefined || a.if_not !== undefined).length;
   console.log(
-    `wrote reports/actions.json — week ${output.week}, ${finalActions.length} action(s), sources: ${Object.keys(sources).join(', ') || '(none)'}`
+    `wrote reports/actions.json — week ${output.week}, ${finalActions.length} action(s) (${dependentCount} dependent on another action), sources: ${Object.keys(sources).join(', ') || '(none)'}`
   );
 }
 
@@ -633,15 +866,48 @@ async function check(fileArg) {
     process.exit(1);
   }
 
+  // ---- after/if_not: resolve, detect cycles, enforce the conflict rules ----
+  // A reference may point at another action in this same file (by the
+  // generated id rule, source inferred from the filename) or at any id
+  // already in reports/actions.json, so a single-report check can still
+  // validate cross-source links. Conflict rules run against actions.json's
+  // *other-source* actions only — the source being checked is about to
+  // replace whatever it currently holds there.
+  const source = inferSource(path.basename(filePath));
+  const reportName = path.basename(filePath);
+  const localActions = result.actions.map((a) => finalizeAction(a, source, reportName, block.week));
+  const compiledActions = await loadActionsJson();
+
+  const graphSet = [...localActions, ...compiledActions.filter((a) => !localActions.some((l) => l.id === a.id))];
+  const linkResult = resolveLinksAndDetectProblems(graphSet);
+  if (linkResult.problems.length) {
+    for (const p of linkResult.problems) console.log(`  ${p}`);
+    console.error(`\n${fileArg}: FAILED (${linkResult.problems.length} problem(s))`);
+    process.exit(1);
+  }
+
+  const otherSourceActions = compiledActions.filter((a) => a.source !== source);
+  const conflictSet = [...localActions, ...otherSourceActions];
+  const conflict = await checkConflictRules(conflictSet, snapshot, index);
+  if (conflict.errors.length) {
+    for (const p of conflict.errors) console.log(`  ${p}`);
+    console.error(`\n${fileArg}: FAILED (${conflict.errors.length} problem(s))`);
+    process.exit(1);
+  }
+  for (const w of conflict.warnings) console.error(`actions.mjs: warning — ${w}`);
+
+  const linkCount = localActions.filter((a) => a.after !== undefined || a.if_not !== undefined).length;
+  const linkSummary = `, ${linkCount} after/if_not link(s) resolved`;
+
   if (result.stale) {
     const dropped = result.actions.filter((a) => a.kind === 'start').length;
     const kept = result.actions.length - dropped;
     console.log(
-      `\n${fileArg}: OK — week ${block.week} (stale vs snapshot week ${snapshot.week}), ${result.actions.length} action(s) valid` +
+      `\n${fileArg}: OK — week ${block.week} (stale vs snapshot week ${snapshot.week}), ${result.actions.length} action(s) valid${linkSummary}` +
         (dropped ? `; ${dropped} start action(s) would be dropped at compile time, ${kept} other action(s) kept` : ' (none are `start`, so none would be dropped)')
     );
   } else {
-    console.log(`\n${fileArg}: OK — week ${block.week}, ${result.actions.length} action(s) valid`);
+    console.log(`\n${fileArg}: OK — week ${block.week}, ${result.actions.length} action(s) valid${linkSummary}`);
   }
 }
 
