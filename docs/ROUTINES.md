@@ -1,10 +1,20 @@
 # Routines — owner's runbook
 
-**Update (2026-09-14)**: the prompts can in fact be updated through Claude Code's `RemoteTrigger` tool — verified today on the watcher (`trig_01DTuqiqG69gfwSjFfW65vah`). So the checklist below can be run from a Claude Code session instead of pasted in by hand. The paste-in text remains the source of truth for what each prompt should say.
+**Update (2026-09-15) — the 2026-09-14 note below was wrong; every change on this page is Ben's to make in the UI.** Tried again today from a Claude Code session against both the inactives routine and the watcher, changing nothing but the cron:
+
+```
+update_trigger: this routine was created via "http_api", not by an agent.
+Agents can only update routines they created (via create_trigger).
+A routine's own session may still disable itself (enabled=false only).
+```
+
+That is a rule about **who created the routine**, not about which field is being changed, so it applies to crons, prompts and models alike — and agent-created replacements don't get the repo attached (see below), which is why the originals have to stay. Notification settings were never agent-editable either. So: the whole checklist is hand-work in the claude.ai UI. Do not assume otherwise again without re-testing; this is the second time the page has flipped on it.
+
+~~**Update (2026-09-14)**: the prompts can in fact be updated through Claude Code's `RemoteTrigger` tool — verified today on the watcher (`trig_01DTuqiqG69gfwSjFfW65vah`). So the checklist below can be run from a Claude Code session instead of pasted in by hand.~~ The paste-in text remains the source of truth for what each prompt should say.
 
 **Update (2026-09-14, later)**: the paste-ins are done — step 5 (plus the bye/inactives phrasing) is live in all four weekly routines, and steps 1–3, 4, 5, 7 are live in the watcher. Still pending: both model changes (watcher and inactives → Haiku 4.5), both cron changes (inactives and watcher schedules), and turning on email notifications for all five. The live prompts were written from the corrected text below, so every routine now also compiles `reports/actions.json` before publishing.
 
-The five scheduled routines live in the claude.ai routines UI, not in this repo. Their prompts **can** be edited from a Claude Code session (see the 2026-09-14 update above — the earlier "the API refuses to edit them" note was wrong); notification settings still cannot, so those remain Ben's to change in the UI. This page is the checklist either way.
+The five scheduled routines live in the claude.ai routines UI, not in this repo. They were created outside agent control and cannot be edited from a session (see the update above), so every change below is something **Ben does by hand**. This page is the checklist for that.
 
 **Keep the blocks below in step with the live prompts.** They drifted once already: the paste-in text omitted `reports/actions.json` from the publish command long after the live prompts had it, so re-pasting from this page would have silently un-fixed the card.
 
