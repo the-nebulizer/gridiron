@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Graduate&family=Barlow+Semi+Condensed:wght@400;500;600&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="marked.min.js"></script>
 <style>
   :root{
     --turf:#0C1D12; --pitch:#15291C; --pitch-2:#182F20; --line:#24422F;
@@ -142,10 +143,23 @@
   .move .when{font-family:var(--mono);font-size:12px;color:var(--chalk-dim);margin-left:auto}
   .free{font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--amber);border:1px solid var(--amber);padding:1px 6px}
 
+  .tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .tab{font-family:var(--mono);font-size:14px;background:none;border:1px solid var(--line);color:var(--chalk-dim);padding:8px 16px;cursor:pointer}
+  .tab[aria-selected="true"]{background:var(--pitch);color:var(--amber);border-color:var(--amber);border-bottom-color:var(--pitch)}
+  .brief{border:1px solid var(--line);background:var(--pitch);padding:8px 28px 24px}
+  .brief-meta{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding:14px 0;font-family:var(--mono);font-size:13px;color:var(--chalk-dim)}
   .runlink{font-family:var(--mono);font-size:13px;border:1px solid var(--amber);color:var(--amber);padding:6px 14px;white-space:nowrap}
   .runlink:hover{background:var(--amber);color:var(--turf);text-decoration:none}
   .missed{color:var(--flag)}
-  .dim{color:var(--chalk-dim)}
+  .report{max-width:70ch}
+  .report h1{font-size:24px;line-height:1.3;margin:22px 0 10px}
+  .report h2,.report h3{font-family:var(--body);font-size:19px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--chalk);margin:26px 0 8px;display:block}
+  .report p,.report li{font-size:17px;color:var(--chalk)}
+  .report em{color:var(--chalk-dim)}
+  .report strong{color:var(--amber);font-weight:600}
+  .report code{font-family:var(--mono);font-size:14px;background:var(--pitch-2);padding:1px 5px}
+  .report blockquote{margin:14px 0;padding:2px 18px;border-left:3px solid var(--line);color:var(--chalk-dim)}
+  .empty{padding:26px 0 14px;color:var(--chalk-dim)}
 
   table{width:100%;border-collapse:collapse;font-size:17px}
   th{font-family:var(--mono);font-size:12px;font-weight:400;letter-spacing:.06em;color:var(--chalk-dim);text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);text-transform:uppercase}
@@ -168,6 +182,7 @@
     .cols{grid-template-columns:1fr}
     .slotrow,.lineup .head{grid-template-columns:1fr 52px 1fr}
     .lineup.solo .head,.lineup.solo .slotrow{grid-template-columns:52px 1fr}
+    .brief{padding:6px 16px 18px}
     .move .when{margin-left:0}
     .act{grid-template-columns:18px 1fr;padding:13px 16px}
     .act .chip{grid-column:2;justify-self:start;margin-top:2px}
@@ -210,7 +225,7 @@ const ROUTINES = {
   trades:   {label:'Trades',    id:'trig_01Jr9ik2fKEiwcs4yaS99ZeQ', day:1, hour:12, auto:'runs Mondays'},
 };
 const WATCHER = {label:'Roster watcher', id:'trig_01DTuqiqG69gfwSjFfW65vah',
-  auto:'checks hourly, and refreshes these after any move you make'};
+  auto:'checks hourly, and rewrites the brief after any move you make'};
 const API = 'https://api.sleeper.app';
 const MIN = 60*1000, HOUR = 60*MIN, DAY = 24*HOUR;
 const $ = (id)=>document.getElementById(id);
@@ -692,7 +707,7 @@ function wireDismiss(m){
   }));
 }
 
-/* ——— the report listing (dates and outcomes only) ——— */
+/* ——— the written brief ——— */
 let reportFiles = null;          // null until GitHub has answered at least once; then the last good listing
 let reportsCheckedAt = 0;
 async function loadReports(){
@@ -723,6 +738,79 @@ function missedRun(type, file){
   const due = last.toISOString().slice(0,10);
   return (have && have >= due) ? null : last.toLocaleDateString(undefined,{weekday:'long', timeZone:'UTC'});
 }
+// Markdown from the repo is trusted-ish, but it renders as HTML, so strip anything that could run. This hands back
+// the sanitized nodes themselves, never a string: serializing clean markup and parsing it again is exactly how
+// mutation XSS gets through (e.g. a <noscript> whose attribute text turns into live elements on the second parse).
+function safeFragment(md){
+  const t = document.createElement('template');
+  t.innerHTML = marked.parse(md);
+  // <noscript> and <template> go too: their contents parse differently depending on context, and nothing
+  // in a report needs them.
+  t.content.querySelectorAll('script,style,iframe,object,embed,form,input,link,meta,base,noscript,template').forEach(n=>n.remove());
+  const okUrl = (v)=>{ const u = String(v).replace(/[\x00-\x20]/g,'').toLowerCase();
+                       return /^(https?:|mailto:)/.test(u) || !/^[a-z][a-z0-9+.-]*:/.test(u); };
+  t.content.querySelectorAll('*').forEach(el=>{
+    for(const a of [...el.attributes]){
+      const n = a.name.toLowerCase();
+      if(n.startsWith('on') || n==='srcdoc' || n==='formaction') el.removeAttribute(a.name);
+      else if((n==='href' || n==='src' || n==='xlink:href' || n==='action' || n==='data') && !okUrl(a.value)) el.removeAttribute(a.name);
+    }
+  });
+  return t.content;
+}
+// Put the meta line and a sanitized write-up into the brief, moving the clean nodes in directly.
+function renderReport(box, metaHtml, md){
+  box.innerHTML = metaHtml;
+  const article = document.createElement('article');
+  article.className = 'report';
+  article.append(safeFragment(md));
+  box.append(article);
+}
+
+function settingsPanel(){
+  const rows = [...Object.values(ROUTINES).filter(r=>r.id), WATCHER];
+  return `<div class="brief-meta"><span>what runs on its own, and when</span></div>
+    <table style="margin:18px 0"><thead><tr><th>Routine</th><th>Schedule</th><th class="r"></th></tr></thead><tbody>
+    ${rows.map(r=>`<tr><td>${esc(r.label)}</td><td>${esc(r.auto)}</td>
+      <td class="num"><a href="https://claude.ai/code/routines/${esc(r.id)}" target="_blank" rel="noopener">open ↗</a></td></tr>`).join('')}
+    </tbody></table>
+    <p class="sub">Each link opens that routine, where you can pause it, change when it runs, or start one now. Everything else on this page is live from Sleeper and refreshes itself every two minutes.</p>`;
+}
+
+let currentBrief = null;                 // the tab the reader has open; survives refreshes
+let articleCache = {key:null, md:''};    // the write-up's markdown, refetched only when GitHub says it changed
+async function showBrief(type){
+  currentBrief = type;
+  document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected', t.dataset.type===type));
+  const box = $('brief');
+  if(type==='settings'){ box.innerHTML = settingsPanel(); return; }
+  const r = ROUTINES[type], f = newestOf(type), missed = missedRun(type, f);
+  const ghLink = `<a href="https://github.com/${CFG.repo}/tree/main/reports">read them on GitHub</a>`;
+  const when = f ? esc(longDate(reportDate(f.name)) || f.name.replace('.md','')) : (reportFiles ? 'nothing yet' : 'couldn’t check for new write-ups');
+  const meta = `<div class="brief-meta">
+      <span>${when}${r.auto ? ' · '+esc(r.auto) : ''}${
+        missed ? ` · <span class="missed">${esc(missed)}'s run left nothing here</span>` : ''}</span>
+      ${r.id ? `<a class="runlink" href="https://claude.ai/code/routines/${esc(r.id)}" target="_blank" rel="noopener">Run fresh ↗</a>` : ''}
+    </div>`;
+  if(!f){
+    box.innerHTML = meta + (reportFiles
+      ? `<div class="empty">Nothing here yet.${r.id ? ' “Run fresh” starts one now; the write-up lands here a few minutes later.' : ''}</div>`
+      : `<div class="empty">GitHub didn't answer, so this may be out of date — ${ghLink}.</div>`);
+    return;
+  }
+  const key = f.sha || f.name;
+  if(articleCache.key !== key){
+    box.innerHTML = meta + `<div class="empty">Loading…</div>`;
+    try{
+      const res = await fetch(f.download_url); if(!res.ok) throw new Error(res.status);
+      // The actions block is data for the card, not prose; it would read as noise in the write-up.
+      articleCache = {key, md:(await res.text()).replace(/^```actions[ \t]*$[\s\S]*?^```[ \t]*$\n?/m, '')};
+    }catch{ box.innerHTML = meta + `<div class="empty">This one wouldn't load — ${ghLink}.</div>`; return; }
+    if(currentBrief !== type) return;      // the reader moved on while it was loading
+  }
+  renderReport(box, meta, articleCache.md);
+}
+
 /* ——— page ——— */
 const FEED_NAMES = {matchups:'this week’s matchup', trendAdd:'who’s trending', trendDrop:'who’s trending',
                     schedule:'the NFL schedule (byes)', scores:'kickoff times', txnsNow:'league moves', txnsPrev:'last week’s moves'};
@@ -881,30 +969,12 @@ function render(state, got, failed){
     <div class="feed">${txns ? (movesHtml || '<div class="allclear">Nobody has made a move yet.</div>')
                             : '<div class="allclear">Couldn’t load league moves just now.</div>'}</div></section>`;
 
-  /* 4 — where each routine landed, one line each. The write-ups stay on GitHub:
-     this page is for outcomes, not for the reasoning behind them. */
-  const srcs = (actionsDoc && actionsDoc.sources) || {};
-  const runRows = Object.entries(ROUTINES).map(([type, r])=>{
-    const f = newestOf(type), missed = missedRun(type, f), src = srcs[type];
-    const when = f ? (longDate(reportDate(f.name)) || f.name.replace('.md','')) : null;
-    const outcome = src && src.verdict ? esc(src.verdict)
-                  : f ? '<span class="dim">\u2014</span>'
-                  : `<span class="dim">${reportFiles ? 'Nothing yet.' : 'Couldn\u2019t check.'}</span>`;
-    return `<tr>
-      <td><b>${esc(r.label)}</b><br><span class="dim">${esc(r.auto||'')}</span></td>
-      <td>${outcome}${missed ? ` <span class="missed">\u00b7 ${esc(missed)}\u2019s run left nothing</span>` : ''}</td>
-      <td class="num">${when ? esc(when) : ''}</td>
-      <td class="num">${r.id ? `<a href="https://claude.ai/code/routines/${esc(r.id)}" target="_blank" rel="noopener">Run fresh \u2197</a>` : ''}</td>
-    </tr>`;
-  }).join('');
-  html += `<section><h2>Latest</h2>
-    <p class="sub">Where each routine landed, and when. The roster watcher ${esc(WATCHER.auto)}.</p>
-    <table><thead><tr><th>Routine</th><th>Outcome</th><th class="r">Landed</th><th class="r"></th></tr></thead>
-    <tbody>${runRows}</tbody></table>
-    <p class="sub" style="margin-top:12px">The reasoning behind any of these is in the full write-ups
-      <a href="https://github.com/${esc(CFG.repo)}/tree/main/reports" target="_blank" rel="noopener">on GitHub</a>.
-      Something they don\u2019t cover \u2014 a trade offer to weigh, a what-if?
-      <a href="https://claude.ai/code" target="_blank" rel="noopener">Open a session</a> and ask.</p>
+  /* 4 — the brief */
+  html += `<section><h2>The brief</h2>
+    <p class="sub">The written analysis behind all of this. “Run fresh” starts a new one; it lands here a few minutes later.</p>
+    <div class="tabs" role="tablist">${Object.entries(ROUTINES).map(([t,r])=>`<button class="tab" role="tab" data-type="${t}" aria-selected="false">${r.label}</button>`).join('')}<button class="tab" role="tab" data-type="settings" aria-selected="false">Routines</button></div>
+    <div class="brief" id="brief"></div>
+    <p class="sub" style="margin-top:12px">Something these don't cover — a trade offer to weigh, a what-if? <a href="https://claude.ai/code" target="_blank" rel="noopener">Open a session</a> on <b>the-nebulizer/gridiron</b> and ask.</p>
   </section>`;
 
   /* 5 — the season */
@@ -927,6 +997,9 @@ function render(state, got, failed){
   $('app').innerHTML = html;
   rendered = true;
   wireDismiss(doNow);
+  document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>showBrief(t.dataset.type)));
+  const newest = (reportFiles||[]).slice().sort((a,b)=>b.name.localeCompare(a.name))[0];
+  showBrief(currentBrief || (newest ? (Object.keys(ROUTINES).find(t=>newest.name.includes('-'+t)) || 'waivers') : 'waivers'));
 
   // One plain line for whatever didn't come through; the exception text stays in the tooltip.
   const missing = [...new Set(Object.keys(failed).map(k=>FEED_NAMES[k]||k))];
