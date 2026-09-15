@@ -24,6 +24,8 @@ Times: Central is CDT (UTC-5) until clocks fall back on **Sunday Nov 1, 2026**, 
 
 Replacement routines created by the agent (`create_trigger`) spawn sessions **without the repository attached** — verified Sep 10: two test runs, no checkout, nothing pushed. Only routines created in the claude.ai UI get the repo. So the originals stay, and every change below is a UI edit. Nothing on this page needs code.
 
+The two disabled leftovers from that experiment (`roster-change watcher (v2)`, `Thursday lineup (v2)`) were **deleted 2026-09-15** — they could never have worked, and they made the routines list read as though there were seven. Five routines, all live, all listed below.
+
 ## Three edits that need no pasting (do these first)
 
 1. **Sunday inactives cron → `40 15 * * 0`** (10:40am CDT; `40 16 * * 0` from Nov 1), **and model → Haiku 4.5.** It currently fires at 10:06am, before inactives post at 10:30. The job is a lookup — "is this starter inactive today?" — not a judgment call.
