@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-09-16T12:22:06.968Z",
+  "compiled_at": "2026-09-16T20:06:30.897Z",
   "season": "2026",
   "week": 2,
   "games_have_started": true,
@@ -14,14 +14,15 @@
       "8228",
       "3163",
       "8259",
-      "BUF"
+      null
     ],
     "bench": [
       "1166",
       "1479",
       "4993",
       "5947",
-      "9228"
+      "9228",
+      "CHI"
     ],
     "reserve": [
       "9753"
@@ -31,14 +32,14 @@
     "waivers": {
       "report": "2026-09-16-waivers.md",
       "week": 2,
-      "verdict": "Hold — the Gesicki claim landed and the bench is full; no waiver move clears the bar this week.",
+      "verdict": "Hold — the Chicago defense pickup is already made and the bench is full; no waiver move clears the bar this week.",
       "next_check": "Lineup, Thu 7am",
       "stale": false
     },
     "lineup": {
       "report": "2026-09-16-lineup.md",
       "week": 2,
-      "verdict": "No changes — start the same ten as last week; Gesicki now covers the Week 11 tight end bye.",
+      "verdict": "Start Chicago Bears at DEF — the slot is empty after dropping Buffalo.",
       "next_check": "Inactives, Sun 10am",
       "stale": false
     },
@@ -58,6 +59,25 @@
     }
   },
   "actions": [
+    {
+      "id": "lineup:start:CHI",
+      "source": "lineup",
+      "report": "2026-09-16-lineup.md",
+      "kind": "start",
+      "week": 2,
+      "player": "CHI",
+      "name": "Chicago Bears",
+      "pos": "DEF",
+      "team": "CHI",
+      "slot": "DEF",
+      "consumes": [],
+      "urgency": "before_kickoff",
+      "deadline_label": "before your first kickoff this week",
+      "why": "Buffalo was dropped for Chicago but Chicago was never moved into the lineup, leaving DEF empty.",
+      "case": {
+        "starts": "Chicago Bears in at DEF"
+      }
+    },
     {
       "id": "trades:trade:8",
       "source": "trades",

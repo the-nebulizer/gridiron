@@ -1,6 +1,6 @@
 {
-  "fingerprint": "6228e71a0fd83f317f4ec7d47c4ce5d1e55065e90f547aba56d7f94e705cb02f",
-  "updated_at": "2026-09-16T12:16:56.441Z",
+  "fingerprint": "098c0b142da517c15ca5ab9202005de82b3fb6fcb7b3860c8410f981c4ec8857",
+  "updated_at": "2026-09-16T20:03:47.882Z",
   "roster": {
     "starters": [
       "4881",
@@ -12,14 +12,15 @@
       "8228",
       "3163",
       "8259",
-      "BUF"
+      null
     ],
     "bench": [
       "1166",
       "1479",
       "4993",
       "5947",
-      "9228"
+      "9228",
+      "CHI"
     ],
     "reserve": [
       "9753"
