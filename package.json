@@ -6,6 +6,7 @@
     "sync": "node scripts/sync.mjs",
     "actions": "node scripts/actions.mjs",
     "test": "node scripts/selftest.mjs",
-    "outlook": "node scripts/outlook.mjs"
+    "outlook": "node scripts/outlook.mjs",
+    "ask": "node scripts/ask-bundle.mjs"
   }
 }

@@ -1,0 +1,980 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ask the Card</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Graduate&family=Barlow+Semi+Condensed:wght@400;500;600&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* Same tokens, same faces, same dark pitch as docs/index.html. This is a companion page,
+     not a second identity: one visual world, deliberately single-theme. */
+  :root{
+    --turf:#0C1D12; --pitch:#15291C; --pitch-2:#182F20; --line:#24422F;
+    --chalk:#F2F5EB; --chalk-dim:#A8BCA9; --amber:#FFB41F; --flag:#F0503A;
+    --display:'Graduate',serif; --body:'Barlow Semi Condensed',system-ui,sans-serif;
+    --mono:'Spline Sans Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--turf);color:var(--chalk);font-family:var(--body);font-size:17px;line-height:1.55;
+    padding-bottom:var(--composer-h, 176px)}
+  [hidden]{display:none!important}
+  img{max-width:100%}
+  a{color:var(--amber);text-decoration:none}
+  a:hover,a:focus-visible{text-decoration:underline}
+  :focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+  .wrap{max-width:960px;margin:0 auto;padding-block:0 32px;padding-left:20px;padding-right:20px}
+
+  .field{background-image:repeating-linear-gradient(90deg,transparent 0 95px,rgba(242,245,235,.06) 95px 96px);border-bottom:1px solid var(--line)}
+  header.masthead{max-width:960px;margin:0 auto;padding:30px 20px 22px;display:flex;align-items:baseline;justify-content:space-between;gap:12px 16px;flex-wrap:wrap}
+  .wordmark{font-family:var(--display);font-size:clamp(24px,4vw,34px);letter-spacing:.04em}
+  .wordmark .throne{color:var(--amber)}
+  .headmeta{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap}
+  .weekchip{font-family:var(--mono);font-size:14px;color:var(--chalk-dim)}
+  .weekchip b{color:var(--amber);font-weight:500}
+
+  h2{font-family:var(--display);font-size:16px;font-weight:400;letter-spacing:.12em;color:var(--chalk);margin:0 0 6px;text-transform:uppercase}
+
+  /* alert rows — the card's markup uses these for its "Heads up" list. This page passes no
+     alerts, but the shared renderer can still emit them, so the rules ship with it. */
+  .item{padding:15px 20px;border-bottom:1px solid var(--line);display:flex;gap:14px;align-items:baseline}
+  .item:last-child{border-bottom:0}
+  .tag{font-family:var(--mono);font-size:11px;letter-spacing:.08em;padding:2px 7px;border:1px solid;flex-shrink:0;text-transform:uppercase}
+  .tag.now{color:var(--flag);border-color:var(--flag)}
+  .tag.soon{color:var(--amber);border-color:var(--amber)}
+  .tag.watch{color:var(--chalk-dim);border-color:var(--line)}
+  .item .what{min-width:0}
+  .item .what b{color:var(--chalk);font-weight:600}
+  .item .why{color:var(--chalk-dim);font-size:15px;display:block;margin-top:2px}
+
+  /* ——— the card: these rules are docs/index.html's, unchanged, because the markup is
+     rendered by docs/index.html's own renderDoNow. Two copies of one look drift; keep them
+     identical when you touch either. ——— */
+  .donow{margin-top:32px;border:1px solid var(--line);border-top:3px solid var(--amber);background:var(--pitch)}
+  .donow .dhead{display:flex;align-items:baseline;justify-content:space-between;gap:12px 18px;flex-wrap:wrap;padding:16px 22px 14px;border-bottom:1px solid var(--line)}
+  .donow .dtitle{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+  .donow .dhead h2{margin:0}
+  .dcount{font-family:var(--mono);font-size:13px;color:var(--chalk-dim)}
+  .dcount b{color:var(--amber);font-weight:500}
+  .act{display:grid;grid-template-columns:18px 1fr auto;gap:3px 12px;padding:14px 22px;border-bottom:1px solid var(--line)}
+  .act:last-child{border-bottom:0}
+  .act .glyph{font-family:var(--mono);font-size:14px;line-height:1.6;color:var(--amber)}
+  .act.done .glyph{color:var(--chalk-dim)}
+  .act.gone .glyph{color:var(--flag)}
+  .act .move{font-weight:600;font-size:18px;min-width:0}
+  .act.done .move{color:var(--chalk-dim);font-weight:500}
+  .act .move .meta{font-family:var(--mono);font-size:13px;font-weight:400;color:var(--chalk-dim)}
+  .act .chip{font-family:var(--mono);font-size:12px;color:var(--amber);border:1px solid var(--line);padding:2px 9px;white-space:nowrap;align-self:start;justify-self:end}
+  .act.done .chip,.act.gone .chip{color:var(--chalk-dim)}
+  .act .kind{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--amber);margin-right:10px;vertical-align:middle}
+  .act .case{grid-column:2/-1;display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;margin:8px 0 2px;font-size:13px;line-height:1.35}
+  .act .case .k{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--chalk-dim);padding-top:2px}
+  .act .case .v{color:var(--chalk)}
+  .act .why{grid-column:2/-1;font-size:16px;color:var(--chalk-dim)}
+  .act.waiting .glyph,.act.superseded .glyph{color:var(--chalk-dim)}
+  .act.waiting .move,.act.superseded .move{color:var(--chalk-dim);font-weight:500}
+  .act.waiting .kind,.act.superseded .kind{color:var(--chalk-dim)}
+  .act.waiting .case .v{color:var(--chalk-dim)}
+  .act .lead{font-family:var(--mono);font-size:12px;font-weight:400;letter-spacing:.04em;color:var(--chalk-dim)}
+  .act.nest{border-bottom-style:dotted}
+  .act.nest-1{padding-left:46px}
+  .act.nest-2{padding-left:70px}
+  .act.nest-3{padding-left:94px}
+  .act .offer{grid-column:2/-1;margin-top:5px}
+  .act .offer summary{font-family:var(--mono);font-size:12px;color:var(--chalk-dim);cursor:pointer;list-style:none}
+  .act .offer summary::-webkit-details-marker{display:none}
+  .act .offer summary::before{content:'▸ '}
+  .act .offer[open] summary::before{content:'▾ '}
+  .act .offer summary:hover{color:var(--amber)}
+  .act .offer pre{font-family:var(--mono);font-size:13px;line-height:1.55;color:var(--chalk);
+    background:var(--pitch-2);border:1px solid var(--line);padding:11px 13px;margin:7px 0 0;
+    white-space:pre-wrap;overflow-wrap:anywhere}
+  .act .src{grid-column:2/-1;display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-family:var(--mono);font-size:12px;color:var(--chalk-dim);margin-top:2px}
+  .donow .none{padding:18px 22px;color:var(--chalk-dim)}
+  .donow .none b{color:var(--chalk);font-weight:600}
+  .donow .none .next{font-family:var(--mono);font-size:13px}
+  .donedrop{border-top:1px solid var(--line)}
+  .donedrop summary{font-family:var(--mono);font-size:13px;color:var(--chalk-dim);padding:11px 22px;cursor:pointer;list-style:none}
+  .donedrop summary::-webkit-details-marker{display:none}
+  .donedrop summary::before{content:'▸ ';color:var(--chalk-dim)}
+  .donedrop[open] summary::before{content:'▾ '}
+  .donedrop summary:hover{color:var(--amber)}
+  .donedrop .act{border-top:1px solid var(--line);border-bottom:0}
+  .heads{border-top:1px solid var(--line);background:var(--pitch-2)}
+  .heads .htitle{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--chalk-dim);padding:13px 22px 0}
+  .heads .item{padding:11px 22px;border-bottom:0}
+  .heads .item + .item{border-top:1px solid var(--line)}
+  .drift{border-top:1px solid var(--line);padding:11px 22px;font-family:var(--mono);font-size:12px;color:var(--chalk-dim)}
+  .runlink{font-family:var(--mono);font-size:13px;border:1px solid var(--amber);color:var(--amber);padding:6px 14px;white-space:nowrap}
+  .runlink:hover{background:var(--amber);color:var(--turf);text-decoration:none}
+
+  /* the line that keeps the card honest: this copy is a photograph, the dashboard is the mirror */
+  .asof{font-family:var(--mono);font-size:13px;color:var(--chalk-dim);margin:10px 2px 0}
+
+  /* ——— the ask box ——— */
+  .ask{margin-top:44px;border:1px solid var(--line);background:var(--pitch)}
+  .ask .ahead{padding:16px 22px 12px;border-bottom:1px solid var(--line)}
+  .ask .ahead p{margin:6px 0 0;font-size:16px;color:var(--chalk-dim);max-width:65ch}
+
+  /* the composer: pinned to the bottom of the viewport so asking never waits below the fold.
+     #askbody is still the element retireAsk() clears and replaces wholesale — only its look
+     (a fixed bar instead of an in-flow block) has changed. */
+  .composer{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--pitch);
+    border-top:1px solid var(--line);padding-top:12px;padding-bottom:calc(12px + env(safe-area-inset-bottom, 0px))}
+  .composerin{max-width:960px;margin:0 auto;padding:0 20px;display:flex;flex-direction:column;gap:10px}
+  .chiprow{display:flex;gap:8px;flex-wrap:wrap}
+  .qchip{font-family:var(--mono);font-size:12px;background:none;border:1px solid var(--line);color:var(--chalk-dim);padding:5px 11px;cursor:pointer;text-align:left}
+  .qchip:hover{border-color:var(--amber);color:var(--amber)}
+  .composerrow{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+  .composerrow>textarea{flex:1 1 260px;min-width:0}
+  .composerrow>.controls{flex:0 0 auto}
+  textarea#ask-input{width:100%;min-height:48px;max-height:150px;overflow-y:auto;resize:none;background:var(--pitch-2);border:1px solid var(--line);
+    color:var(--chalk);font-family:var(--body);font-size:17px;line-height:1.5;padding:12px 14px}
+  textarea#ask-input::placeholder{color:var(--chalk-dim)}
+  textarea#ask-input:focus-visible{border-color:var(--amber)}
+  .controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .btn{font-family:var(--mono);font-size:14px;background:none;border:1px solid var(--line);color:var(--chalk);padding:8px 18px;cursor:pointer}
+  .btn:hover:not(:disabled){border-color:var(--amber);color:var(--amber)}
+  .btn:disabled{color:var(--chalk-dim);cursor:default;opacity:.65}
+  .btn.primary{background:var(--amber);border-color:var(--amber);color:var(--turf);font-weight:500}
+  .btn.primary:hover:not(:disabled){background:var(--chalk);border-color:var(--chalk);color:var(--turf)}
+  .btn.primary:disabled{background:none;color:var(--chalk-dim);border-color:var(--line)}
+  .tier{display:flex;align-items:baseline;gap:8px;margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--chalk-dim)}
+  .tier .tiergroup{display:flex}
+  .tierbtn{font-family:var(--mono);font-size:13px;background:none;border:1px solid var(--line);color:var(--chalk-dim);padding:5px 13px;cursor:pointer}
+  .tierbtn + .tierbtn{border-left:0}
+  .tierbtn[aria-pressed="true"]{color:var(--amber);border-color:var(--amber)}
+  .tierbtn[aria-pressed="true"] + .tierbtn{border-left:1px solid var(--line)}
+  .status{font-family:var(--mono);font-size:13px;color:var(--chalk-dim);min-height:1.4em;max-width:65ch;padding:14px 22px 6px}
+  .status.bad{color:var(--flag)}
+  .noask{padding:20px 22px;color:var(--chalk-dim);max-width:65ch}
+
+  /* the conversation: speaker rules rather than chat bubbles — the dashboard's flat, ruled
+     language, so a question and an answer read as two entries in the same ledger */
+  .thread{display:flex;flex-direction:column;gap:22px;padding:0 22px 22px}
+  .thread:empty{display:none}
+  .turn{border-left:2px solid var(--line);padding-left:16px}
+  .turn .who{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--chalk-dim);display:block;margin-bottom:5px}
+  .turn.ben{border-left-color:var(--chalk-dim)}
+  .turn.ben .body{color:var(--chalk-dim)}
+  .turn.claude{border-left-color:var(--amber)}
+  .turn.claude .who{color:var(--amber)}
+  .turn .body{max-width:65ch;overflow-wrap:anywhere}
+  .turn .body p{margin:0 0 10px}
+  .turn .body p:last-child,.turn .body ul:last-child,.turn .body ol:last-child{margin-bottom:0}
+  .turn .body ul,.turn .body ol{margin:0 0 10px;padding-left:22px}
+  .turn .body li{margin:0 0 4px}
+  .turn .body strong{color:var(--amber);font-weight:600}
+  .turn .body code{font-family:var(--mono);font-size:14px;background:var(--pitch-2);padding:1px 5px}
+  .turn .note{font-family:var(--mono);font-size:12px;color:var(--chalk-dim);margin-top:8px}
+  .thinking{font-family:var(--mono);font-size:14px;color:var(--chalk-dim)}
+
+  .limits{margin-top:46px;padding-top:18px;border-top:1px solid var(--line);color:var(--chalk-dim);font-size:15px;max-width:65ch}
+  .limits p{margin:0 0 9px}
+  .limits p:last-child{margin-bottom:0}
+
+  @media (max-width:720px){
+    .act{grid-template-columns:18px 1fr;padding:13px 16px}
+    .act .chip{grid-column:2;justify-self:start;margin-top:2px}
+    .act.nest-1{padding-left:34px}
+    .act.nest-2{padding-left:52px}
+    .act.nest-3{padding-left:70px}
+    .donow .dhead,.donow .none,.drift,.donedrop summary,.heads .htitle,.heads .item{padding-left:16px;padding-right:16px}
+    .ask .ahead,.status,.noask,.thread{padding-left:16px;padding-right:16px}
+    .composerin{padding-left:16px;padding-right:16px}
+    .composerrow{flex-direction:column;align-items:stretch}
+    .controls{align-items:stretch;flex-direction:column}
+    .btn{width:100%}
+    .tier{margin-left:0;justify-content:space-between}
+  }
+  @media (prefers-reduced-motion:no-preference){
+    .donow{animation:drop .35s ease-out}
+    @keyframes drop{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+    .thinking{animation:breathe 1.8s ease-in-out infinite}
+    @keyframes breathe{0%,100%{opacity:.55}50%{opacity:1}}
+  }
+</style>
+
+<div class="field">
+  <header class="masthead">
+    <div class="wordmark">GRIDIRON <span class="throne">ASK</span></div>
+    <div class="headmeta">
+      <span class="weekchip">WEEK <b id="weekno">—</b> · DATA AS OF __AS_OF__</span>
+      <a class="runlink" id="dashlink" href="https://the-nebulizer.github.io/gridiron/" target="gridiron-dash" rel="noopener">Dashboard ↗</a>
+    </div>
+  </header>
+</div>
+
+<div class="wrap">
+  <main>
+    <div id="card"></div>
+    <p class="asof">As of __AS_OF__ — <a id="dashlink2" href="https://the-nebulizer.github.io/gridiron/" target="gridiron-dash" rel="noopener">the dashboard</a> has the live version.</p>
+
+    <section class="ask" id="ask">
+      <div class="ahead">
+        <h2>Ask about this card</h2>
+        <p>Claude answers from the same data the card was compiled from — this roster, this league, this week. Nothing else.</p>
+      </div>
+      <!-- The composer: pinned to the bottom of the viewport (see .composer) so asking is never
+           below the fold. #askbody is still the one element retireAsk() clears and replaces
+           wholesale when asking isn't available — only where it sits on screen has changed. -->
+      <div class="composer" id="askbody">
+        <div class="composerin">
+          <div class="chiprow" id="chips">
+            <button type="button" class="qchip" data-q="Why is #1 the priority?">Why is #1 the priority?</button>
+            <button type="button" class="qchip" data-q="Who could I drop for a second TE?">Who could I drop for a second TE?</button>
+            <button type="button" class="qchip" data-q="Is there a better defense on the wire?">Is there a better defense on the wire?</button>
+          </div>
+          <div class="composerrow">
+            <textarea id="ask-input" rows="1" aria-label="Your question about the card" placeholder="Why Gesicki over Vele? Is there a better DEF than Buffalo? What if I drop Allen for someone?"></textarea>
+            <div class="controls">
+              <button type="button" class="btn primary" id="ask-btn" disabled>Ask</button>
+              <button type="button" class="btn" id="stop-btn" hidden>Stop</button>
+              <div class="tier">
+                <span>Answer</span>
+                <span class="tiergroup" role="group" aria-label="Answer depth">
+                  <button type="button" class="tierbtn" id="tier-careful" aria-pressed="true">Careful</button>
+                  <button type="button" class="tierbtn" id="tier-quick" aria-pressed="false">Quick</button>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="status" id="status">Checking with the viewer…</p>
+      <!-- outside the composer, so a conversation survives the ask box being retired mid-session -->
+      <div class="thread" id="thread"></div>
+    </section>
+
+    <div class="limits">
+      <p>What it can't do: it sees only the data on this page. No news, no injury reports beyond the status tags here, no rankings, no scores since the data was taken. If something has moved since, the dashboard knows and this page doesn't.</p>
+      <p>It can't change the card either — the routines write that, and moves happen in the Sleeper app.</p>
+      <p>Answers run on your own Claude account, so every question spends a little of your usage. The dashboard costs nothing; this costs a question at a time.</p>
+    </div>
+  </main>
+</div>
+
+<script id="data" type="application/json">/*__DATA__*/</script>
+<script>/*__OUTLOOK_CORE__*/</script>
+<script>/*__DONOW_PURE__*/</script>
+<script>
+/* The league id is public and fixed, exactly as docs/index.html holds it: the card's header
+   link needs it and the compiled actions file doesn't carry it. */
+const LEAGUE_ID = '1353093442397294592';
+const DASH_FALLBACK = 'https://the-nebulizer.github.io/gridiron/';
+
+/* ask-pure start */
+/* Everything between these markers is plain logic — no DOM, no window, no claude. It is lifted
+   out and run in node by scratch smoke tests, so keep it that way: if a function needs an
+   element, it belongs below the end marker. The one outside thing it reaches for is the
+   outlook core (buildOutlook), guarded, because the bundler injects that as a separate script. */
+
+const ASK_CAP_BYTES = 64 * 1024;          // the platform's hard input cap
+const ASK_INSTRUCTION_BUDGET = 56 * 1024; // what the standing turn may take, leaving room to talk
+const byteLen = (s) => new TextEncoder().encode(String(s == null ? '' : s)).length;
+
+const htmlEscape = (s) => String(s == null ? '' : s)
+  .replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ——— the answer renderer ———
+   Claude writes a few sentences, sometimes a short list. Escape first, then put back the three
+   things worth having: paragraphs, bullets, bold. Nothing here can produce a tag that wasn't
+   written by this function, because the source text stopped being markup on the first line. */
+function renderMarkdown(src){
+  const text = String(src == null ? '' : src).replace(/\r\n?/g, '\n');
+  const inline = (s) => htmlEscape(s)
+    .replace(/`([^`]+)`/g, (_, c) => `<code>${c}</code>`)
+    .replace(/\*\*([^*]+)\*\*/g, (_, b) => `<strong>${b}</strong>`);
+  const out = [];
+  let list = null, para = [];
+  const flushPara = () => { if(para.length){ out.push(`<p>${inline(para.join(' '))}</p>`); para = []; } };
+  const flushList = () => { if(list){ out.push(`<${list.tag}>${list.items.map(i=>`<li>${inline(i)}</li>`).join('')}</${list.tag}>`); list = null; } };
+  for(const raw of text.split('\n')){
+    const line = raw.trim();
+    if(!line){ flushPara(); flushList(); continue; }
+    const bullet = /^[-*+]\s+(.*)$/.exec(line);
+    const numbered = /^\d+[.)]\s+(.*)$/.exec(line);
+    const hit = bullet || numbered;
+    if(hit){
+      const tag = bullet ? 'ul' : 'ol';
+      flushPara();
+      if(list && list.tag !== tag) flushList();
+      if(!list) list = {tag, items: []};
+      list.items.push(hit[1]);
+      continue;
+    }
+    // A wrapped line inside a bullet belongs to that bullet, not to a new paragraph.
+    if(list){ list.items[list.items.length-1] += ' ' + line; continue; }
+    para.push(line);
+  }
+  flushPara(); flushList();
+  return out.join('');
+}
+
+/* ——— reading the compiled card ———
+   The numbers the instructions use have to be the numbers Ben is looking at, or "why is #1 the
+   priority" answers about the wrong move. The ordering constants come from the do-now slice
+   when it is loaded, so the two cannot drift apart on urgency or kind; only the sort itself is
+   written twice, and it is three lines. */
+const ASK_URGENCY = ['now','before_kickoff','by_tuesday','this_week','optional'];
+const ASK_KIND_RANK = {start:0, add:1, drop:1, ir:1, activate:1, trade:2};
+const ASK_DEADLINE = {now:'now', before_kickoff:'before kickoff', by_tuesday:'by Tue night',
+                      this_week:'this week', optional:'optional'};
+const askUrg = (u) => {
+  const list = (typeof URGENCY !== 'undefined' && Array.isArray(URGENCY)) ? URGENCY : ASK_URGENCY;
+  const i = list.indexOf(u);
+  return i < 0 ? list.length : i;
+};
+const askKind = (k) => {
+  const map = (typeof KIND_RANK !== 'undefined' && KIND_RANK) ? KIND_RANK : ASK_KIND_RANK;
+  return map[k] == null ? 3 : map[k];
+};
+const askDeadline = (i) => i.deadline_label
+  || ((typeof DEADLINE !== 'undefined' && DEADLINE) ? DEADLINE : ASK_DEADLINE)[i.urgency]
+  || 'when you can';
+
+// The compiled state is all this page has — there is no live Sleeper here to re-verify against.
+function askResolve(actions){
+  const seeded = (Array.isArray(actions) ? actions : [])
+    .filter(a => a && typeof a === 'object')
+    .map(a => { const s = a.state || 'open'; return {...a, base_state: s, state: s}; });
+  return typeof resolveDependencies === 'function' ? resolveDependencies(seeded) : seeded;
+}
+
+/* The card's reading order, flattened: numbered primaries, each followed by whatever waits
+   behind it. Same shape the card draws, so the instructions and the page agree. */
+function askCardItems(items){
+  const live = (items || []).filter(i => i.state !== 'stale' && i.state !== 'dismissed');
+  const open = live.filter(i => i.state === 'open' && !i.parent_id)
+    .sort((a,b) => askKind(a.kind) - askKind(b.kind)
+                || askUrg(a.urgency) - askUrg(b.urgency)
+                || String(b.report||'').localeCompare(String(a.report||'')));
+  const kids = new Map();
+  live.filter(i => i.state === 'waiting' && i.parent_id).forEach(i => {
+    const k = String(i.parent_id);
+    if(!kids.has(k)) kids.set(k, []);
+    kids.get(k).push(i);
+  });
+  const rows = [];
+  const drawn = new Set();
+  const branch = (parent, num) => {
+    (kids.get(parent.id == null ? '' : String(parent.id)) || [])
+      .filter(k => !drawn.has(k))
+      .sort((a,b) => (a.link==='after'?0:1) - (b.link==='after'?0:1) || askUrg(a.urgency) - askUrg(b.urgency))
+      .forEach(k => { drawn.add(k); rows.push({item:k, num:null, under:num}); branch(k, num); });
+  };
+  open.forEach((i, n) => { drawn.add(i); rows.push({item:i, num:n+1, under:null}); branch(i, n+1); });
+  live.filter(i => i.state === 'waiting' && !drawn.has(i))
+    .forEach(i => { drawn.add(i); rows.push({item:i, num:null, under:null}); });
+  const shelved = live.filter(i => i.state==='done' || i.state==='gone' || i.state==='superseded');
+  return {rows, shelved, openCount: open.length};
+}
+
+// Mirrors the dashboard's own pick: the freshest non-stale source's next_check.
+function askNextCheck(sources){
+  const all = Object.values(sources || {}).filter(s => s && s.next_check);
+  const freshest = (arr) => arr.slice().sort((a,b)=>String(b.report||'').localeCompare(String(a.report||'')))[0];
+  const pick = freshest(all.filter(s => !s.stale)) || freshest(all);
+  return pick ? pick.next_check : 'Waivers run Tue 7am';
+}
+
+/* ——— the data, written as a manager would say it ——— */
+const askNum = (n) => (n == null || n === '' || Number.isNaN(Number(n))) ? null : Number(n);
+
+// The snapshot stamp, said the way a person says it. Fixed to UTC so the same data always
+// produces the same instructions — a locale-dependent string would defeat answer caching and
+// make two runs of the smoke test disagree.
+const ASK_DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const ASK_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function askWhen(iso){
+  const d = new Date(iso);
+  if(isNaN(d)) return String(iso || 'recently');
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${ASK_DAYS[d.getUTCDay()]} ${d.getUTCDate()} ${ASK_MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}, `
+    + `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())} UTC`;
+}
+function askPlayerLine(p, opts){
+  if(!p) return '';
+  const o = opts || {};
+  const bits = [p.pos || p.position, p.team || '—'].filter(Boolean);
+  const bye = askNum(p.bye != null ? p.bye : p.bye_week);
+  if(bye != null) bits.push('bye ' + bye);
+  const status = p.status || p.injury_status;
+  const tail = status ? ` [${status}]` : '';
+  const star = o.star ? '*' : '';
+  return `${p.name || '?'}${star} (${bits.join(', ')})${tail}`;
+}
+
+function askCardSection(data){
+  const card = (data && data.card) || {};
+  const {rows, shelved, openCount} = askCardItems(askResolve(card.actions));
+  const L = [];
+  L.push(`== THE CARD — the moves the routines have compiled (${openCount} open) ==`);
+  if(!rows.length) L.push('Nothing open. Next routine due: ' + askNextCheck(card.sources));
+  for(const {item, num, under} of rows){
+    const i = item;
+    const head = num ? `[${num}]`
+      : under ? (i.link === 'if_not' ? `  [fallback for #${under}]` : `  [after #${under}]`)
+      : '  [waiting]';
+    const what = askMoveLine(i);
+    L.push(`${head} ${what}  (${askDeadline(i)}${i.state && i.state !== 'open' ? ', ' + i.state : ''})`);
+    const c = (i.case && typeof i.case === 'object' && !Array.isArray(i.case)) ? i.case : {};
+    for(const [k, label] of [['starts','Starts'],['need','Need'],['cost','Cost'],['later','Later']]){
+      if(typeof c[k] === 'string' && c[k]) L.push(`      ${label}: ${c[k]}`);
+    }
+    if(i.why) L.push(`      Why: ${i.why}`);
+    L.push(`      From: ${i.source || '?'} report ${i.report || '?'}${i.id ? ', id ' + i.id : ''}`);
+  }
+  if(shelved.length){
+    L.push('  Shelved (not instructions any more): ' + shelved
+      .map(i => `${i.name || (i.get_names||[]).join(' + ') || i.kind} — ${i.state}`).join(' · '));
+  }
+  L.push(`  Next routine due: ${askNextCheck(card.sources)}`);
+  return L.join('\n');
+}
+
+// One line per move, in the same words the card uses.
+function askMoveLine(i){
+  const who = `${i.name || '?'}${i.pos ? ` (${i.pos}, ${i.team || '—'})` : ''}`;
+  switch(i.kind){
+    case 'add': return `${i.mode === 'fcfs' ? 'Add' : 'Claim'} ${who}`
+      + (i.mode === 'waiver' && i.faab != null ? ` for $${i.faab}` : ' at no FAAB cost')
+      + (i.drop_name ? `, dropping ${i.drop_name}` : ', no drop needed');
+    case 'drop': return `Drop ${who}`;
+    case 'start': return `Start ${who} at ${String(i.slot||'').replace('SUPER_FLEX','SUPERFLEX')}`
+      + (i.for_name ? `, benching ${i.for_name}` : '');
+    case 'ir': return `Move ${who} to IR`;
+    case 'activate': return `Activate ${who} off IR`;
+    case 'trade': return `Offer ${(i.give_names||[]).join(' + ') || '—'} to ${i.with_owner || ('roster ' + i.with)}`
+      + ` for ${(i.get_names||[]).join(' + ') || '—'}`;
+  }
+  return `${i.kind || 'move'} ${who}`;
+}
+
+function askMySection(data){
+  const me = (data && data.me) || {};
+  const L = [`== MY ROSTER — ${me.owner || 'me'}, roster ${me.roster_id}, $${me.faab_remaining} FAAB left ==`];
+  L.push('  Starting lineup:');
+  for(const s of me.starters || []){
+    L.push(`    ${String(s.slot||'').padEnd(11)} ${s.empty ? '— EMPTY —' : askPlayerLine(s)}`);
+  }
+  const bench = (me.bench || []).map(p => askPlayerLine(p));
+  L.push('  Bench: ' + (bench.length ? bench.join(' · ') : 'empty'));
+  const res = (me.reserve || []).map(p => askPlayerLine(p));
+  if(res.length) L.push('  IR: ' + res.join(' · '));
+  return L.join('\n');
+}
+
+function askOutlookSection(data){
+  const o = (data && data.outlook) || {};
+  const shape = o.roster_shape || {};
+  const L = ['== THE OUTLOOK — every week still to come, solved against the real starting slots =='];
+  const thin = shape.thin_positions || [];
+  L.push(`  Thin positions (one body from an unfillable slot): ${thin.length ? thin.join(', ') : 'none'}`);
+  L.push(`  Bench slots open: ${shape.bench_open} of ${shape.bench_slots} · IR ${shape.ir_used}/${shape.ir_slots}`);
+  if(shape.active_by_position) L.push('  Bodies by position: '
+    + Object.entries(shape.active_by_position).map(([p,n]) => `${p} ${n}`).join(', '));
+  if((o.crunch_weeks||[]).length) L.push('  Crunch weeks: ' + o.crunch_weeks.map(w=>'W'+w).join(', '));
+  if(o.trade_deadline_week != null) L.push(`  Trade deadline: Week ${o.trade_deadline_week} (${o.weeks_until_trade_deadline} weeks away)`);
+  if((o.playoff_weeks||[]).length) L.push('  Playoffs: ' + o.playoff_weeks.map(w=>'W'+w).join(', '));
+  for(const w of o.weeks || []){
+    const bits = [];
+    if((w.byes||[]).length) bits.push('on bye: ' + w.byes.map(b => `${b.name} (${b.pos})`).join(', '));
+    if((w.empty_slots||[]).length) bits.push('CANNOT FILL: ' + w.empty_slots.join(', '));
+    if((w.empty_slots_if_injured_stay_out||[]).length) bits.push('cannot fill if the injured stay out: ' + w.empty_slots_if_injured_stay_out.join(', '));
+    if(bits.length) L.push(`  W${w.week}: ${bits.join(' · ')}`);
+  }
+  return L.join('\n');
+}
+
+function askRostersSection(data, startersOnly){
+  const L = [`== ALL 12 ROSTERS${startersOnly ? ' (starting lineups only — trimmed for length)' : ''} · * = in their starting lineup ==`];
+  for(const t of (data && data.teams) || []){
+    const mine = data.me && t.roster_id === data.me.roster_id;
+    const players = (t.players || []).filter(p => startersOnly && !mine ? p.starting : true);
+    const byPos = {};
+    for(const p of players){
+      const k = p.pos || '?';
+      (byPos[k] = byPos[k] || []).push(`${p.name}${p.starting ? '*' : ''}${p.ir ? ' (IR)' : ''}`);
+    }
+    const line = Object.entries(byPos).map(([pos, names]) => `${pos} ${names.join(', ')}`).join(' · ');
+    L.push(`  ${t.owner}${mine ? ' (me)' : ''} — $${t.faab_remaining} FAAB: ${line || 'no players listed'}`);
+  }
+  return L.join('\n');
+}
+
+function askPoolSection(data, perPos){
+  const avail = (data && data.available) || {};
+  const L = ['== FREE AGENTS — unrostered in this league, the top few the page can see per position =='];
+  for(const pos of ['QB','RB','WR','TE','K','DEF']){
+    const list = (avail[pos] || []).slice(0, perPos);
+    if(!list.length) continue;
+    L.push(`  ${pos}: ` + list.map(p => askPlayerLine({...p, pos})).join(' · '));
+  }
+  L.push('  Anyone not on a roster above and not in this list is someone the page cannot see — say so rather than guessing.');
+  return L.join('\n');
+}
+
+function askTrendingSection(data){
+  const t = (data && data.trending) || [];
+  if(!t.length) return '';
+  const L = ['== MOST-ADDED ACROSS ALL OF SLEEPER THIS WEEK (not this league — a popularity signal, not a ranking) =='];
+  t.forEach((p, n) => {
+    L.push(`  ${n+1}. ${p.name} (${p.pos}, ${p.team}) +${Number(p.adds||p.net||0).toLocaleString('en-US')} adds`
+      + ` — ${p.rostered_in_league ? 'already rostered in this league' : 'free in this league'}`);
+  });
+  return L.join('\n');
+}
+
+function askLeagueSection(data){
+  const lg = (data && data.league) || {};
+  const sc = lg.scoring || {};
+  const slots = (lg.roster_positions || []).filter(s => s !== 'BN');
+  const bn = (lg.roster_positions || []).filter(s => s === 'BN').length;
+  const L = [`== THE LEAGUE ==`];
+  L.push(`  ${lg.name || 'Battle for the Gridiron Throne'} · 12 teams · superflex · half-PPR`);
+  L.push(`  Starting slots: ${slots.join(', ')} · ${bn} bench · ${lg.reserve_slots} IR`);
+  L.push('  FLEX takes RB/WR/TE. SUPER_FLEX takes QB/RB/WR/TE — that is why a spare QB has real value here.');
+  L.push(`  Scoring: passing TD ${sc.pass_td != null ? sc.pass_td : 6} · reception ${sc.rec != null ? sc.rec : 0.5}`
+    + `${sc.rush_td != null ? ' · rushing TD ' + sc.rush_td : ''}${sc.rec_td != null ? ' · receiving TD ' + sc.rec_td : ''}`);
+  L.push(`  $${lg.waiver_budget} FAAB for the season, claims process Wednesday · trade deadline Week ${lg.trade_deadline}`
+    + ` · playoffs from Week ${lg.playoff_week_start} · ${lg.max_keepers} keeper`);
+  L.push('  FAAB left: ' + ((data.faab || []).map(f => `${f.owner} $${f.remaining}`).join(' · ') || 'unknown'));
+  return L.join('\n');
+}
+
+/* ——— the standing instructions turn ———
+   This is the product. Level 0 sends everything; each level up drops the least load-bearing
+   section, deterministically, so the same data always trims the same way. */
+function buildInstructions(data, level, hasTools){
+  const lv = Math.max(0, Math.min(3, Number(level) || 0));
+  const tools = hasTools === undefined ? true : !!hasTools;
+  const d = data || {};
+  const L = [];
+
+  L.push('You are the assistant for Ben\'s fantasy football team in "Battle for the Gridiron Throne", a 12-team Sleeper league. Ben is looking at his dashboard\'s "Do now" card and has a question about it. Everything you know is in this message.');
+  L.push('');
+  L.push('HOW YOU ANSWER');
+  L.push('Answer only from the data below. Never say from memory who is rostered, who is available, who is starting, who is hurt or who is on a bye — this whole project exists because that went wrong once on draft day. If the answer is not in the data below, say "I can\'t see that from here" and say what you would need. You have no news, no injury information beyond the status tags below, no rankings, no projections, and no scores. A player who is not listed below is not necessarily free or unavailable — you simply cannot see him, and that is what to say.');
+  L.push('');
+  L.push('TWO SCORING FACTS THAT CHANGE MOST ANSWERS');
+  L.push('- Superflex, with 6-point passing touchdowns. The SUPER_FLEX slot can hold a quarterback, and at 6 points a passing TD a startable QB there nearly always outscores a WR or TE. Quarterbacks are worth more in this league than in any generic ranking, and a spare one is a tradeable asset rather than a wasted bench slot.');
+  L.push('- Half-PPR: half a point per reception. Volume receivers are worth a little less than they would be in full PPR.');
+  L.push('');
+  L.push('HOW TO READ THE CARD');
+  L.push('Each move carries up to four evidence lines, computed from the snapshot rather than written by hand:');
+  L.push('- Starts — does he crack the lineup this week, and over whom.');
+  L.push('- Need — is this a position Ben is thin at, and which future week it fixes.');
+  L.push('- Cost — what it spends: the bid, the drop, the players given, and how hot he is on the wire.');
+  L.push('- Later — what it changes in the weeks ahead: holes opened or closed, bench slots used or freed.');
+  L.push('The "Why" line is the routine\'s judgment; the four lines are the evidence behind it. The numbers are the order to do the moves in, not a ranking of how good they are. A move listed under another one either waits on it ("after #1") or replaces it if it falls through ("fallback for #1").');
+  L.push('');
+  L.push('THE STANDING ORDER');
+  L.push('1. Lineup moves before their kickoff — free, time-locked, never wait on anything.');
+  L.push('2. Waiver claims by Tuesday night — they process Wednesday morning in bid order, and never wait for a trade.');
+  L.push('3. Trade offers, any time. A player inside an open offer is locked in Sleeper until the other manager answers, so he cannot also be the drop for that week\'s claims.');
+  L.push('');
+  if(tools){
+    L.push('TOOLS');
+    L.push('When the question is about a swap — an add, a drop, a claim, a trade — call whatIf with the player ids before answering, and quote what actually changes rather than reasoning it out by hand. When a name is ambiguous or you need an id, call findPlayer. Do not invent an id.');
+    L.push('');
+  }
+  L.push('VOICE');
+  L.push('Answer in a few sentences of plain English — this is a chat, not a report. Use names, never player ids. Say what the data shows and, just as plainly, what it does not. When Ben asks for a recommendation, give one, then say in one line what would change it. Do not read the whole card back to him; he is looking at it.');
+  L.push('');
+  L.push(`THE DATA — a snapshot taken ${askWhen(d.as_of)}, Week ${d.week} of the ${d.season} season`
+    + `${d.games_have_started ? '' : '. The season has not kicked off yet: there are no points, no inactives, and every injury tag below is a camp designation'}`
+    + '. The dashboard has the live version; if Ben says something has changed since, believe him and say this snapshot is behind.');
+  L.push('');
+  L.push(askCardSection(d));
+  L.push('');
+  L.push(askMySection(d));
+  L.push('');
+  L.push(askOutlookSection(d));
+  L.push('');
+  L.push(askRostersSection(d, lv >= 2));
+  L.push('');
+  L.push(askPoolSection(d, lv >= 3 ? 4 : 8));
+  const trend = lv >= 1 ? '' : askTrendingSection(d);
+  if(trend){ L.push(''); L.push(trend); }
+  L.push('');
+  L.push(askLeagueSection(d));
+  return L.join('\n');
+}
+
+/* Fit the call inside the platform's cap: shrink the data first (it is the part with a
+   deterministic ladder), then drop the oldest turns. The instructions turn is never dropped. */
+function buildInput(data, turns, hasTools){
+  let level = 0;
+  let instructions = buildInstructions(data, 0, hasTools);
+  while(level < 3 && byteLen(instructions) > ASK_INSTRUCTION_BUDGET){
+    level += 1;
+    instructions = buildInstructions(data, level, hasTools);
+  }
+  const kept = (Array.isArray(turns) ? turns : []).filter(t => t && t.content);
+  let start = 0;
+  const size = () => byteLen(instructions)
+    + kept.slice(start).reduce((n, t) => n + byteLen(t.content), 0);
+  while(start < kept.length - 1 && size() > ASK_CAP_BYTES) start += 1;
+  return {input: [{role:'user', content: instructions}, ...kept.slice(start)], level, dropped: start};
+}
+
+/* ——— the two page tools ——— */
+const askOutlook = () => (typeof buildOutlook === 'function' ? buildOutlook : null);
+
+// Every player the page can name, id -> object, so a tool can resolve what Claude asks for.
+function askPlayerIndex(data){
+  const idx = new Map();
+  const lite = (data && data.snapshot_lite) || {};
+  for(const t of lite.teams || []){
+    for(const group of ['starters','bench','reserve']){
+      for(const p of t[group] || []) if(p && p.id) idx.set(String(p.id), p);
+    }
+  }
+  for(const p of lite.pool || []) if(p && p.id && !idx.has(String(p.id))) idx.set(String(p.id), p);
+  return idx;
+}
+
+function whatIf(data, input){
+  const run = askOutlook();
+  const lite = (data && data.snapshot_lite) || null;
+  if(!run || !lite) throw new Error('The what-if model is not loaded on this page.');
+  const ids = (v) => (Array.isArray(v) ? v : (v == null || v === '' ? [] : [v]))
+    .map(x => String(x).trim()).filter(Boolean);
+  const idx = askPlayerIndex(data);
+  const unknown = [];
+  const pick = (list) => list.map(id => { const p = idx.get(id); if(!p) unknown.push(id); return p; }).filter(Boolean);
+  const add = pick(ids(input && input.add));
+  const drop = pick(ids(input && input.drop));
+  if(!add.length && !drop.length){
+    return {error: 'No players I could resolve. Call findPlayer first, then pass the ids it returns.', unknown_ids: unknown};
+  }
+  const before = run(lite, {});
+  const after = run(lite, {add, drop});
+  const weekMap = new Map((before.weeks || []).map(w => [w.week, w]));
+  const changed = [];
+  for(const w of after.weeks || []){
+    const b = weekMap.get(w.week);
+    const was = ((b && b.empty_slots) || []).join(',');
+    const now = (w.empty_slots || []).join(',');
+    if(was !== now) changed.push({week: w.week, before: (b && b.empty_slots) || [], after: w.empty_slots || []});
+  }
+  const nameOf = (p) => `${p.name} (${p.position}, ${p.team})`;
+  const out = {
+    add: add.map(nameOf),
+    drop: drop.map(nameOf),
+    thin_positions: {before: before.roster_shape.thin_positions, after: after.roster_shape.thin_positions},
+    bench_open: {before: before.roster_shape.bench_open, after: after.roster_shape.bench_open},
+    weeks_changed: changed.slice(0, 12),
+  };
+  if(unknown.length) out.unknown_ids = unknown;
+  if(!changed.length) out.note = 'No week changes from unfillable to fillable or back — the move neither fixes nor opens a hole.';
+  return out;
+}
+
+function findPlayer(data, input){
+  const q = String((input && input.name) || '').trim().toLowerCase();
+  if(q.length < 2) return {error: 'Give me at least two letters of a name.'};
+  const hits = [];
+  const seen = new Set();
+  const take = (p, owner) => {
+    const id = String(p.id == null ? '' : p.id);
+    if(!id || seen.has(id) || hits.length >= 8) return;
+    if(!String(p.name || '').toLowerCase().includes(q)) return;
+    seen.add(id);
+    hits.push({id, name: p.name, pos: p.pos || p.position || '?', team: p.team || '—',
+      owner, status: p.status || p.injury_status || null});
+  };
+  for(const t of (data && data.teams) || []) for(const p of t.players || []) take(p, t.owner);
+  for(const [pos, list] of Object.entries((data && data.available) || {})) {
+    for(const p of list || []) take({...p, pos}, 'free agent');
+  }
+  for(const p of (data && data.trending) || []) take(p, p.rostered_in_league ? 'rostered in this league' : 'free agent');
+  if(!hits.length) return {matches: [], note: 'No one on this page matches that. Say you cannot see him rather than guessing.'};
+  return {matches: hits};
+}
+
+const ASK_TOOL_SPECS = [
+  {name: 'whatIf',
+   description: 'Runs Ben\'s roster through the rest-of-season outlook with players added and/or dropped, and reports what changes: which positions go thin, how many bench slots stay open, and which future weeks gain or lose a starting slot nobody can fill. Pass Sleeper player ids taken from the data in this conversation. Use it for any question about a swap, a claim or a trade.',
+   inputSchema: {type: 'object', properties: {
+     add: {type: 'array', items: {type: 'string'}, description: 'Player ids to add to the roster'},
+     drop: {type: 'array', items: {type: 'string'}, description: 'Player ids to remove from the roster'},
+   }}},
+  {name: 'findPlayer',
+   description: 'Looks players up by any part of their name across all 12 rosters, the free-agent pool and the trending list on this page. Returns up to 8 matches with position, NFL team, who owns them in this league (or "free agent") and any injury tag. Use it when a name is ambiguous or you need an id for whatIf.',
+   inputSchema: {type: 'object', properties: {
+     name: {type: 'string', description: 'Part of the player\'s name, case-insensitive'},
+   }, required: ['name']}},
+];
+
+/* Viewer copy per error code, grouped the way sample.d.ts groups them. `hide` retires the ask
+   box for this view; `clear` withdraws whatever had streamed. Nothing here ever retries. */
+function askErrorCopy(code){
+  switch(code){
+    case 'cancelled':
+      return {msg: '', keepPartial: true};
+    case 'not_granted':
+      return {msg: 'You turned down Claude access for this page. Reload it if you change your mind.', hide: true};
+    case 'sampling_disabled':
+      return {msg: 'Claude isn\'t available on this account, so this page can only show the card.', hide: true};
+    case 'not_declared':
+    case 'capability_disabled':
+    case 'capability_removed':
+      return {msg: 'This page can\'t reach Claude in this viewer. The card above is still current as of the data time.', hide: true};
+    case 'tools_unavailable':
+      return {msg: 'This viewer can\'t run the what-if tools, so I\'ve switched them off. Ask again and you\'ll get an answer from the data alone.', dropTools: true};
+    case 'rate_limited':
+      return {msg: 'Too many questions too quickly, or your Claude usage is spent for now. Give it a few minutes and ask again.'};
+    case 'session_expired':
+      return {msg: 'Your Claude session expired. Sign in again, then ask again.'};
+    case 'refused':
+      return {msg: 'Claude declined to answer that one. Try asking it a different way.', clear: true};
+    case 'empty_completion':
+      return {msg: 'Nothing came back. Try asking for less at a time.'};
+    case 'prompt_too_large':
+      return {msg: 'This conversation has outgrown one message. Reload the page to start a fresh thread.'};
+    case 'invalid_request':
+    case 'transform_error':
+    case 'queue_overflow':
+      return {msg: 'Something in the question didn\'t make it out of the page. Reload and try again.'};
+    default:
+      return {msg: 'The connection to Claude dropped. Whatever arrived is above; ask again when you\'re ready.'};
+  }
+}
+/* ask-pure end */
+
+/* ——— the page ——— */
+const $ = (id) => document.getElementById(id);
+
+const DATA = (() => {
+  try{ return JSON.parse($('data').textContent); }
+  catch{ return null; }
+})();
+
+let sampleFn = null;      // the resolved capability, or null when this isn't a Claude viewer
+let toolsOn = false;      // only where limits() reports tools
+let running = null;       // the AbortController of the call in flight
+let tier = 'default';     // "Careful"; "Quick" sends "quick"
+const turns = [];         // the conversation this page keeps — Claude remembers nothing
+let composerRO = null;    // measures the fixed composer bar so the page can reserve room for it
+
+// Auto-grow the question box between one line and the ~5-line cap set in CSS; beyond that
+// max-height takes over and it scrolls internally instead of shoving the bar taller.
+function growTextarea(){
+  const ta = $('ask-input');
+  if(!ta) return;
+  ta.style.height = 'auto';
+  ta.style.height = ta.scrollHeight + 'px';
+}
+
+// The bar's real height, kept in a CSS variable so the page body can reserve exactly that much
+// room at the bottom — the fallback in the body rule covers the instant before this first runs.
+function watchComposer(){
+  const bar = $('askbody');
+  if(!bar) return;
+  const setVar = () => document.documentElement.style.setProperty('--composer-h', bar.getBoundingClientRect().height + 'px');
+  setVar();
+  if(typeof ResizeObserver === 'function'){
+    composerRO = new ResizeObserver(setVar);
+    composerRO.observe(bar);
+  }
+}
+
+// Bring a just-started answer into view without letting it land behind the fixed bar, which the
+// browser's own scrollIntoView doesn't know is covering the bottom of the viewport.
+function revealBubble(el){
+  if(!el) return;
+  const bar = $('askbody');
+  const barH = bar ? bar.getBoundingClientRect().height : 0;
+  const rect = el.getBoundingClientRect();
+  const visibleBottom = window.innerHeight - barH;
+  if(rect.top >= 0 && rect.bottom <= visibleBottom) return;
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  window.scrollBy({top: rect.bottom - visibleBottom + 24, left: 0, behavior: reduce ? 'auto' : 'smooth'});
+}
+
+/* 1 — the card, drawn by the dashboard's own renderer. `m` is the same object docs/index.html
+   builds, minus the parts that need a live Sleeper feed: no alerts, no drift check, and states
+   that come from the compiler rather than from re-verification. */
+function renderCard(){
+  if(!DATA){ $('card').innerHTML = '<div class="donow"><div class="none">The card didn\'t load with this page.</div></div>'; return; }
+  const card = DATA.card || {};
+  const m = {
+    ok: !!(card.actions && card.actions.length >= 0),
+    week: DATA.week,
+    league: LEAGUE_ID,
+    now: clockOf(DATA.as_of),
+    items: askResolve(card.actions),
+    alerts: [],
+    nextCheck: askNextCheck(card.sources),
+    drift: false,
+  };
+  $('card').innerHTML = renderDoNow(m);
+  // Two read-only adjustments to the shared markup. The card here is a photograph: Dismiss has
+  // nothing to write to, and the source line's "verified live" belongs to the page that does the
+  // verifying. Both are guarded — if the shared renderer changes, they quietly do nothing.
+  $('card').querySelectorAll('[data-dismiss]').forEach(b => b.remove());
+  $('card').querySelectorAll('.act .src span').forEach(s => {
+    s.textContent = s.textContent.replace(/verified live\s/, 'state as of ');
+  });
+}
+const clockOf = (iso) => {
+  const d = new Date(iso);
+  return isNaN(d) ? '' : d.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+};
+
+/* 2 — the thread */
+function addTurn(role, html){
+  const el = document.createElement('div');
+  el.className = 'turn ' + (role === 'user' ? 'ben' : 'claude');
+  el.innerHTML = `<span class="who">${role === 'user' ? 'Ben' : 'Claude'}</span><div class="body"></div>`;
+  el.querySelector('.body').innerHTML = html;
+  $('thread').appendChild(el);
+  return el;
+}
+function setNote(el, text){
+  let n = el.querySelector('.note');
+  if(!text){ if(n) n.remove(); return; }
+  if(!n){ n = document.createElement('p'); n.className = 'note'; el.appendChild(n); }
+  n.textContent = text;
+}
+// Both of these run in the `finally` of a call that may have just retired the ask box, so
+// neither may assume its elements are still in the page.
+function setStatus(text, bad){
+  const s = $('status');
+  if(!s) return;
+  s.textContent = text || '';
+  s.classList.toggle('bad', !!bad);
+}
+
+/* 3 — asking */
+async function ask(){
+  const box = $('ask-input');
+  const question = box.value.trim();
+  if(!question || !sampleFn || running) return;
+
+  box.value = '';
+  growTextarea();
+  turns.push({role: 'user', content: question});
+  addTurn('user', renderMarkdown(question));
+
+  const bubble = addTurn('assistant', '<p class="thinking">Thinking…</p>');
+  revealBubble(bubble);
+  const body = bubble.querySelector('.body');
+  const ctl = new AbortController();
+  running = ctl;
+  setBusy(true);
+  setStatus('');
+
+  const {input, dropped} = buildInput(DATA, turns, toolsOn);
+  const opts = {
+    cache: false,                                  // a chat turn must never replay an old answer
+    signal: ctl.signal,
+    modelTier: tier,
+    onText: ({text}) => { body.innerHTML = renderMarkdown(text); },
+  };
+  if(toolsOn) opts.tools = ASK_TOOL_SPECS.map(spec => ({
+    ...spec,
+    execute: (arg) => (spec.name === 'whatIf' ? whatIf(DATA, arg) : findPlayer(DATA, arg)),
+  }));
+
+  try{
+    const res = await sampleFn(input, opts);
+    body.innerHTML = renderMarkdown(res.text);
+    turns.push({role: 'assistant', content: res.text});
+    const notes = [];
+    if(res.truncated) notes.push('Cut short — ask for less at a time.');
+    if(res.modelTierApplied && res.modelTierApplied !== tier){
+      notes.push(`Answered on the ${res.modelTierApplied === 'quick' ? 'quick' : res.modelTierApplied} model, not the one you picked.`);
+    }
+    if(dropped) notes.push(`The oldest ${dropped === 1 ? 'question' : dropped + ' questions'} dropped out of the thread to make room.`);
+    setNote(bubble, notes.join(' '));
+  }catch(e){
+    const copy = askErrorCopy(e && e.code);
+    if(copy.clear || (!copy.keepPartial && !e.text)) body.innerHTML = '';
+    if(e && e.text && !copy.clear) body.innerHTML = renderMarkdown(e.text);
+    if(!body.innerHTML) bubble.remove();
+    else if(e && e.code === 'cancelled') setNote(bubble, 'Stopped.');
+    else setNote(bubble, 'Interrupted.');
+    if(copy.dropTools) toolsOn = false;
+    if(copy.hide){ retireAsk(copy.msg); return; }
+    if(copy.msg) setStatus(copy.msg, true);
+  }finally{
+    running = null;
+    setBusy(false);
+  }
+}
+
+function setBusy(on){
+  const btn = $('ask-btn'), stop = $('stop-btn'), box = $('ask-input'), chips = $('chips');
+  if(!btn || !stop || !box || !chips) return;
+  btn.disabled = on || !sampleFn;
+  stop.hidden = !on;
+  box.disabled = on;
+  chips.querySelectorAll('.qchip').forEach(c => { c.disabled = on; });
+}
+
+// The ask box is gone for this view; the card stays, because the card is the point.
+function retireAsk(sentence){
+  $('askbody').innerHTML = '';
+  const p = document.createElement('p');
+  p.className = 'noask';
+  p.textContent = sentence;
+  $('askbody').replaceWith(p);
+  p.id = 'askbody';
+  if(composerRO){ composerRO.disconnect(); composerRO = null; }
+  document.documentElement.style.setProperty('--composer-h', '0px');
+}
+
+/* 4 — wiring */
+function boot(){
+  if(DATA){
+    $('weekno').textContent = DATA.week;
+    if(DATA.dashboard_url){
+      $('dashlink').href = DATA.dashboard_url;
+      $('dashlink2').href = DATA.dashboard_url;
+    }
+    renderCard();
+  }else{
+    renderCard();
+  }
+
+  $('chips').addEventListener('click', (ev) => {
+    const b = ev.target.closest('.qchip');
+    if(!b) return;
+    $('ask-input').value = b.dataset.q;
+    $('ask-input').focus();
+    growTextarea();
+  });
+  $('ask-btn').addEventListener('click', ask);
+  $('stop-btn').addEventListener('click', () => { if(running) running.abort(); });
+  $('ask-input').addEventListener('keydown', (ev) => {
+    if((ev.metaKey || ev.ctrlKey) && ev.key === 'Enter') ask();
+  });
+  $('ask-input').addEventListener('input', growTextarea);
+  growTextarea();
+  watchComposer();
+  const tiers = {'tier-careful': 'default', 'tier-quick': 'quick'};
+  Object.keys(tiers).forEach(id => $(id).addEventListener('click', () => {
+    tier = tiers[id];
+    Object.keys(tiers).forEach(other => $(other).setAttribute('aria-pressed', String(other === id)));
+  }));
+
+  connect();
+}
+
+async function connect(){
+  let s = null;
+  try{
+    s = (window.claude && typeof window.claude.use === 'function') ? await window.claude.use('sample') : null;
+  }catch{ s = null; }
+  if(!s){ retireAsk('Asking needs the claude.ai viewer — open this page from claude.ai.'); return; }
+  if(!DATA){ retireAsk('The data didn\'t load with this page, so there\'s nothing honest to answer from.'); return; }
+  sampleFn = s;
+  try{ const lim = await s.limits(); toolsOn = !!(lim && lim.tools); }catch{ toolsOn = false; }
+  $('ask-btn').disabled = false;
+  setStatus('');
+}
+
+boot();
+</script>

@@ -72,6 +72,8 @@ node scripts/publish-report.mjs reports/<file>.md reports/actions.json "report: 
 
 It commits, pushes `HEAD:main`, rebases once if main moved, and if it still can't get there, pushes a branch and tells you to open a PR. **Never end a run with the report only on a session branch, and never end one silently — the final message must say where the report landed.**
 
+A session with the Artifact tool that has just published reports should also refresh the Ask page (`npm run ask`, then publish `ask/index.html` to `config.json`'s `ask_url`) — the cloud routines can't do this and shouldn't try.
+
 ## Sequencing
 
 Every routine reads `reports/actions.json` before writing. Open actions from the other routines are standing commitments this week, not suggestions to override. Conflicts over the same player get linked with `after` / `if_not` per `docs/ACTIONS.md`, and the compiler refuses to write `reports/actions.json` when a conflict is left unlinked.
@@ -90,6 +92,7 @@ Reports in `reports/` and the dashboard's own copy are written for Ben, not for 
 - `scripts/sleeper.mjs` — API client; `scripts/sync.mjs` — snapshot builder; `scripts/actions.mjs` — compiles report action blocks into `reports/actions.json`
 - `scripts/outlook.mjs` — the forward view: positional counts, and every week ahead I can't field a legal lineup. Runs inside every sync; also a what-if tool (`--add` / `--drop`)
 - The snapshot's `available` block is the real free-agent pool by position — `trending` is Sleeper-wide noise and hides most of it
+- `ask/`, `scripts/ask-bundle.mjs`, `scripts/outlook-core.mjs` — the "Ask about this card" page Ben publishes as a claude.ai Artifact; see `docs/ASK.md`
 - `scripts/league-activity.mjs` — what the other 11 managers have done, and who they dropped that's still claimable
 - `scripts/selftest.mjs` — `npm test`, offline. Run it after touching `actions.mjs`, `outlook.mjs` or `sync.mjs`; every case in it is a bug that shipped once
 - `data/` — gitignored cache (`players.json` refreshed when >24h old; `league/snapshot.json` per sync)

@@ -49,6 +49,7 @@
   /* do now — the headline card: the routines' moves first, then what the page works out itself */
   .donow{margin-top:32px;border:1px solid var(--line);border-top:3px solid var(--amber);background:var(--pitch)}
   .donow .dhead{display:flex;align-items:baseline;justify-content:space-between;gap:12px 18px;flex-wrap:wrap;padding:16px 22px 14px;border-bottom:1px solid var(--line)}
+  .donow .dlinks{display:flex;gap:8px;flex-wrap:wrap}
   .donow .dtitle{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
   .donow .dhead h2{margin:0}
   .dcount{font-family:var(--mono);font-size:13px;color:var(--chalk-dim)}
@@ -223,7 +224,7 @@
 </div>
 
 <script>
-const CFG = { league:'1353093442397294592', me:12, repo:'the-nebulizer/gridiron' };
+const CFG = { league:'1353093442397294592', me:12, repo:'the-nebulizer/gridiron', ask_url:'https://claude.ai/artifact/FMKnrqruo8QqrpG7qednqY' };
 // day/hour: when each routine fires (UTC), so the page can tell when one ran but left nothing.
 // The activity note is written by hand, not by a routine, so it has no schedule and no "Run fresh".
 const ROUTINES = {
@@ -719,10 +720,14 @@ function renderDoNow(m){
   if(m.drift) body += `<div class="drift">Your roster has changed since these were written — the watcher re-runs within the hour.</div>`;
 
 
+  // "Ask" opens the companion page in one named tab (clicking again re-focuses it rather than
+  // opening another). It comes in on the model, not from a global, because the Ask page draws
+  // this same card with this same function and must not link to itself.
+  const askLink = m.askUrl ? `<a class="runlink" href="${esc(m.askUrl)}" target="gridiron-ask" rel="noopener">Ask ↗</a>` : '';
   return `<div class="donow" id="donow">
       <div class="dhead">
         <div class="dtitle"><h2>Do now</h2><span class="dcount">Week ${esc(m.week)} · <b>${open.length} open</b></span></div>
-        <a class="runlink" href="https://sleeper.com/leagues/${esc(m.league)}" target="_blank" rel="noopener">Open Sleeper ↗</a>
+        <div class="dlinks">${askLink}<a class="runlink" href="https://sleeper.com/leagues/${esc(m.league)}" target="_blank" rel="noopener">Open Sleeper ↗</a></div>
       </div>${body}</div>`;
 }
 /* ——— end do-now pure ——— */
@@ -974,7 +979,7 @@ function render(state, got, failed){
   const spokenFor = new Set(verified
     .filter(i=>(i.state==='open' || i.state==='waiting') && i.player).map(i=>String(i.player)));
   const doNow = {
-    ok: !!actionsDoc, week: wk, league: CFG.league,
+    ok: !!actionsDoc, week: wk, league: CFG.league, askUrl: CFG.ask_url,
     now: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),
     items: verified,
     alerts: actionItems({me, players, games, byes, week:wk, txns, rostered, trendAdd, trendDrop, slots})
