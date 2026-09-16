@@ -1,6 +1,6 @@
 {
-  "fingerprint": "f89ce95e08673b8422499e22ea61734abdd557a2aa833a34cbc60bda12ece7c7",
-  "updated_at": "2026-09-14T12:21:22.645Z",
+  "fingerprint": "6228e71a0fd83f317f4ec7d47c4ce5d1e55065e90f547aba56d7f94e705cb02f",
+  "updated_at": "2026-09-16T12:16:56.441Z",
   "roster": {
     "starters": [
       "4881",
@@ -17,6 +17,7 @@
     "bench": [
       "1166",
       "1479",
+      "4993",
       "5947",
       "9228"
     ],

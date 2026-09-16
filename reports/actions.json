@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-09-16T02:37:04.729Z",
+  "compiled_at": "2026-09-16T12:22:06.968Z",
   "season": "2026",
   "week": 2,
   "games_have_started": true,
@@ -19,6 +19,7 @@
     "bench": [
       "1166",
       "1479",
+      "4993",
       "5947",
       "9228"
     ],
@@ -28,92 +29,39 @@
   },
   "sources": {
     "waivers": {
-      "report": "2026-09-15-waivers.md",
+      "report": "2026-09-16-waivers.md",
       "week": 2,
-      "verdict": "Claim Mike Gesicki for $8, no drop needed — he takes the one open bench slot and fixes the Week 11 tight end hole outright. Only if that claim is lost to another team, fall back to Devaughn Vele for $10 as bench depth.",
+      "verdict": "Hold — the Gesicki claim landed and the bench is full; no waiver move clears the bar this week.",
       "next_check": "Lineup, Thu 7am",
       "stale": false
     },
     "lineup": {
-      "report": "2026-09-14-lineup.md",
-      "week": 1,
-      "verdict": "Nothing to change — Week 1 is final, all ten starters played, and you won 141.2–100.74.",
+      "report": "2026-09-16-lineup.md",
+      "week": 2,
+      "verdict": "No changes — start the same ten as last week; Gesicki now covers the Week 11 tight end bye.",
       "next_check": "Inactives, Sun 10am",
-      "stale": true
+      "stale": false
     },
     "trades": {
-      "report": "2026-09-15-trades.md",
+      "report": "2026-09-16-trades.md",
       "week": 2,
       "verdict": "Still two trades worth sending: Cousins + Meyers to Tally241 for Aaron Jones, and Bryce Young to amandaberry for Brian Robinson.",
       "next_check": "Waivers, Tue 7am",
       "stale": false
     },
     "inactives": {
-      "report": "2026-09-14-inactives.md",
-      "week": 1,
-      "verdict": "Nothing to check — Week 1 is over and Week 2 games are still days out.",
+      "report": "2026-09-16-inactives.md",
+      "week": 2,
+      "verdict": "Nothing to check — Week 2 games haven't kicked off yet.",
       "next_check": "Trades, Mon 7am",
-      "stale": true
+      "stale": false
     }
   },
   "actions": [
     {
-      "id": "waivers:add:4993",
-      "source": "waivers",
-      "report": "2026-09-15-waivers.md",
-      "kind": "add",
-      "week": 2,
-      "player": "4993",
-      "name": "Mike Gesicki",
-      "pos": "TE",
-      "team": "CIN",
-      "mode": "waiver",
-      "faab": 8,
-      "displaces": null,
-      "displaces_name": null,
-      "consumes": [],
-      "needs_slot": true,
-      "urgency": "by_tuesday",
-      "deadline_label": "claims process Wed morning",
-      "why": "Bengals' clear lead TE, and the only move that fills the Week 11 hole the outlook can't otherwise staff — takes the last open bench slot outright.",
-      "case": {
-        "starts": "Bench — TE2 behind Tucker Kraft; starts Week 11",
-        "need": "TE: you have 1 — your thinnest spot · fixes W11",
-        "cost": "$8 of $100 · 11 of 12 teams still have $100 · #9 most-added in Sleeper this week",
-        "later": "opens no holes · uses your last bench slot"
-      }
-    },
-    {
-      "id": "waivers:add:11834",
-      "source": "waivers",
-      "report": "2026-09-15-waivers.md",
-      "kind": "add",
-      "week": 2,
-      "if_not": "waivers:add:4993",
-      "player": "11834",
-      "name": "Devaughn Vele",
-      "pos": "WR",
-      "team": "NO",
-      "mode": "waiver",
-      "faab": 10,
-      "displaces": null,
-      "displaces_name": null,
-      "consumes": [],
-      "needs_slot": true,
-      "urgency": "optional",
-      "deadline_label": "claims process Wed morning",
-      "why": "Saints' clear WR2 with Tyson out into October, but beats no current starter and no free slot is left once Gesicki claims it — fallback only.",
-      "case": {
-        "starts": "Bench — WR5 behind Tetairoa McMillan, Stefon Diggs",
-        "need": "WR: you have 4 — not thin · fixes nothing on the calendar",
-        "cost": "$10 of $100 · 11 of 12 teams still have $100 · #1 most-added in Sleeper this week",
-        "later": "opens no holes · uses your last bench slot"
-      }
-    },
-    {
       "id": "trades:trade:8",
       "source": "trades",
-      "report": "2026-09-15-trades.md",
+      "report": "2026-09-16-trades.md",
       "kind": "trade",
       "week": 2,
       "with": 8,
@@ -151,7 +99,7 @@
     {
       "id": "trades:trade:9",
       "source": "trades",
-      "report": "2026-09-15-trades.md",
+      "report": "2026-09-16-trades.md",
       "kind": "trade",
       "week": 2,
       "with": 9,
