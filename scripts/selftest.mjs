@@ -37,6 +37,10 @@ const P = {
   qb1: { id: 'qb1', name: 'Quinn One', position: 'QB', team: 'AAA', bye_week: 13, injury_status: null },
   qb2: { id: 'qb2', name: 'Quinn Two', position: 'QB', team: 'BBB', bye_week: 6, injury_status: null },
   qb3: { id: 'qb3', name: 'Quinn Three', position: 'QB', team: 'CCC', bye_week: 13, injury_status: null },
+  // Spare arms, used only where a test needs genuine QB surplus to prove the
+  // give-away rule stays quiet when there is cover.
+  qb4: { id: 'qb4', name: 'Quinn Four', position: 'QB', team: 'UUU', bye_week: 9, injury_status: null },
+  qb5: { id: 'qb5', name: 'Quinn Five', position: 'QB', team: 'VVV', bye_week: 10, injury_status: null },
   rb1: { id: 'rb1', name: 'Rush One', position: 'RB', team: 'DDD', bye_week: 9, injury_status: null },
   rb2: { id: 'rb2', name: 'Rush Two', position: 'RB', team: 'EEE', bye_week: 10, injury_status: null },
   rb3: { id: 'rb3', name: 'Rush Three', position: 'RB', team: 'FFF', bye_week: 7, injury_status: 'PUP' },
@@ -373,6 +377,66 @@ console.log('\nsequencing — the seven fixes, pinned down permanently');
   const r = runActions(dir);
   check('...but only when every consumer is actually in the chain', r.code === 1 && /both use Quinn Three/.test(r.out), r.out);
 }
+
+// Rule 1a: the same collision one position up. Two live trade offers each
+// gave away a different quarterback, and because every case is measured
+// against one baseline, both cards reported the quarterbacks on the roster
+// today — while between them they left the lineup short. Shipped Sep 2026.
+{
+  const threeTeams = () => {
+    const snap = fixture();
+    snap.teams.push({ roster_id: 3, owner: 'Third', faab_remaining: 100, starters: [P.fa3], bench: [], reserve: [] });
+    return snap;
+  };
+  {
+    const dir = await sandbox(threeTeams(), {
+      '2026-09-15-trades.md': block([
+        { kind: 'trade', id: 't1', with: 2, give: ['qb3'], get: ['opp1'], urgency: 'this_week', why: 'Gives one quarterback.' },
+        { kind: 'trade', id: 't2', with: 3, give: ['qb2'], get: ['fa3'], urgency: 'optional', why: 'Gives another quarterback.' },
+      ]),
+    });
+    const r = runActions(dir);
+    check('two unlinked trades that each give away a QB are rejected', r.code === 1 && /each give up a QB/.test(r.out), r.out);
+    check('...and the message says what the roster is left with against what it starts',
+      /you keep 1 QB against a lineup that starts 2/.test(r.out), r.out);
+  }
+  {
+    const dir = await sandbox(threeTeams(), {
+      '2026-09-15-trades.md': block([
+        { kind: 'trade', id: 't1', with: 2, give: ['qb3'], get: ['opp1'], urgency: 'this_week', why: 'Gives one quarterback.' },
+        { kind: 'trade', id: 't2', with: 3, give: ['qb2'], get: ['fa3'], urgency: 'optional', if_not: 't1', why: 'The cheaper alternative, not a second deal.' },
+      ]),
+    });
+    const r = runActions(dir);
+    check('...and accepted once the second is marked the alternative to the first', r.code === 0, r.out);
+  }
+  {
+    // Control: real surplus. Five quarterbacks against the two the lineup
+    // starts still leaves cover after both offers land, so the rule is silent.
+    const snap = threeTeams();
+    snap.teams[0].bench = [P.qb3, P.qb4, P.qb5, P.rb4];
+    const dir = await sandbox(snap, {
+      '2026-09-15-trades.md': block([
+        { kind: 'trade', id: 't1', with: 2, give: ['qb3'], get: ['opp1'], urgency: 'this_week', why: 'Gives one of five quarterbacks.' },
+        { kind: 'trade', id: 't2', with: 3, give: ['qb4'], get: ['fa3'], urgency: 'optional', why: 'Gives another of five.' },
+      ]),
+    });
+    const r = runActions(dir);
+    check('...while two unlinked gives from genuine surplus stay legal', r.code === 0, r.out);
+  }
+  {
+    // Control: the rule is scoped to a position, not to "two trades".
+    const dir = await sandbox(threeTeams(), {
+      '2026-09-15-trades.md': block([
+        { kind: 'trade', id: 't1', with: 2, give: ['qb3'], get: ['opp1'], urgency: 'this_week', why: 'Gives a quarterback.' },
+        { kind: 'trade', id: 't2', with: 3, give: ['rb1'], get: ['fa3'], urgency: 'optional', why: 'Gives a running back — a different position.' },
+      ]),
+    });
+    const r = runActions(dir);
+    check('...and two gives at different positions are not linked into a false conflict',
+      r.code === 0 || !/each give up/.test(r.out), r.out);
+  }
+}
 {
   // Rule 2: this set's own drop credits the open-bench-slot count, letting
   // two slotless adds share the one slot it frees.
@@ -626,6 +690,55 @@ const outlookSnap = (starters, bench, reserve = []) => ({
     buildOutlook({ week: 1, my_roster_id: 1, league: { roster_positions: ['QB', 'LOLWUT'] }, teams: [{ roster_id: 1, starters: [P.qb1], bench: [], reserve: [] }] });
   } catch { threw = true; }
   check('an unknown slot throws rather than silently under-reporting a hole', threw);
+}
+
+// A superflex lineup starts two quarterbacks every week, but the dedicated
+// slots say one — so a roster cut to two QBs read "not thin", and a week
+// with only one left read "full lineup" because a wide receiver in
+// SUPER_FLEX is legal. Legal, and materially worse at 6-point passing TDs.
+console.log('\noutlook — the SUPER_FLEX the lineup fills with a QB is demand, not a spare seat');
+
+{
+  const base = outlookSnap([P.qb1, P.rb1, P.rb2, P.wr1, P.wr2, P.te1, P.wr3, P.qb2, P.k1, P.df1], [P.qb3, P.rb4, P.rb5, P.wr4], [P.rb3]);
+  const o = buildOutlook(base);
+  check('the flex slots are read off the submitted lineup, not guessed',
+    JSON.stringify(o.roster_shape.flex_preferences) === '[{"slot":"FLEX","position":"WR"},{"slot":"SUPER_FLEX","position":"QB"}]',
+    JSON.stringify(o.roster_shape.flex_preferences));
+  check('...so lineup demand counts two QBs and three WRs, where dedicated slots say one and two',
+    o.roster_shape.lineup_demand.QB === 2 && o.roster_shape.lineup_demand.WR === 3 && o.roster_shape.dedicated_slots.QB === 1,
+    JSON.stringify(o.roster_shape.lineup_demand));
+  check('three QBs against two started is still cover', !o.roster_shape.no_cover_positions.includes('QB'),
+    JSON.stringify(o.roster_shape.no_cover_positions));
+
+  const cut = buildOutlook(base, { drop: ['qb3'] });
+  check('two QBs against two started has none', cut.roster_shape.no_cover_positions.includes('QB'),
+    JSON.stringify(cut.roster_shape.no_cover_positions));
+  check('...but it is still not "thin", which asks a narrower question', !cut.roster_shape.thin_positions.includes('QB'),
+    JSON.stringify(cut.roster_shape.thin_positions));
+
+  const w13 = o.weeks.find((w) => w.week === 13);
+  check('the week two of three QBs are on bye downgrades the SUPER_FLEX',
+    JSON.stringify(w13.downgraded_slots) === '["SUPER_FLEX"]', JSON.stringify(w13));
+  check('...and the same week is still reported as a legal lineup', !w13.empty_slots, JSON.stringify(w13));
+  check('...and counts as a crunch week to plan around', o.crunch_weeks.includes(13), JSON.stringify(o.crunch_weeks));
+  const w9 = o.weeks.find((w) => w.week === 9);
+  check('a week with both QBs available is not downgraded', !w9.downgraded_slots, JSON.stringify(w9));
+
+  // The bug in full: a swap that trades a quarterback away reads as free on
+  // the calendar, because every week it touches is still legal.
+  const traded = buildOutlook(base, { drop: ['qb3'] });
+  const newlyDowngraded = traded.weeks.filter((w) => w.downgraded_slots).map((w) => w.week);
+  check('dropping the third QB downgrades a week the empty-slot test cannot see',
+    newlyDowngraded.includes(6) && traded.weeks.find((w) => w.week === 6).empty_slots === undefined,
+    JSON.stringify(newlyDowngraded));
+}
+{
+  // No QB in the flex slot means no QB-flex: a lineup that starts a running
+  // back there must not be told it is short a quarterback.
+  const o = buildOutlook(outlookSnap([P.qb1, P.rb1, P.rb2, P.wr1, P.wr2, P.te1, P.wr3, P.rb4, P.k1, P.df1], [P.rb5, P.wr4], []));
+  check('a SUPER_FLEX the lineup fills with an RB creates no QB demand',
+    o.roster_shape.lineup_demand.QB === 1 && o.weeks.every((w) => !w.downgraded_slots),
+    JSON.stringify(o.roster_shape.lineup_demand));
 }
 
 // ---- 6. the command line itself -------------------------------------------
@@ -945,8 +1058,23 @@ console.log('\n  need — thinness and the position count');
     '2026-09-15-waivers.md': block([{ kind: 'add', player: 'fa3', mode: 'waiver', faab: 10, displaces: null, urgency: 'by_tuesday', why: 'WR need line.' }]),
   });
   const r = runActions(dir, ['--check', 'reports/2026-09-15-waivers.md']);
-  check('a WR add\'s need line says WR is not thin (3 active against 2 dedicated slots)',
-    /need: WR: you have 3 — not thin/.test(r.out), r.out);
+  // Three WRs against two dedicated slots used to read "not thin" — but the
+  // fixture lineup also fills FLEX with a wide receiver, so it starts three
+  // of the three it owns. Dedicated slots alone can't see that.
+  check('a WR add\'s need line counts the FLEX the lineup fills with a WR',
+    /need: WR: you have 3 — starts 3, no cover/.test(r.out), r.out);
+}
+{
+  // Depth still reads as depth: four WRs against the same three the lineup
+  // starts leaves a spare body, so the line must not cry "no cover".
+  const snap = fixture();
+  snap.teams[0].bench = [P.qb3, P.wr4];
+  const dir = await sandbox(snap, {
+    '2026-09-15-waivers.md': block([{ kind: 'add', player: 'fa3', mode: 'waiver', faab: 10, displaces: null, urgency: 'by_tuesday', why: 'WR need line with cover.' }]),
+  });
+  const r = runActions(dir, ['--check', 'reports/2026-09-15-waivers.md']);
+  check('...and says "not thin" once there is a spare body behind those starts',
+    /need: WR: you have 4 — not thin/.test(r.out), r.out);
 }
 
 console.log('\n  cost — the bid, the market, and the trending rank');

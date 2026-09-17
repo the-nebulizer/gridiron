@@ -45,8 +45,8 @@ Two exceptions, both hard constraints rather than preferences:
 
 Every sync computes `snapshot.outlook` (`scripts/outlook.mjs`) and every routine reads it:
 
-- `roster_shape` — how many I have at each position, how many the lineup demands, which bench and IR slots are open, and `thin_positions`: the positions with no cover if one body is lost.
-- `weeks` — for **every week still to come**, who is on bye and which starting slots cannot be filled at all. The question is solved as a real assignment against the league's slots, so FLEX and SUPER_FLEX are accounted for; a bare count per position is not an answer.
+- `roster_shape` — how many I have at each position, how many the lineup actually starts there (`lineup_demand`, which counts the flex slots my lineup fills at that position — never `dedicated_slots`, which says I start one QB in a superflex league), which bench and IR slots are open, `thin_positions` (can't fill the dedicated slot) and `no_cover_positions` (no spare body for what the lineup starts).
+- `weeks` — for **every week still to come**, who is on bye and which starting slots cannot be filled at all, plus the weeks that are legal but weaker: no quarterback left for the SUPER_FLEX my lineup fills with one, so a flex body starts there. The question is solved as a real assignment against the league's slots, so FLEX and SUPER_FLEX are accounted for; a bare count per position is not an answer.
 - `crunch_weeks`, `playoff_weeks`, `weeks_until_trade_deadline` — what to plan budget and trades around.
 
 Never count a position by hand, and never state a bye week from memory — both are already computed. Before recommending a swap, check what it does to the rest of the season:

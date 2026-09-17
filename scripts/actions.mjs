@@ -315,10 +315,17 @@ function rankAt(baseline, pos) {
   return (baseline.roster_shape.active_by_position[pos] ?? 0) + 1;
 }
 
+// Three readings, strongest first: can't fill the dedicated slot, can't cover
+// what the lineup actually starts (the superflex QB, the flex RB — invisible
+// to a dedicated-slot count), or genuine depth.
 function needLine(baseline, pos, label = 'your thinnest spot') {
-  const thin = baseline.roster_shape.thin_positions.includes(pos);
-  const have = baseline.roster_shape.active_by_position[pos] ?? 0;
-  return `${pos}: you have ${have} — ${thin ? label : 'not thin'}`;
+  const shape = baseline.roster_shape;
+  const have = shape.active_by_position[pos] ?? 0;
+  if (shape.thin_positions.includes(pos)) return `${pos}: you have ${have} — ${label}`;
+  if ((shape.no_cover_positions ?? []).includes(pos)) {
+    return `${pos}: you have ${have} — starts ${shape.lineup_demand[pos]}, no cover`;
+  }
+  return `${pos}: you have ${have} — not thin`;
 }
 
 // "the drop/removed player emptied a thin spot" suffix shared by add's drop
@@ -426,15 +433,14 @@ function buildTradeCase(action, snapshot, index, baseline) {
   const unknownIncoming = getIds.filter((id) => !index.byId.get(id)?.pos).map((id) => index.byId.get(id)?.name ?? id);
   const givePos = [...new Set(giveIds.map((id) => index.byId.get(id)?.pos).filter(Boolean))];
   const needParts = incomingPos.map((p) => needLine(baseline, p));
-  // "start N" counts who is actually in the lineup at that position today —
+  // "start N" is the outlook's lineup demand — the dedicated slots plus the
+  // flex slots the lineup actually fills at that position. Counting starter
+  // bodies instead under-reported whenever a starting slot sat empty, and
   // dedicated slots alone would say Ben starts one QB in a superflex league.
-  const startingByPos = {};
-  for (const { player } of myStarterRow(snapshot)) {
-    if (player?.position) startingByPos[player.position] = (startingByPos[player.position] ?? 0) + 1;
-  }
   const giveParts = givePos.map((p) => {
     const have = baseline.roster_shape.active_by_position[p] ?? 0;
-    return `gives ${p} depth (you have ${have}, start ${startingByPos[p] ?? 0})`;
+    const starts = baseline.roster_shape.lineup_demand?.[p] ?? 0;
+    return `gives ${p} depth (you have ${have}, start ${starts})`;
   });
   if (unknownIncoming.length) needParts.push(`${unknownIncoming.join(', ')}: position unknown`);
   c.need = needParts.join('; ') + giveParts.map((g) => ` · ${g}`).join('');
@@ -1289,7 +1295,7 @@ function groupLinked(actions) {
 // check: the file's own actions plus reports/actions.json's other-source
 // actions). Returns { errors, warnings } — errors fail the run, the faab
 // warning does not.
-async function checkConflictRules(allActions, snapshot, index) {
+async function checkConflictRules(allActions, snapshot, index, baseline) {
   const errors = [];
   const warnings = [];
   // Done and gone actions are history: they hold no player, need no bench
@@ -1303,6 +1309,7 @@ async function checkConflictRules(allActions, snapshot, index) {
   // (a <- b if_not a <- c if_not b, all touching the same player) is not a
   // conflict just because a and c aren't directly linked to each other.
   const find1 = groupLinked(actions);
+  const rule1Flagged = new Set();
   for (let i = 0; i < actions.length; i++) {
     for (let j = i + 1; j < actions.length; j++) {
       const a = actions[i], b = actions[j];
@@ -1313,11 +1320,54 @@ async function checkConflictRules(allActions, snapshot, index) {
       if (!overlap.length) continue;
       if (find1(a.id) === find1(b.id)) continue;
       for (const pid of overlap) {
+        rule1Flagged.add(pid);
         const resolved = await resolvePlayer(index, pid);
         const name = resolved?.name ?? pid;
         errors.push(`actions ${a.id} and ${b.id} both use ${name}; link them with after/if_not`);
       }
     }
+  }
+
+  // Rule 1a: the same collision one level up — two unlinked actions that give
+  // up DIFFERENT players at the same position. Every action's case lines are
+  // measured against one baseline on purpose, so that two actions in a
+  // compile agree with each other; the cost is that neither can see the
+  // other's give. Two trades each shedding a quarterback therefore both
+  // reported the four on the roster today, and the card showed two live
+  // offers that between them left two. The compiler cannot pick which world
+  // is true, so the report has to say: `if_not` for alternatives, `after`
+  // for a sequence. Only bites when the combined loss actually reaches the
+  // lineup's demand — shedding two of six wide receivers is just depth.
+  // Players Rule 1 already named are skipped; the same pair of actions
+  // should not fail twice for one mistake.
+  const SHEDDING_KINDS = new Set(['trade', 'add', 'drop', 'ir']);
+  const shedByPos = new Map(); // pos -> Map(component root -> Set(player ids))
+  for (const a of actions) {
+    if (!SHEDDING_KINDS.has(a.kind)) continue;
+    for (const pid of a.consumes ?? []) {
+      if (rule1Flagged.has(pid)) continue;
+      const pos = index.byId.get(pid)?.pos;
+      if (!pos) continue;
+      if (!shedByPos.has(pos)) shedByPos.set(pos, new Map());
+      const groups = shedByPos.get(pos);
+      const root = find1(a.id);
+      if (!groups.has(root)) groups.set(root, new Set());
+      groups.get(root).add(pid);
+    }
+  }
+  const shape = baseline?.roster_shape;
+  for (const [pos, groups] of shedByPos) {
+    if (!shape || groups.size < 2) continue;
+    const shed = new Set([...groups.values()].flatMap((s) => [...s]));
+    const left = (shape.active_by_position[pos] ?? 0) - shed.size;
+    const starts = shape.lineup_demand?.[pos] ?? shape.dedicated_slots?.[pos] ?? 0;
+    if (left > starts) continue;
+    const ids = actions
+      .filter((a) => SHEDDING_KINDS.has(a.kind) && (a.consumes ?? []).some((pid) => shed.has(pid)))
+      .map((a) => a.id);
+    errors.push(
+      `actions ${ids.join(', ')} each give up a ${pos} and are not linked; if all of them land you keep ${left} ${pos} against a lineup that starts ${starts}, but each one's case is measured as if the others never happened — link them with after/if_not`
+    );
   }
 
   // Rule 2: adds with no drop (needs_slot) must not outnumber the bench
@@ -1586,7 +1636,7 @@ async function compile() {
   }
 
   // Enforce the conflict rules over the whole compiled set.
-  const conflict = await checkConflictRules(finalActions, snapshot, index);
+  const conflict = await checkConflictRules(finalActions, snapshot, index, baseline);
   if (conflict.errors.length) {
     console.error('actions.mjs: validation failed\n' + conflict.errors.map((p) => `  - ${p}`).join('\n'));
     process.exit(1);
@@ -1691,7 +1741,7 @@ async function check(fileArg) {
 
   const otherSourceActions = compiledActions.filter((a) => a.source !== source);
   const conflictSet = [...localActions, ...otherSourceActions];
-  const conflict = await checkConflictRules(conflictSet, snapshot, index);
+  const conflict = await checkConflictRules(conflictSet, snapshot, index, baseline);
   if (conflict.errors.length) {
     for (const p of conflict.errors) console.log(`  ${p}`);
     console.error(`\n${fileArg}: FAILED (${conflict.errors.length} problem(s))`);

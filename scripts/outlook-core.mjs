@@ -116,12 +116,48 @@ export function buildOutlook(snapshot, { add = [], drop = [] } = {}) {
     else flexSlots.push(slot);
   }
 
+  // What the lineup actually consumes at each position. Counting the
+  // dedicated slots alone says one QB is starting in a superflex league —
+  // the SUPER_FLEX filled with a quarterback every week is demand too, and
+  // missing it is why a roster could be cut to two QBs and still read
+  // "not thin". The preference is READ OFF the submitted lineup rather than
+  // inferred from scoring, and it is the lineup's shape, not its bodies, so
+  // a what-if add/drop doesn't move it.
+  const flexPreferences = [];
+  for (let i = 0; i < slotNames.length; i++) {
+    const slot = slotNames[i];
+    if (SLOT_ELIGIBILITY[slot].length === 1) continue;
+    const held = (me.starters ?? [])[i];
+    if (held?.position && SLOT_ELIGIBILITY[slot].includes(held.position)) {
+      flexPreferences.push({ slot, index: i, position: held.position });
+    }
+  }
+  const lineupDemand = { ...dedicated };
+  for (const { position } of flexPreferences) {
+    lineupDemand[position] = (lineupDemand[position] ?? 0) + 1;
+  }
+
   const activeCounts = countByPosition(active);
   // A position is "thin" when losing one body to a bye or an injury makes the
   // dedicated slots unfillable — the single-TE, single-K, single-DEF trap.
   const thin = Object.entries(dedicated)
     .filter(([pos, need]) => (activeCounts[pos] ?? 0) <= need)
     .map(([pos]) => pos);
+  // The same question asked against what the lineup starts rather than what
+  // it dedicates: no spare body for a slot I fill at that position every
+  // week. Strictly wider than `thin` — every thin position is also uncovered.
+  const noCover = Object.entries(lineupDemand)
+    .filter(([pos, need]) => (activeCounts[pos] ?? 0) <= need)
+    .map(([pos]) => pos);
+
+  // A flex slot that admits a quarterback and that the lineup fills with one
+  // is a QB slot in all but name: at 6-point passing touchdowns a startable
+  // QB there beats a WR/TE almost every time, so a week that can only put a
+  // flex body in it is a real loss the "can I field a legal lineup" test
+  // cannot see. This is the only flex downgrade the scoring makes
+  // categorical — an RB at FLEX instead of a WR is an ordinary week.
+  const qbFlexSlots = flexPreferences.filter((f) => f.position === 'QB').map((f) => f.slot);
+  const qbSlotsWanted = (dedicated.QB ?? 0) + qbFlexSlots.length;
 
   const firstWeek = Math.max(snapshot.week ?? 1, 1);
   const playoffStart = league.playoff_week_start ?? 15;
@@ -154,11 +190,18 @@ export function buildOutlook(snapshot, { add = [], drop = [] } = {}) {
       entry.empty_slots_if_injured_stay_out = ifHurtStayOut.empty;
       entry.injured_counted = hurt.map((p) => ({ id: p.id, name: p.name, pos: p.position, status: p.injury_status }));
     }
+    // Legal but worse: not enough quarterbacks left for the QB-flex slots, so
+    // one of them takes a flex body. Only worth saying when the week is
+    // otherwise fillable — where it isn't, the empty slot is the bigger news.
+    if (qbFlexSlots.length && !best.empty.length) {
+      const short = qbSlotsWanted - (entry.available.QB ?? 0);
+      if (short > 0) entry.downgraded_slots = qbFlexSlots.slice(0, short);
+    }
     weeks.push(entry);
   }
 
   const crunch = weeks
-    .filter((w) => w.empty_slots || w.empty_slots_if_injured_stay_out || (w.byes?.length ?? 0) >= 2)
+    .filter((w) => w.empty_slots || w.empty_slots_if_injured_stay_out || w.downgraded_slots || (w.byes?.length ?? 0) >= 2)
     .map((w) => w.week);
 
   const deadline = league.trade_deadline ?? null;
@@ -173,6 +216,10 @@ export function buildOutlook(snapshot, { add = [], drop = [] } = {}) {
       starting_slots: slotNames,
       dedicated_slots: dedicated,
       flex_slots: flexSlots,
+      // How each flex slot is actually being used, and the per-position
+      // demand that follows from it — see the comment where they are built.
+      flex_preferences: flexPreferences.map(({ slot, position }) => ({ slot, position })),
+      lineup_demand: lineupDemand,
       active_by_position: activeCounts,
       reserve_by_position: countByPosition(reserve),
       active_count: active.length,
@@ -186,6 +233,7 @@ export function buildOutlook(snapshot, { add = [], drop = [] } = {}) {
       ir_used: reserve.length,
       ir_open: Math.max(irSlots - reserve.length, 0),
       thin_positions: thin,
+      no_cover_positions: noCover,
     },
     crunch_weeks: crunch,
     weeks,

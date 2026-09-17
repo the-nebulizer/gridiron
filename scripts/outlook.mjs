@@ -132,6 +132,13 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   if (shape.thin_positions.length) {
     console.log(`Thin (no cover if one is lost): ${shape.thin_positions.join(', ')}`);
   }
+  // Positions the lineup starts more of than the dedicated slots admit — the
+  // superflex QB, the flex RB — are uncovered too, and saying so only for the
+  // ones the thin line missed keeps the two from reading as one repeated list.
+  const alsoUncovered = (shape.no_cover_positions ?? []).filter((p) => !shape.thin_positions.includes(p));
+  if (alsoUncovered.length) {
+    console.log(`No cover for what the lineup starts: ${alsoUncovered.map((p) => `${p} (starts ${shape.lineup_demand[p]}, have ${shape.active_by_position[p] ?? 0})`).join(', ')}`);
+  }
 
   console.log(`\nWeek-by-week:`);
   for (const w of outlook.weeks) {
@@ -139,6 +146,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     if (w.byes) bits.push(`bye: ${w.byes.map((p) => `${p.name} (${p.pos})`).join(', ')}`);
     if (w.empty_slots) bits.push(`CANNOT FILL: ${w.empty_slots.join(', ')}`);
     if (w.empty_slots_if_injured_stay_out) bits.push(`only fillable if ${w.injured_counted.map((p) => p.name).join('/')} returns (else ${w.empty_slots_if_injured_stay_out.join(', ')} is empty)`);
+    if (w.downgraded_slots) bits.push(`legal but weaker: no QB left for ${w.downgraded_slots.join(', ')}, a flex body starts there`);
     if (!bits.length) bits.push('full lineup, no byes');
     console.log(`  W${String(w.week).padEnd(2)}${w.playoffs ? '*' : ' '} ${bits.join(' · ')}`);
   }
