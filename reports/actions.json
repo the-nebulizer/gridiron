@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-09-17T12:14:58.834Z",
+  "compiled_at": "2026-09-17T21:52:36.424Z",
   "season": "2026",
   "week": 2,
   "games_have_started": true,
@@ -59,7 +59,7 @@
   },
   "actions": [
     {
-      "id": "trades:trade:8",
+      "id": "jones",
       "source": "trades",
       "report": "2026-09-17-trades.md",
       "kind": "trade",
@@ -91,17 +91,18 @@
       "why": "Cousins is a real starting QB for a team with no backup, and it turns your extra depth into a running back with an actual role.",
       "case": {
         "starts": "Aaron Jones is depth (RB4)",
-        "need": "RB: you have 3 — not thin · gives QB depth (you have 4, start 2) · gives WR depth (you have 4, start 2)",
+        "need": "RB: you have 3 — starts 3, no cover · gives QB depth (you have 4, start 2) · gives WR depth (you have 4, start 2)",
         "cost": "gives Kirk Cousins, Jakobi Meyers — 0 starters, 2 bench · no FAAB",
         "later": "opens no holes · frees 1 bench slot"
       }
     },
     {
-      "id": "trades:trade:9",
+      "id": "robinson",
       "source": "trades",
       "report": "2026-09-17-trades.md",
       "kind": "trade",
       "week": 2,
+      "if_not": "jones",
       "with": 9,
       "with_owner": "amandaberry",
       "give": [
@@ -123,10 +124,10 @@
         "9228"
       ],
       "urgency": "optional",
-      "why": "A cheaper fallback shot at the same running back fix, costing only your lowest-value quarterback stash.",
+      "why": "The fallback if Tally241 passes — but it spends the only quarterback who covers Lamar Jackson's Week 13 bye.",
       "case": {
         "starts": "Brian Robinson is depth (RB4)",
-        "need": "RB: you have 3 — not thin · gives QB depth (you have 4, start 2)",
+        "need": "RB: you have 3 — starts 3, no cover · gives QB depth (you have 4, start 2)",
         "cost": "gives Bryce Young — 0 starters, 1 bench · no FAAB",
         "later": "opens no holes"
       }
