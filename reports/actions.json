@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-09-16T20:06:30.897Z",
+  "compiled_at": "2026-09-17T02:08:50.916Z",
   "season": "2026",
   "week": 2,
   "games_have_started": true,
@@ -14,15 +14,14 @@
       "8228",
       "3163",
       "8259",
-      null
+      "CHI"
     ],
     "bench": [
       "1166",
       "1479",
       "4993",
       "5947",
-      "9228",
-      "CHI"
+      "9228"
     ],
     "reserve": [
       "9753"
@@ -30,58 +29,39 @@
   },
   "sources": {
     "waivers": {
-      "report": "2026-09-16-waivers.md",
+      "report": "2026-09-17-waivers.md",
       "week": 2,
-      "verdict": "Hold — the Chicago defense pickup is already made and the bench is full; no waiver move clears the bar this week.",
+      "verdict": "Hold — bench and IR are both full and nothing on the wire is worth the swap.",
       "next_check": "Lineup, Thu 7am",
       "stale": false
     },
     "lineup": {
-      "report": "2026-09-16-lineup.md",
+      "report": "2026-09-17-lineup.md",
       "week": 2,
-      "verdict": "Start Chicago Bears at DEF — the slot is empty after dropping Buffalo.",
+      "verdict": "Hold — Chicago Bears is started at DEF and the rest of the lineup is healthy and set.",
       "next_check": "Inactives, Sun 10am",
       "stale": false
     },
     "trades": {
-      "report": "2026-09-16-trades.md",
+      "report": "2026-09-17-trades.md",
       "week": 2,
       "verdict": "Still two trades worth sending: Cousins + Meyers to Tally241 for Aaron Jones, and Bryce Young to amandaberry for Brian Robinson.",
       "next_check": "Waivers, Tue 7am",
       "stale": false
     },
     "inactives": {
-      "report": "2026-09-16-inactives.md",
+      "report": "2026-09-17-inactives.md",
       "week": 2,
-      "verdict": "Nothing to check — Week 2 games haven't kicked off yet.",
+      "verdict": "Nothing to flip — Jared Goff has no injury designation ahead of tonight's Lions-Bills opener.",
       "next_check": "Trades, Mon 7am",
       "stale": false
     }
   },
   "actions": [
     {
-      "id": "lineup:start:CHI",
-      "source": "lineup",
-      "report": "2026-09-16-lineup.md",
-      "kind": "start",
-      "week": 2,
-      "player": "CHI",
-      "name": "Chicago Bears",
-      "pos": "DEF",
-      "team": "CHI",
-      "slot": "DEF",
-      "consumes": [],
-      "urgency": "before_kickoff",
-      "deadline_label": "before your first kickoff this week",
-      "why": "Buffalo was dropped for Chicago but Chicago was never moved into the lineup, leaving DEF empty.",
-      "case": {
-        "starts": "Chicago Bears in at DEF"
-      }
-    },
-    {
       "id": "trades:trade:8",
       "source": "trades",
-      "report": "2026-09-16-trades.md",
+      "report": "2026-09-17-trades.md",
       "kind": "trade",
       "week": 2,
       "with": 8,
@@ -119,7 +99,7 @@
     {
       "id": "trades:trade:9",
       "source": "trades",
-      "report": "2026-09-16-trades.md",
+      "report": "2026-09-17-trades.md",
       "kind": "trade",
       "week": 2,
       "with": 9,
