@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-09-17T02:08:50.916Z",
+  "compiled_at": "2026-09-17T12:14:58.834Z",
   "season": "2026",
   "week": 2,
   "games_have_started": true,
@@ -38,7 +38,7 @@
     "lineup": {
       "report": "2026-09-17-lineup.md",
       "week": 2,
-      "verdict": "Hold — Chicago Bears is started at DEF and the rest of the lineup is healthy and set.",
+      "verdict": "Hold — the lineup is already right; Chicago Bears is in at DEF and every slot is filled and healthy.",
       "next_check": "Inactives, Sun 10am",
       "stale": false
     },
