@@ -130,6 +130,18 @@ export function buildOutlook(snapshot, { add = [], drop = [] } = {}) {
     const held = (me.starters ?? [])[i];
     if (held?.position && SLOT_ELIGIBILITY[slot].includes(held.position)) {
       flexPreferences.push({ slot, index: i, position: held.position });
+    } else if (!held && SLOT_ELIGIBILITY[slot].includes('QB')) {
+      // An unset slot (Sleeper's literal "0", already turned to null by
+      // sync.mjs) is not "nobody wants this position" — it is a lineup
+      // Ben hasn't set yet, or a body just dropped with a waiver claim still
+      // pending. Reading it as no preference at all let lineup_demand.QB
+      // silently fall by one and QB drop out of no_cover_positions at the
+      // exact moment the roster was thinnest. Fall back to QB, since at
+      // 6-point passing touchdowns in superflex a startable QB in a
+      // QB-eligible flex slot is the near-certain use (see CLAUDE.md's
+      // scoring note) — a slot that can't hold a QB at all still contributes
+      // nothing, same as before.
+      flexPreferences.push({ slot, index: i, position: 'QB' });
     }
   }
   const lineupDemand = { ...dedicated };
@@ -200,8 +212,19 @@ export function buildOutlook(snapshot, { add = [], drop = [] } = {}) {
     weeks.push(entry);
   }
 
+  // A week with an empty, downgraded, or injury-exposed slot is a crunch on
+  // its own terms. A week whose only news is "two players share a bye" is
+  // not, unless that bye actually eats into slack — a flat count-of-2
+  // flagged any two unrelated byes even with a full bench sitting behind
+  // them, drowning the weeks that truly can't field a legal kicker or
+  // defense in a longer list that meant nothing.
   const crunch = weeks
-    .filter((w) => w.empty_slots || w.empty_slots_if_injured_stay_out || w.downgraded_slots || (w.byes?.length ?? 0) >= 2)
+    .filter((w) => {
+      if (w.empty_slots || w.empty_slots_if_injured_stay_out || w.downgraded_slots) return true;
+      if ((w.byes?.length ?? 0) < 2) return false;
+      if (w.bench_depth === 0) return true;
+      return (w.byes ?? []).some(({ pos }) => thin.includes(pos) || noCover.includes(pos));
+    })
     .map((w) => w.week);
 
   const deadline = league.trade_deadline ?? null;

@@ -89,11 +89,21 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
       console.error(`Unknown player id "${id}" — not in the snapshot or the players dump.`);
       process.exit(1);
     }
-    const team = p.team ?? null;
+    // The dump keeps every id Sleeper has ever issued, active or not — a
+    // retired/inactive player resolves cleanly with `team: null`, which then
+    // reads as a body with no bye ever, fully eligible to fill a slot. That
+    // is the prime directive's exact failure (hallucinated availability),
+    // now coming from the what-if tool meant to prevent it. Reject the same
+    // way an off-roster drop or an unresolvable id already is: loudly.
+    if (p.active === false || !p.team || !p.position) {
+      console.error(`Cannot add "${id}" (${p.full_name || id}) — not an active NFL player with a team in the players dump (active: ${p.active}, team: ${p.team ?? 'none'}, position: ${p.position ?? 'none'}). Check the id.`);
+      process.exit(1);
+    }
+    const team = p.team;
     return {
       id,
       name: p.full_name || [p.first_name, p.last_name].filter(Boolean).join(' ') || id,
-      position: p.position ?? null,
+      position: p.position,
       team,
       bye_week: (snapshot.byes ?? {})[team] ?? null,
       injury_status: p.injury_status ?? null,

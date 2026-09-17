@@ -62,6 +62,17 @@ const P = {
   rb4: { id: 'rb4', name: 'Rush Four', position: 'RB', team: 'QQQ', bye_week: 8, injury_status: null },
   rb5: { id: 'rb5', name: 'Rush Five', position: 'RB', team: 'RRR', bye_week: 14, injury_status: null },
   wr4: { id: 'wr4', name: 'Wide Four', position: 'WR', team: 'SSS', bye_week: 12, injury_status: null },
+  // a bye pair for the crunch-week tightening tests below: shares a week
+  // with nothing else, so on their own they isolate the bye-count clause.
+  safe_rb: { id: 'safe_rb', name: 'Safe RB', position: 'RB', team: 'WWW', bye_week: 4, injury_status: null },
+  safe_wr: { id: 'safe_wr', name: 'Safe WR', position: 'WR', team: 'XXX', bye_week: 4, injury_status: null },
+  drain_rb: { id: 'drain_rb', name: 'Drain RB', position: 'RB', team: 'YYY', bye_week: 3, injury_status: null },
+  drain_wr: { id: 'drain_wr', name: 'Drain WR', position: 'WR', team: 'ZZZ', bye_week: 3, injury_status: null },
+  // Never placed on any roster or in trending/transactions — exists only so
+  // sandbox()'s synthetic players.json carries a dump-only entry with no
+  // team, the shape a retired/inactive player actually has (see the
+  // "unknown player id" CLI tests below).
+  retired1: { id: 'retired1', name: 'Retired One', position: 'QB', team: null, bye_week: null, injury_status: null },
 };
 
 const SLOTS = ['QB', 'RB', 'RB', 'WR', 'WR', 'TE', 'FLEX', 'SUPER_FLEX', 'K', 'DEF'];
@@ -280,7 +291,37 @@ await strict('a swap that empties another slot is rejected', [{ kind: 'start', p
 await strict('a start with no "for" into a filled slot is rejected', [{ kind: 'start', player: 'qb3', slot: 'SUPER_FLEX', urgency: 'before_kickoff', why: 'Displaces nobody named.' }], { expect: /needs a "for"/ });
 await strict('a start for a player who is not starting is rejected', [{ kind: 'start', player: 'qb3', for: 'rb3', slot: 'SUPER_FLEX', urgency: 'before_kickoff', why: 'Not a starter.' }], { expect: /is not in my starters/ });
 await strict('an unknown slot is rejected', [{ kind: 'start', player: 'qb3', for: 'qb2', slot: 'LOLWUT', urgency: 'before_kickoff', why: 'No such slot.' }], { expect: /slot must be one of/ });
+// rb3 sits in `reserve` in the fixture — myIds counts reserve as "mine" too
+// (it has to, for drop/trade), so roster membership alone let a start into
+// the IR slot validate clean. Sleeper won't move a reserve player straight
+// into a starting slot; he has to be activated first.
+await strict('a start naming a player on IR/reserve is rejected', [{ kind: 'start', player: 'rb3', for: 'rb1', slot: 'RB', urgency: 'before_kickoff', why: 'Still on IR.' }], { expect: /on IR\/reserve/ });
+{
+  // No check anywhere compared the incoming player's own bye to the live
+  // week — buildStartCase only ever reported the benched player's status —
+  // so a start naming someone on a bye validated clean and scored zero.
+  const snap = fixture();
+  snap.teams[0].bench = [{ ...P.qb3, bye_week: snap.week }];
+  const dir = await sandbox(snap, {
+    '2026-09-15-lineup.md': block([{ kind: 'start', player: 'qb3', for: 'qb2', slot: 'SUPER_FLEX', urgency: 'before_kickoff', why: 'On a bye.' }]),
+  });
+  const r = runActions(dir, ['--check', 'reports/2026-09-15-lineup.md']);
+  check('a start naming a player on a bye this week is rejected', r.code === 1 && /on a bye this week/.test(r.out), r.out);
+}
 await strict('a strict run still rejects an add already rostered elsewhere', [{ kind: 'add', player: 'opp1', mode: 'waiver', urgency: 'now', why: 'Not free.' }], { expect: /already rostered by Them/ });
+// games_have_started flips once and stays flipped — the fixture's default
+// (true) matches "the season is underway", so a routine still writing an
+// instant, $0 fcfs add here is the exact stale-report bug this rule stops.
+await strict('an fcfs add is rejected once games have started', [{ kind: 'add', player: 'fa1', mode: 'fcfs', urgency: 'now', why: 'Games are already underway.' }], { expect: /needs mode: "waiver"/ });
+{
+  // Control: before kickoff, fcfs is exactly right — an instant, $0 add,
+  // never a waiver bid — so the identical mode passes when it's still true.
+  const dir = await sandbox(fixture({ games_have_started: false }), {
+    '2026-09-15-waivers.md': block([{ kind: 'add', player: 'fa1', mode: 'fcfs', urgency: 'now', why: 'Pre-season, first come first served.' }]),
+  });
+  const r = runActions(dir, ['--check', 'reports/2026-09-15-waivers.md']);
+  check('...but the same fcfs add is fine before games have started', r.code === 0, r.out);
+}
 
 // ---- 3. the IR slot is real capacity -------------------------------------
 
@@ -437,6 +478,40 @@ console.log('\nsequencing — the seven fixes, pinned down permanently');
       r.code === 0 || !/each give up/.test(r.out), r.out);
   }
 }
+
+// `start`'s own consumes never listed the player being put IN — only `for`,
+// the player coming out — so an unlinked start and a trade/drop giving that
+// same incoming player away never collided under Rule 1. Fixed Sep 2026.
+{
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-lineup.md': block([{ kind: 'start', player: 'qb3', for: 'qb2', slot: 'SUPER_FLEX', urgency: 'before_kickoff', why: 'Start Quinn Three.' }]),
+    '2026-09-15-trades.md': block([{ kind: 'trade', with: 2, give: ['qb3'], get: ['opp1'], urgency: 'this_week', why: 'Also gives Quinn Three away.' }]),
+  });
+  const r = runActions(dir);
+  check('a start and an unlinked trade giving away the same incoming player collide', r.code === 1 && /both use Quinn Three/.test(r.out), r.out);
+}
+{
+  // Control: linking the two with if_not clears Rule 1, same as any other pair.
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-lineup.md': block([{ kind: 'start', player: 'qb3', for: 'qb2', slot: 'SUPER_FLEX', urgency: 'before_kickoff', if_not: 'trades:trade:2', why: 'Only if the trade falls through.' }]),
+    '2026-09-15-trades.md': block([{ kind: 'trade', with: 2, give: ['qb3'], get: ['opp1'], urgency: 'this_week', why: 'Primary plan: trade Quinn Three.' }]),
+  });
+  const r = runActions(dir);
+  check('...and accepted once linked with if_not', r.code === 0, r.out);
+}
+{
+  // Rule 1a is scoped to SHEDDING_KINDS (trade/add/drop/ir) on purpose: a
+  // start's consumes now includes the incoming player, but starting a bench
+  // QB doesn't shed a QB from the roster — the opposite — so it must never
+  // count as a second unlinked "gives up a QB" alongside a real trade give.
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-lineup.md': block([{ kind: 'start', player: 'qb3', for: 'qb2', slot: 'SUPER_FLEX', urgency: 'before_kickoff', why: 'Start Quinn Three.' }]),
+    '2026-09-15-trades.md': block([{ kind: 'trade', with: 2, give: ['qb1'], get: ['opp1'], urgency: 'this_week', why: 'Trades away Quinn One.' }]),
+  });
+  const r = runActions(dir);
+  check('a start does not count as shedding a QB under Rule 1a', r.code === 0 && !/each give up a QB/.test(r.out), r.out);
+}
+
 {
   // Rule 2: this set's own drop credits the open-bench-slot count, letting
   // two slotless adds share the one slot it frees.
@@ -545,6 +620,71 @@ console.log('\nsequencing — the seven fixes, pinned down permanently');
   const r = runActions(dir);
   check('two adds if_not the same trade are not grouped with each other', r.code === 1 && /bench slot/.test(r.out), r.out);
 }
+
+// Rule 2b: a trade's own `get` can outnumber its `give` — it brings home
+// more bodies than it sends away — and nothing checked that against open
+// bench room, unlike an add with no drop. Sleeper refuses a trade the
+// roster has no room for the same as it refuses an overflowing add.
+{
+  const snap = fixture();
+  snap.teams[0].bench = [P.qb4, P.qb5, P.rb4, P.rb5, P.wr4]; // all 5 BN slots full
+  const dir = await sandbox(snap, {
+    '2026-09-15-trades.md': block([
+      { kind: 'trade', with: 2, give: ['qb4'], get: ['opp1', 'opp2'], urgency: 'this_week', why: 'Brings home two for one.' },
+    ]),
+  });
+  const r = runActions(dir);
+  check('a single trade that nets more players in than out is rejected when the bench is full',
+    r.code === 1 && /bring home/.test(r.out), r.out);
+}
+{
+  // Control: the identical shape trade is fine when the bench has room for
+  // the extra body it brings home.
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-trades.md': block([
+      { kind: 'trade', with: 2, give: ['qb3'], get: ['opp1', 'opp2'], urgency: 'this_week', why: 'Brings home two for one, room to spare.' },
+    ]),
+  });
+  const r = runActions(dir);
+  check('...but the identical shape trade is fine when the bench has room for the extra body',
+    r.code === 0, r.out);
+}
+{
+  // Two trades to different partners, each netting one body in, unlinked:
+  // the roster cannot actually absorb both landing at once, but each one's
+  // case is measured as if the other never happened — mirroring how Rule 1a
+  // already sums unlinked same-position gives instead of checking each
+  // action alone.
+  const snap = fixture();
+  snap.teams.push({ roster_id: 3, owner: 'Third', faab_remaining: 100, starters: [P.fa3, P.fa2], bench: [], reserve: [] });
+  snap.teams[0].bench = [P.qb4, P.rb4, P.rb5, P.wr4]; // 4 on bench, 5 BN slots: 1 open
+  const dir = await sandbox(snap, {
+    '2026-09-15-trades.md': block([
+      { kind: 'trade', id: 't1', with: 2, give: ['qb4'], get: ['opp1', 'opp2'], urgency: 'this_week', why: 'Nets one body from roster 2.' },
+      { kind: 'trade', id: 't2', with: 3, give: ['rb4'], get: ['fa3', 'fa2'], urgency: 'optional', why: 'Nets one body from roster 3.' },
+    ]),
+  });
+  const r = runActions(dir);
+  check('two unlinked trades that each net a body combine to overflow the one open bench slot',
+    r.code === 1 && /bring home/.test(r.out), r.out);
+}
+{
+  // Control: marking the second an alternative to the first — only one can
+  // actually land — clears it, the same if_not-only grouping Rule 2 already
+  // applies to slotless adds.
+  const snap = fixture();
+  snap.teams.push({ roster_id: 3, owner: 'Third', faab_remaining: 100, starters: [P.fa3, P.fa2], bench: [], reserve: [] });
+  snap.teams[0].bench = [P.qb4, P.rb4, P.rb5, P.wr4];
+  const dir = await sandbox(snap, {
+    '2026-09-15-trades.md': block([
+      { kind: 'trade', id: 't1', with: 2, give: ['qb4'], get: ['opp1', 'opp2'], urgency: 'this_week', why: 'Primary offer.' },
+      { kind: 'trade', id: 't2', with: 3, give: ['rb4'], get: ['fa3', 'fa2'], urgency: 'optional', if_not: 't1', why: 'Fallback, not a second deal.' },
+    ]),
+  });
+  const r = runActions(dir);
+  check('...and accepted once the second is marked the fallback to the first', r.code === 0, r.out);
+}
+
 {
   // Rule 5: after-linked bids are not alternatives — both could land — so
   // both count toward the projected spend.
@@ -602,6 +742,77 @@ console.log('\nsequencing — the seven fixes, pinned down permanently');
   const written = JSON.parse(readFileSync(path.join(dir, 'reports', 'actions.json'), 'utf8'));
   const waiver = written.actions.find((a) => a.player === 'fa1');
   check("...onto the winning report's id", waiver?.if_not === 'inactives:trade:2', JSON.stringify(waiver));
+}
+
+// Two trade offers to the SAME partner used to collapse to one with no error
+// or warning: the old flat `trade:${with}` key in compile()'s dedupe hit
+// neither "first sighting" nor "different report" branch for a second
+// same-report offer, so it silently dropped it. Cross-report supersession by
+// partner is deliberate (a newer trades report revising an offer to one
+// partner must still replace the older one) — only the SAME-report case was
+// the bug. Fixed Sep 2026.
+{
+  // Two genuinely separate, distinctly-id'd offers to one partner both
+  // survive a compile — neither the primary-plus-if_not-fallback pattern nor
+  // two independent offers should ever be dropped for sharing a partner.
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-trades.md': block([
+      { kind: 'trade', id: 'offerA', with: 2, give: ['qb3'], get: ['opp1'], urgency: 'this_week', why: 'First offer.' },
+      { kind: 'trade', id: 'offerB', with: 2, give: ['rb1'], get: ['opp2'], urgency: 'this_week', why: 'A second, separate offer.' },
+    ]),
+  });
+  const r = runActions(dir);
+  check('two distinctly-id\'d offers to the same partner in one report both survive compile',
+    r.code === 0 && /2 open action/.test(r.out), r.out);
+  const written = JSON.parse(readFileSync(path.join(dir, 'reports', 'actions.json'), 'utf8'));
+  const ids = written.actions.filter((a) => a.kind === 'trade').map((a) => a.id).sort();
+  check('...and both ids are in the compiled set', ids.join(',') === 'offerA,offerB', ids.join(','));
+}
+{
+  // With no explicit id on either, both default to the same
+  // `<source>:trade:<with>` key — that collision is now a write-time error
+  // instead of a silent drop two steps downstream.
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-trades.md': block([
+      { kind: 'trade', with: 2, give: ['qb3'], get: ['opp1'], urgency: 'this_week', why: 'First offer.' },
+      { kind: 'trade', with: 2, give: ['rb1'], get: ['opp2'], urgency: 'this_week', why: 'A second, separate offer.' },
+    ]),
+  });
+  const r = runActions(dir, ['--check', 'reports/2026-09-15-trades.md']);
+  check('two offers to the same partner with no explicit ids are rejected as a default-id collision',
+    r.code === 1 && /need distinct "id"s/.test(r.out), r.out);
+}
+{
+  // A literal restatement — same give and same get to the same partner — is
+  // the accidental duplicate it looks like, even with distinct ids attached.
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-trades.md': block([
+      { kind: 'trade', id: 'x', with: 2, give: ['qb3'], get: ['opp1'], urgency: 'this_week', why: 'First offer.' },
+      { kind: 'trade', id: 'y', with: 2, give: ['qb3'], get: ['opp1'], urgency: 'this_week', why: 'Same offer restated.' },
+    ]),
+  });
+  const r = runActions(dir, ['--check', 'reports/2026-09-15-trades.md']);
+  check('an exact give/get restatement to the same partner is rejected as a likely duplicate even with distinct ids',
+    r.code === 1 && /likely a duplicate/.test(r.out), r.out);
+}
+{
+  // Cross-report supersession still replaces a partner's WHOLE set, not just
+  // a matching key: a newer report with one offer to roster 2 drops both of
+  // an older report's offers to roster 2, not just one of them.
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-trades.md': block([
+      { kind: 'trade', id: 'old1', with: 2, give: ['qb3'], get: ['opp1'], urgency: 'this_week', why: 'Old offer one.' },
+      { kind: 'trade', id: 'old2', with: 2, give: ['rb1'], get: ['opp2'], urgency: 'this_week', why: 'Old offer two.' },
+    ]),
+    '2026-09-16-inactives.md': block([
+      { kind: 'trade', id: 'new1', with: 2, give: ['wr1'], get: ['opp1'], urgency: 'this_week', why: 'Revised offer, carried by the newer report.' },
+    ]),
+  });
+  const r = runActions(dir);
+  check('a newer report\'s offer set to a partner replaces the older report\'s whole set', r.code === 0, r.out);
+  const written = JSON.parse(readFileSync(path.join(dir, 'reports', 'actions.json'), 'utf8'));
+  const trades = written.actions.filter((a) => a.kind === 'trade' && a.with === 2);
+  check('...leaving exactly the newer offer, not a merge of both', trades.length === 1 && trades[0].id === 'new1', JSON.stringify(trades));
 }
 {
   // --check names the routine from the filename; a name it can't match to
@@ -676,6 +887,29 @@ const outlookSnap = (starters, bench, reserve = []) => ({
   const starters = [P.qb1, P.rb1, P.rb2, P.wr1, P.wr2, P.te1, P.wr3, null, P.k1, P.df1];
   const o = buildOutlook(outlookSnap(starters, [P.qb3, P.rb4, P.rb5, P.wr4], [P.rb3]));
   check('an empty starting slot does not inflate open roster room', o.roster_shape.bench_open === 2, `bench_open=${o.roster_shape.bench_open} (13 bodies, 15 places)`);
+  // The same empty SUPER_FLEX (a drop with no waiver replacement chosen yet,
+  // or simply an unset lineup) must not silently erase the QB demand that
+  // slot carries every other week — flex_preferences used to read `null` and
+  // just skip the slot, so lineup_demand.QB quietly fell to 1 and QB dropped
+  // out of no_cover_positions at the exact moment the roster was thinnest.
+  check('an empty SUPER_FLEX still falls back to a QB preference, not none at all',
+    JSON.stringify(o.roster_shape.flex_preferences) === '[{"slot":"FLEX","position":"WR"},{"slot":"SUPER_FLEX","position":"QB"}]',
+    JSON.stringify(o.roster_shape.flex_preferences));
+  check('...so lineup_demand.QB still counts the unset slot', o.roster_shape.lineup_demand.QB === 2, JSON.stringify(o.roster_shape.lineup_demand));
+  check('...and QB shows up as uncovered rather than reading as safe', o.roster_shape.no_cover_positions.includes('QB'), JSON.stringify(o.roster_shape.no_cover_positions));
+}
+{
+  // Contrast: an empty flex slot that CANNOT hold a quarterback must not
+  // manufacture QB demand out of thin air — only a slot whose eligibility
+  // actually admits QB gets the fallback.
+  const o = buildOutlook({
+    week: 1,
+    my_roster_id: 1,
+    league: { roster_positions: ['QB', 'FLEX'], reserve_slots: 0, playoff_week_start: 15, trade_deadline: 11 },
+    teams: [{ roster_id: 1, starters: [P.qb1, null], bench: [P.rb1], reserve: [] }],
+  });
+  check('an empty non-QB flex slot contributes no preference at all',
+    o.roster_shape.flex_preferences.length === 0, JSON.stringify(o.roster_shape.flex_preferences));
 }
 {
   const base = outlookSnap([P.qb1, P.rb1, P.rb2, P.wr1, P.wr2, P.te1, P.wr3, P.qb2, P.k1, P.df1], [P.qb3, P.rb4, P.rb5, P.wr4], [P.rb3]);
@@ -741,6 +975,71 @@ console.log('\noutlook — the SUPER_FLEX the lineup fills with a QB is demand, 
     JSON.stringify(o.roster_shape.lineup_demand));
 }
 
+// A flat "2+ byes" threshold flagged any two unrelated players sharing a
+// week as crunch even with a full bench sitting behind them — burying the
+// weeks that actually can't field a legal kicker or defense in a longer list
+// that meant nothing.
+console.log('\noutlook — a bye-only week is only crunch when it actually costs something');
+
+{
+  const base = outlookSnap(
+    [P.qb1, P.rb1, P.rb2, P.wr1, P.wr2, P.te1, P.wr3, P.qb2, P.k1, P.df1],
+    [P.qb3, P.rb4, P.rb5, P.wr4, P.safe_rb, P.safe_wr],
+    []
+  );
+  const o = buildOutlook(base);
+  const w4 = o.weeks.find((w) => w.week === 4);
+  check('two bench players sharing a bye with depth to spare is not itself a crunch',
+    !o.crunch_weeks.includes(4) && !w4.empty_slots && !w4.downgraded_slots && w4.bench_depth > 0,
+    JSON.stringify(w4));
+}
+{
+  const base = outlookSnap(
+    [P.qb1, P.rb1, P.rb2, P.wr1, P.wr2, P.te1, P.wr3, P.qb2, P.k1, P.df1],
+    [P.drain_rb, P.drain_wr],
+    []
+  );
+  const o = buildOutlook(base);
+  const w3 = o.weeks.find((w) => w.week === 3);
+  check('...but the same shape of bye pair IS a crunch once it drains bench depth to zero',
+    o.crunch_weeks.includes(3) && !w3.empty_slots && w3.bench_depth === 0,
+    JSON.stringify(w3));
+}
+{
+  // Control: the QB-bye week from the SUPER_FLEX block above stays a crunch
+  // week under the tightened rule too — it earns it on downgraded_slots, not
+  // on the bye count, so tightening the bye clause must not touch it.
+  const base = outlookSnap([P.qb1, P.rb1, P.rb2, P.wr1, P.wr2, P.te1, P.wr3, P.qb2, P.k1, P.df1], [P.qb3, P.rb4, P.rb5, P.wr4], [P.rb3]);
+  const o = buildOutlook(base);
+  check('a week already flagged by downgraded_slots is untouched by the bye-only tightening',
+    o.crunch_weeks.includes(13), JSON.stringify(o.crunch_weeks));
+}
+
+// scripts/sync.mjs always does a live fetch at import time (no CLI guard, per
+// its own usage comment), so it can't be imported or run here the way
+// outlook.mjs is — the guard is pulled out of the file as text and run
+// standalone instead, the same way section 8 below runs a slice of
+// docs/index.html's script through vm rather than a browser.
+console.log('\nsync — the Tuesday/Wednesday assumption is checked, not just typed');
+
+{
+  const src = readFileSync(path.join(root, 'scripts', 'sync.mjs'), 'utf8');
+  const from = src.indexOf('function waiverAssumptionWarning');
+  const to = src.indexOf('\n}', from) + 2;
+  check('sync.mjs still carries the waiver-assumption guard as one pure function', from !== -1 && to > from);
+
+  const ctx = {};
+  vm.createContext(ctx);
+  new vm.Script(src.slice(from, to) + ';this.waiverAssumptionWarning=waiverAssumptionWarning;').runInContext(ctx);
+
+  check('the values every doc and skill assumes (Tuesday/Wednesday) warn about nothing',
+    ctx.waiverAssumptionWarning({ waiver_day_of_week: 2, waiver_clear_days: 2 }) === null);
+  check('a changed processing day is a loud warning, not a silent stale assumption',
+    /waiver_day_of_week=3/.test(ctx.waiverAssumptionWarning({ waiver_day_of_week: 3, waiver_clear_days: 2 }) ?? ''));
+  check('a changed clear window warns too, independent of the day',
+    /waiver_clear_days=1/.test(ctx.waiverAssumptionWarning({ waiver_day_of_week: 2, waiver_clear_days: 1 }) ?? ''));
+}
+
 // ---- 6. the command line itself -------------------------------------------
 // A what-if tool that ignores an argument answers "this move changes nothing"
 // when it has in fact ignored the move. That is worse than crashing.
@@ -768,6 +1067,16 @@ function runOutlook(dir, args) {
 
   const badDrop = runOutlook(dir, ['--drop', 'not-on-my-roster']);
   check('dropping someone who is not on the roster is an error', badDrop.code === 2 && /Cannot drop/.test(badDrop.out), badDrop.out);
+
+  // The players dump keeps every id Sleeper has ever issued, retired and
+  // inactive included — resolving one clean handed back a fully-available
+  // body with no team and no bye, ever. `retired1` has team: null in the
+  // synthetic dump the same way a real retired player does (see the P
+  // fixture comment), and is on no roster, so --add must fall through to
+  // the dump and reject it there, not fabricate a body from it.
+  const retiredAdd = runOutlook(dir, ['--add', 'retired1']);
+  check('adding a retired/teamless player id from the dump is rejected, not fabricated',
+    retiredAdd.code === 1 && /Cannot add "retired1"/.test(retiredAdd.out), retiredAdd.out);
 
   const plain = runOutlook(dir, []);
   check('no arguments prints the roster as it stands', plain.code === 0 && /as it stands/.test(plain.out), plain.out);
@@ -1006,14 +1315,24 @@ console.log('\n  starts — named displacement vs. bench depth');
 console.log('\n  depth is priced like depth — DEPTH_BID_CAP');
 
 {
-  const dir = await sandbox(fixture(), {
-    '2026-09-15-waivers.md': block([{ kind: 'add', player: 'fa3', mode: 'waiver', faab: 15, displaces: null, urgency: 'by_tuesday', why: 'A fourth WR at a starter price.' }]),
+  // fa3 against the bare fixture is a THIRD active WR that the lineup's FLEX
+  // also starts — "you have 3 — starts 3, no cover" (see the need-line case
+  // below), real need, not surplus. Genuine surplus needs a spare body
+  // behind what the lineup starts, so give the bench a fourth WR (wr4)
+  // first: fa3 would then be a fifth against three starts, with one already
+  // spare — the cap has to apply here or it prices real need like a stash.
+  const snap = fixture();
+  snap.teams[0].bench = [P.qb3, P.wr4];
+  const dir = await sandbox(snap, {
+    '2026-09-15-waivers.md': block([{ kind: 'add', player: 'fa3', mode: 'waiver', faab: 15, displaces: null, urgency: 'by_tuesday', why: 'A fifth WR at a starter price.' }]),
   });
   const r = runActions(dir, ['--check', 'reports/2026-09-15-waivers.md']);
-  check('a non-thin depth add priced above 10% of remaining FAAB fails --check', r.code === 1 && /starter's price/.test(r.out), r.out);
+  check('a genuinely-surplus depth add priced above 10% of remaining FAAB fails --check', r.code === 1 && /starter's price/.test(r.out), r.out);
 }
 {
-  const dir = await sandbox(fixture(), {
+  const snap = fixture();
+  snap.teams[0].bench = [P.qb3, P.wr4];
+  const dir = await sandbox(snap, {
     '2026-09-15-waivers.md': block([{ kind: 'add', player: 'fa3', mode: 'waiver', faab: 10, displaces: null, urgency: 'by_tuesday', why: 'Right at the cap.' }]),
   });
   const r = runActions(dir, ['--check', 'reports/2026-09-15-waivers.md']);
@@ -1025,6 +1344,22 @@ console.log('\n  depth is priced like depth — DEPTH_BID_CAP');
   });
   const r = runActions(dir, ['--check', 'reports/2026-09-15-waivers.md']);
   check('...and a thin position is exempt from the cap entirely, at any bid', r.code === 0, r.out);
+}
+{
+  // The cap used to check thin_positions only, so this exact bid failed as
+  // "ordinary depth" even though fa3 here is a no_cover WR (three active,
+  // all three started via the dedicated slots plus FLEX) — needLine() has
+  // called that real need, not depth, all along; the cap now has to agree,
+  // or it prices a real need like a stash. Reachable in production as a
+  // roster down to two QBs (one QB slot, one SUPER_FLEX): no dedicated slot
+  // is short, so thin_positions alone missed it, but losing either QB
+  // breaks the lineup all the same.
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-waivers.md': block([{ kind: 'add', player: 'fa3', mode: 'waiver', faab: 30, displaces: null, urgency: 'by_tuesday', why: 'A no-cover WR, priced like the need it is.' }]),
+  });
+  const r = runActions(dir, ['--check', 'reports/2026-09-15-waivers.md']);
+  check('...and a no_cover-but-not-thin position is exempt from the cap too, same as needLine treats it',
+    r.code === 0, r.out);
 }
 
 console.log('\n  a report written before this rule existed still compiles');
@@ -1148,6 +1483,51 @@ console.log('\n  a trade case — the incoming player, the give, and the outlook
   });
   const r = runActions(dir, ['--check', 'reports/2026-09-15-trades.md']);
   check('a trade that gives more than it gets frees a bench slot', /frees 1 bench slot/.test(r.out), r.out);
+}
+{
+  // qb2 starts SUPER_FLEX in the fixture. Giving him away reads "opens no
+  // holes" from the outlook diff alone, because the what-if outlook freely
+  // reassigns qb3 (the bench QB) into SUPER_FLEX for its own legal-lineup
+  // projection — but that reassignment only happened on paper; the live
+  // Sleeper lineup still has SUPER_FLEX empty until Ben makes the swap
+  // himself, and trade review is 0 days, so the deal can land minutes
+  // before kickoff. Fixed Sep 2026.
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-trades.md': block([{ kind: 'trade', with: 2, give: ['qb2'], get: ['opp1'], displaces: null, urgency: 'this_week', why: 'Gives away the current SUPER_FLEX starter.' }]),
+  });
+  const r = runActions(dir, ['--check', 'reports/2026-09-15-trades.md']);
+  check('a trade giving away a current starter names the slot it empties',
+    /empties SUPERFLEX this week — set a starter there before kickoff/.test(r.out), r.out);
+}
+{
+  // Control: giving away a bench player never empties a starting slot, so
+  // the note must not appear.
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-trades.md': block([{ kind: 'trade', with: 2, give: ['qb3'], get: ['opp1'], displaces: null, urgency: 'this_week', why: 'Gives away a bench QB.' }]),
+  });
+  const r = runActions(dir, ['--check', 'reports/2026-09-15-trades.md']);
+  check('...but giving away a bench player never triggers it', r.code === 0 && !/empties/.test(r.out), r.out);
+}
+{
+  // outlook-core.mjs's downgraded_slots (a legal-but-worse week: no QB left
+  // for a QB-eligible flex slot) never reached diffWeeks, so a trade that
+  // only ever creates downgraded weeks — never a fully empty one — still
+  // read "opens no holes". With a bench deep enough that no week actually
+  // goes empty (rb4/rb5/wr4 added, matching the outlook fixture two sections
+  // up), trading qb3 away leaves only qb1 to cover Week 6 — qb2's bye — so
+  // SUPER_FLEX there downgrades to a flex body; Week 13 (qb1 and qb3's
+  // shared bye) was already downgraded before the trade and is unaffected by
+  // it, so this is specifically Week 6 the trade newly breaks. Fixed Sep 2026.
+  const snap = fixture();
+  snap.teams[0].bench = [P.qb3, P.rb4, P.rb5, P.wr4];
+  const dir = await sandbox(snap, {
+    '2026-09-15-trades.md': block([{ kind: 'trade', with: 2, give: ['qb3'], get: ['opp1'], displaces: null, urgency: 'this_week', why: 'Spends the only QB covering Week 6.' }]),
+  });
+  const r = runActions(dir, ['--check', 'reports/2026-09-15-trades.md']);
+  check('a trade that newly downgrades a future SUPER_FLEX week names it',
+    /opens a W6 SUPERFLEX downgrade/.test(r.out), r.out);
+  check('...and does not also claim the already-downgraded W13 as newly opened',
+    !/W13 SUPERFLEX downgrade/.test(r.out), r.out);
 }
 
 console.log('\n  a start case — who comes in, who sits, and the bench player\'s status');

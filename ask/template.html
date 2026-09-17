@@ -470,6 +470,13 @@ function askOutlookSection(data){
   const L = ['== THE OUTLOOK — every week still to come, solved against the real starting slots =='];
   const thin = shape.thin_positions || [];
   L.push(`  Thin positions (one body from an unfillable slot): ${thin.length ? thin.join(', ') : 'none'}`);
+  // no_cover_positions asks the wider question: does the lineup start more of a position
+  // than the dedicated slots admit — the superflex QB, the flex RB — with no spare body
+  // behind it. Every thin position is also no-cover, so only the ones thin didn't already
+  // name are worth another line (mirrors scripts/outlook.mjs's CLI printer).
+  const alsoUncovered = (shape.no_cover_positions || []).filter(p => !thin.includes(p));
+  if(alsoUncovered.length) L.push('  Also no cover for what the lineup starts: '
+    + alsoUncovered.map(p => `${p} (starts ${shape.lineup_demand?.[p]}, have ${shape.active_by_position?.[p] ?? 0})`).join(', '));
   L.push(`  Bench slots open: ${shape.bench_open} of ${shape.bench_slots} · IR ${shape.ir_used}/${shape.ir_slots}`);
   if(shape.active_by_position) L.push('  Bodies by position: '
     + Object.entries(shape.active_by_position).map(([p,n]) => `${p} ${n}`).join(', '));
@@ -481,6 +488,9 @@ function askOutlookSection(data){
     if((w.byes||[]).length) bits.push('on bye: ' + w.byes.map(b => `${b.name} (${b.pos})`).join(', '));
     if((w.empty_slots||[]).length) bits.push('CANNOT FILL: ' + w.empty_slots.join(', '));
     if((w.empty_slots_if_injured_stay_out||[]).length) bits.push('cannot fill if the injured stay out: ' + w.empty_slots_if_injured_stay_out.join(', '));
+    // Legal but worse: not enough quarterbacks for the SUPER_FLEX slots, so a flex body
+    // starts there instead — the QB-in-superflex case CLAUDE.md calls out by name.
+    if((w.downgraded_slots||[]).length) bits.push('legal but weaker — no QB left for ' + w.downgraded_slots.join(', ') + ', a flex body starts there');
     if(bits.length) L.push(`  W${w.week}: ${bits.join(' · ')}`);
   }
   return L.join('\n');
@@ -654,20 +664,37 @@ function whatIf(data, input){
   const changed = [];
   for(const w of after.weeks || []){
     const b = weekMap.get(w.week);
-    const was = ((b && b.empty_slots) || []).join(',');
-    const now = (w.empty_slots || []).join(',');
-    if(was !== now) changed.push({week: w.week, before: (b && b.empty_slots) || [], after: w.empty_slots || []});
+    const emptyBefore = (b && b.empty_slots) || [];
+    const emptyAfter = w.empty_slots || [];
+    // downgraded_slots (a flex body starting over a quarterback in SUPER_FLEX) is diffed
+    // the same way as empty_slots — a swap that trades a QB away can read as free on the
+    // week-by-week check because every touched week is still legal, while quietly costing
+    // a downgraded week the plain empty_slots diff can't see. See CLAUDE.md's scoring note.
+    const downBefore = (b && b.downgraded_slots) || [];
+    const downAfter = w.downgraded_slots || [];
+    if(emptyBefore.join(',') !== emptyAfter.join(',') || downBefore.join(',') !== downAfter.join(',')){
+      changed.push({
+        week: w.week,
+        empty_slots: {before: emptyBefore, after: emptyAfter},
+        downgraded_slots: {before: downBefore, after: downAfter},
+      });
+    }
   }
   const nameOf = (p) => `${p.name} (${p.position}, ${p.team})`;
   const out = {
     add: add.map(nameOf),
     drop: drop.map(nameOf),
     thin_positions: {before: before.roster_shape.thin_positions, after: after.roster_shape.thin_positions},
+    // The wider question thin_positions doesn't ask: does the lineup start more of a
+    // position (the superflex QB, the flex RB) than the dedicated slots admit, with no
+    // spare body behind it. Without this, a swap that pushes a position from "thin" to
+    // merely "no cover" — or the reverse — read as no change at all.
+    no_cover_positions: {before: before.roster_shape.no_cover_positions, after: after.roster_shape.no_cover_positions},
     bench_open: {before: before.roster_shape.bench_open, after: after.roster_shape.bench_open},
     weeks_changed: changed.slice(0, 12),
   };
   if(unknown.length) out.unknown_ids = unknown;
-  if(!changed.length) out.note = 'No week changes from unfillable to fillable or back — the move neither fixes nor opens a hole.';
+  if(!changed.length) out.note = 'No week changes from unfillable to fillable or back, and no SUPER_FLEX week gains or loses its quarterback — the move neither fixes nor opens a hole.';
   return out;
 }
 
@@ -695,7 +722,7 @@ function findPlayer(data, input){
 
 const ASK_TOOL_SPECS = [
   {name: 'whatIf',
-   description: 'Runs Ben\'s roster through the rest-of-season outlook with players added and/or dropped, and reports what changes: which positions go thin, how many bench slots stay open, and which future weeks gain or lose a starting slot nobody can fill. Pass Sleeper player ids taken from the data in this conversation. Use it for any question about a swap, a claim or a trade.',
+   description: 'Runs Ben\'s roster through the rest-of-season outlook with players added and/or dropped, and reports what changes: which positions go thin or lose all cover, how many bench slots stay open, which future weeks gain or lose a starting slot nobody can fill, and which weeks start losing their quarterback in SUPER_FLEX to a flex body instead. Pass Sleeper player ids taken from the data in this conversation. Use it for any question about a swap, a claim or a trade.',
    inputSchema: {type: 'object', properties: {
      add: {type: 'array', items: {type: 'string'}, description: 'Player ids to add to the roster'},
      drop: {type: 'array', items: {type: 'string'}, description: 'Player ids to remove from the roster'},

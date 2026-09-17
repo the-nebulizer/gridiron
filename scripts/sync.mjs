@@ -239,6 +239,26 @@ const snapshot = {
   available: availableByPosition,
 };
 
+// CLAUDE.md, docs/LEAGUE.md, docs/ACTIONS.md and the waivers/trade skills all
+// say "Tuesday night deadline, Wednesday processing, 2-day clear" as prose,
+// not read from the snapshot — Sleeper numbers days from Monday, so
+// waiver_day_of_week 2 is Wednesday, and a 2-day clear means a player
+// dropped Monday is claimable in that Wednesday run.
+// If the commissioner ever changes either setting in Sleeper, every report
+// and the dashboard would keep saying "Wednesday" with nothing to catch the
+// drift. Kept as one pure function, not inline, so selftest.mjs can pin it
+// without running the live sync. This doesn't rearchitect that prose into
+// reading the field — it just makes a mismatch loud instead of silent.
+function waiverAssumptionWarning(league) {
+  if (league.waiver_day_of_week === 2 && league.waiver_clear_days === 2) return null;
+  return `WARNING: league waiver settings no longer match what the docs and reports assume ` +
+    `(waiver_day_of_week=${league.waiver_day_of_week}, waiver_clear_days=${league.waiver_clear_days}; ` +
+    `expected 2 and 2, i.e. Wednesday processing with a 2-day clear). ` +
+    `Update CLAUDE.md, docs/LEAGUE.md, docs/ACTIONS.md and the waivers/trade skills before trusting any "by Tuesday" wording.`;
+}
+const waiverWarning = waiverAssumptionWarning(snapshot.league);
+if (waiverWarning) console.error(waiverWarning);
+
 // The forward view, computed here so every routine reads the same numbers:
 // what my roster looks like in each week still to come, which slots go empty,
 // and which weeks need a plan. Nothing downstream should ever count positions

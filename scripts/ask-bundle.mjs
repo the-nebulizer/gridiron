@@ -145,8 +145,12 @@ function buildTrending(snapshot, count) {
 }
 
 function buildOutlookSection(outlook) {
+  // downgraded_slots (the QB-in-SUPER_FLEX case) has to keep a week in this list on its
+  // own, same as empty_slots — outlook-core.mjs's own crunch_weeks filter already counts
+  // a downgraded-only week as a crunch week, so dropping it here left the Ask page naming
+  // a week as a crunch week with nothing in `weeks` to say why.
   const weeks = (outlook.weeks ?? []).filter(
-    (w) => (w.byes?.length ?? 0) || (w.empty_slots?.length ?? 0) || (w.empty_slots_if_injured_stay_out?.length ?? 0)
+    (w) => (w.byes?.length ?? 0) || (w.empty_slots?.length ?? 0) || (w.empty_slots_if_injured_stay_out?.length ?? 0) || (w.downgraded_slots?.length ?? 0)
   );
   return {
     roster_shape: outlook.roster_shape,

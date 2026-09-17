@@ -40,12 +40,22 @@ const URGENCIES = ['now', 'before_kickoff', 'by_tuesday', 'this_week', 'optional
 const ADD_MODES = ['fcfs', 'waiver'];
 const MAX_AGE_MS = 3 * 60 * 60 * 1000;
 // docs/ACTIONS.md "the case": a slotless waiver add at a position that isn't
-// thin is depth, and depth priced above 10% of remaining FAAB is priced like
-// a starter — that's the rule "depth is priced like depth" enforces.
+// thin AND isn't otherwise uncovered is depth, and depth priced above 10% of
+// remaining FAAB is priced like a starter — that's the rule "depth is priced
+// like depth" enforces.
 const DEPTH_BID_CAP = 0.1;
 
 const isNonEmptyString = (v) => typeof v === 'string' && v.trim().length > 0;
 const rel = (p) => path.relative(root, p);
+// Two player-id arrays name the exact same set, order aside — used to tell
+// "the same offer restated" from "two different offers to one partner" (see
+// the same-report trade-id check in validateReportBlock).
+function sameIdSet(a, b) {
+  if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return false;
+  const sa = [...a].sort();
+  const sb = [...b].sort();
+  return sa.every((v, i) => v === sb[i]);
+}
 
 // ---- snapshot loading + freshness gate ----
 
@@ -255,17 +265,31 @@ function namesList(names) {
 }
 
 // Weeks whose empty_slots shrink (a hole this move fixes) or grow (a hole it
-// opens) between a baseline outlook and a what-if outlook, week by week.
+// opens), AND weeks whose downgraded_slots shrink or grow (a downgrade this
+// move fixes or opens), between a baseline outlook and a what-if outlook,
+// week by week. downgraded_slots (outlook-core.mjs) is a week that is still
+// a LEGAL lineup but a worse one — no QB left for a QB-eligible flex slot,
+// so a flex body starts there instead — which the empty_slots comparison
+// alone can never see. Without this half, a trade or add that only ever
+// creates or removes downgraded weeks (never a fully empty one) read "opens
+// no holes" even when it spent the only quarterback covering a future bye.
+// Each entry carries `kind` ('hole' or 'downgrade') so opensLine can group
+// and word the two kinds separately rather than merging them.
 function diffWeeks(baseline, whatIf) {
-  const fixes = []; // { week, slot }
-  const opens = []; // { week, slot }
+  const fixes = []; // { week, slot, kind }
+  const opens = []; // { week, slot, kind }
   const baseByWeek = new Map(baseline.weeks.map((w) => [w.week, w]));
   for (const w of whatIf.weeks) {
     const base = baseByWeek.get(w.week);
-    const baseSet = new Set(base?.empty_slots ?? []);
-    const nowSet = new Set(w.empty_slots ?? []);
-    for (const slot of baseSet) if (!nowSet.has(slot)) fixes.push({ week: w.week, slot });
-    for (const slot of nowSet) if (!baseSet.has(slot)) opens.push({ week: w.week, slot });
+    const baseEmpty = new Set(base?.empty_slots ?? []);
+    const nowEmpty = new Set(w.empty_slots ?? []);
+    for (const slot of baseEmpty) if (!nowEmpty.has(slot)) fixes.push({ week: w.week, slot, kind: 'hole' });
+    for (const slot of nowEmpty) if (!baseEmpty.has(slot)) opens.push({ week: w.week, slot, kind: 'hole' });
+
+    const baseDowngraded = new Set(base?.downgraded_slots ?? []);
+    const nowDowngraded = new Set(w.downgraded_slots ?? []);
+    for (const slot of baseDowngraded) if (!nowDowngraded.has(slot)) fixes.push({ week: w.week, slot, kind: 'downgrade' });
+    for (const slot of nowDowngraded) if (!baseDowngraded.has(slot)) opens.push({ week: w.week, slot, kind: 'downgrade' });
   }
   return { fixes, opens };
 }
@@ -285,20 +309,24 @@ function fixesSuffix(fixes) {
 }
 
 // "opens no holes" / "opens a W7 WR hole, a W9 K hole" / "opens a K hole in
-// 15 weeks (W3–W17)" — used where the need line already carries the fixes
-// half (add). Holes are grouped by slot so a season-long gap is one clause.
+// 15 weeks (W3–W17)" / "opens a W13 SUPER_FLEX downgrade" — used where the
+// need line already carries the fixes half (add). Grouped by slot AND kind
+// (not slot alone) so a hole and a downgrade at the same slot stay two
+// clauses — a season-long gap is still one clause per kind.
 function opensLine(opens) {
   if (!opens.length) return 'opens no holes';
-  const bySlot = new Map();
+  const bySlot = new Map(); // "slot|kind" -> { slot, kind, weeks }
   for (const o of [...opens].sort((a, b) => a.week - b.week)) {
-    if (!bySlot.has(o.slot)) bySlot.set(o.slot, []);
-    bySlot.get(o.slot).push(o.week);
+    const key = `${o.slot}|${o.kind}`;
+    if (!bySlot.has(key)) bySlot.set(key, { slot: o.slot, kind: o.kind, weeks: [] });
+    bySlot.get(key).weeks.push(o.week);
   }
-  const clauses = [...bySlot.entries()].map(([slot, weeks]) =>
-    weeks.length >= 3
-      ? `a ${slotLabel(slot)} hole in ${weeksLabel(weeks)}`
-      : weeks.map((w) => `a W${w} ${slotLabel(slot)} hole`).join(', ')
-  );
+  const clauses = [...bySlot.values()].map(({ slot, kind, weeks }) => {
+    const noun = kind === 'downgrade' ? 'downgrade' : 'hole';
+    return weeks.length >= 3
+      ? `a ${slotLabel(slot)} ${noun} in ${weeksLabel(weeks)}`
+      : weeks.map((w) => `a W${w} ${slotLabel(slot)} ${noun}`).join(', ');
+  });
   return `opens ${clauses.join(', ')}`;
 }
 
@@ -458,6 +486,20 @@ function buildTradeCase(action, snapshot, index, baseline) {
   let later = fixesAndOpensLine(fixes, opens);
   const freed = giveIds.length - getIds.length;
   if (freed > 0) later += ` · frees ${freed} bench slot${freed === 1 ? '' : 's'}`;
+  // The what-if outlook is a season-long "can some legal lineup be fielded"
+  // check — it will happily reassign a same-position bench body into a slot
+  // a given-away starter vacates, so the diff above can read clean even
+  // though nobody has actually moved in the live Sleeper lineup yet. Trade
+  // review is 0 days, so the deal can process minutes before kickoff; name
+  // the emptied slot(s) so the card still says a manual swap is owed, without
+  // requiring this action to carry a paired `start` (that's a bigger,
+  // separate contract change — this just makes sure it's never silent).
+  const vacated = [...new Set(
+    giveIds.filter((id) => myStarters.has(id)).map((id) => starterSlotOf(snapshot, id)).filter(Boolean)
+  )];
+  if (vacated.length) {
+    later += ` · empties ${vacated.map(slotLabel).join(', ')} this week — set a starter there before kickoff`;
+  }
   c.later = later;
 
   return c;
@@ -719,6 +761,17 @@ async function validateAndBuildAction(action, i, snapshot, index, problems, opts
         bad = true;
       } else {
         out.mode = action.mode;
+        // Pre-kickoff, unrostered players are instant, $0, first-come adds;
+        // CLAUDE.md's calendar calibration section is explicit that this
+        // flips the moment a game leaves pre_game — after that, Sleeper
+        // locks every add behind Tuesday-night waivers. games_have_started
+        // was recorded in the snapshot and echoed to the compiled output but
+        // never checked here, so a stale "fcfs" mode validated clean well
+        // past kickoff.
+        if (action.mode === 'fcfs' && snapshot.games_have_started &&
+            worldFail(`games have started — this add needs mode: "waiver", not fcfs`)) {
+          bad = true;
+        }
       }
       if (action.drop !== undefined) {
         if (!isNonEmptyString(action.drop)) {
@@ -766,10 +819,17 @@ async function validateAndBuildAction(action, i, snapshot, index, problems, opts
 
       // "Depth is priced like depth": a slotless waiver add at a position
       // that isn't thin, bidding more than DEPTH_BID_CAP of my remaining
-      // FAAB, is a starter's price for a player who isn't starting.
+      // FAAB, is a starter's price for a player who isn't starting. Exempt
+      // the same two tiers needLine() reads real need from, not thin alone —
+      // thin_positions (can't fill the dedicated slot) and no_cover_positions
+      // (no spare body for what the lineup actually starts, flex/SUPER_FLEX
+      // included). Checking thin_positions only used to cap a backup QB's
+      // bid to stash money even with just two QBs on the roster — no dedicated
+      // slot was short, but SUPER_FLEX was, and losing either one breaks it.
       if (live && action.mode === 'waiver' && Number.isInteger(out.faab) &&
           (out.displaces === null || out.displaces_missing) &&
-          !baseline.roster_shape.thin_positions.includes(resolved.pos)) {
+          !baseline.roster_shape.thin_positions.includes(resolved.pos) &&
+          !(baseline.roster_shape.no_cover_positions ?? []).includes(resolved.pos)) {
         const me = snapshot.teams.find((t) => t.roster_id === myId);
         const cap = Math.floor((me?.faab_remaining ?? 0) * DEPTH_BID_CAP);
         if (out.faab > cap) {
@@ -789,6 +849,20 @@ async function validateAndBuildAction(action, i, snapshot, index, problems, opts
     if (kind === 'start') {
       // Likewise: a start whose player has left my roster is `gone`.
       if (!myIds.has(player) && worldFail(`${resolved.name} is not on my roster`)) {
+        bad = true;
+      }
+      // myIds counts reserve as "mine" too (it has to, for drop/trade), so
+      // roster membership alone let a start into the IR slot validate clean —
+      // Sleeper won't move a reserve player straight into a starting slot,
+      // he has to be activated first.
+      if (myReserve.has(player) && worldFail(`${resolved.name} is on IR/reserve — activate him before starting him`)) {
+        bad = true;
+      }
+      // Nothing else in the pipeline compares the incoming player's own bye
+      // to the live week — buildStartCase only reports the benched player's
+      // status — so a start naming someone on a bye validated clean and
+      // scored zero.
+      if (resolved.bye_week === snapshot.week && worldFail(`${resolved.name} is on a bye this week`)) {
         bad = true;
       }
       const nonBnSlots = (snapshot.league.roster_positions ?? []).filter((p) => p !== 'BN');
@@ -949,17 +1023,22 @@ async function validateAndBuildAction(action, i, snapshot, index, problems, opts
   }
 
   // ---- consumes: the rostered player ids this action uses up ----
-  // (drop's own player, add's drop if any, trade's give, for's benched
-  // starter, ir/activate's subject). Empty array when none. `add` also
-  // flags needs_slot when it has no drop, since it will occupy an open
-  // bench spot rather than replace someone.
+  // (drop's own player, add's drop if any, trade's give, start's incoming
+  // player and its benched `for`, ir/activate's subject). Empty array when
+  // none. `add` also flags needs_slot when it has no drop, since it will
+  // occupy an open bench spot rather than replace someone.
   if (kind === 'drop') {
     out.consumes = out.player !== undefined ? [out.player] : [];
   } else if (kind === 'add') {
     out.consumes = out.drop !== undefined ? [out.drop] : [];
     if (out.drop === undefined) out.needs_slot = true;
   } else if (kind === 'start') {
-    out.consumes = out.for !== undefined ? [out.for] : [];
+    // The player going IN is a resource this action uses up too, same as
+    // `for` (the player coming out) — without him here, an unlinked start
+    // and a trade/drop giving that same incoming player away never showed
+    // up as the same player under Rule 1, so the card could carry both
+    // "start him" and "give him away" live at once.
+    out.consumes = out.for !== undefined ? [out.for, out.player] : [out.player];
   } else if (kind === 'ir' || kind === 'activate') {
     out.consumes = out.player !== undefined ? [out.player] : [];
   } else if (kind === 'trade') {
@@ -980,7 +1059,7 @@ async function validateAndBuildAction(action, i, snapshot, index, problems, opts
 
 // ---- top-level block validation ----
 
-async function validateReportBlock(block, snapshot, index, baseline, { lifecycle = false } = {}) {
+async function validateReportBlock(block, snapshot, index, baseline, { lifecycle = false, source = null } = {}) {
   const driftWarnings = [];
   const problems = [];
   if (typeof block !== 'object' || block === null || Array.isArray(block)) {
@@ -1020,6 +1099,51 @@ async function validateReportBlock(block, snapshot, index, baseline, { lifecycle
     }
     actionResults.push({ index: i, ok: localProblems.length === 0, problems: localProblems, action: built });
     problems.push(...localProblems);
+  }
+
+  // Same-report trade-id collisions: two offers to one partner default to
+  // the SAME id (`<source>:trade:<with>`) unless each carries its own
+  // explicit `id` — and a second offer to a manager already offered is a
+  // real, documented pattern (a primary offer plus an if_not fallback, or
+  // two genuinely separate offers), not an accident to silently drop. This
+  // used to only surface as a silent loss two steps downstream, in
+  // compile()'s cross-source dedupe, which keys trades by partner alone and
+  // has only ever had to pick between reports, never within one — checked
+  // here instead, once, so both --check and compile give the same answer
+  // about the report actually being written. A literal restatement (same
+  // give and get to the same partner) is treated as the accidental
+  // duplicate it almost certainly is.
+  const tradesByPartner = new Map(); // with -> [{ index, action }]
+  for (const r of actionResults) {
+    const a = r.action;
+    if (!r.ok || !a || a.kind !== 'trade' || a.with === undefined) continue;
+    if (!tradesByPartner.has(a.with)) tradesByPartner.set(a.with, []);
+    tradesByPartner.get(a.with).push({ index: r.index, action: a });
+  }
+  for (const [withId, entries] of tradesByPartner) {
+    if (entries.length < 2) continue;
+    const idOf = (a) => a.id ?? `${source}:trade:${withId}`;
+    const seenIds = new Map(); // effective id -> first index it appeared at
+    for (const { index, action } of entries) {
+      const eid = idOf(action);
+      if (seenIds.has(eid)) {
+        problems.push(
+          `action[${index}]: (trade) two offers to roster ${withId} in this report need distinct "id"s — action[${seenIds.get(eid)}] and action[${index}] would both default to "${eid}"`
+        );
+      } else {
+        seenIds.set(eid, index);
+      }
+    }
+    for (let i = 0; i < entries.length; i++) {
+      for (let j = i + 1; j < entries.length; j++) {
+        const A = entries[i], B = entries[j];
+        if (sameIdSet(A.action.give, B.action.give) && sameIdSet(A.action.get, B.action.get)) {
+          problems.push(
+            `action[${B.index}]: (trade) offers roster ${withId} the exact same give/get as action[${A.index}] — likely a duplicate, not a second offer`
+          );
+        }
+      }
+    }
   }
 
   if (problems.length) return { problems, actionResults, driftWarnings };
@@ -1340,6 +1464,13 @@ async function checkConflictRules(allActions, snapshot, index, baseline) {
   // lineup's demand — shedding two of six wide receivers is just depth.
   // Players Rule 1 already named are skipped; the same pair of actions
   // should not fail twice for one mistake.
+  //
+  // `start` is deliberately never in this set. Its `consumes` carries the
+  // incoming player (for Rule 1, above) as well as the benched `for`, but
+  // starting a bench player doesn't shed him from the roster — the opposite —
+  // so counting a `start` here would falsely read "puts a QB in" as "gives a
+  // QB up" and could flag a real, single trade give as a same-position
+  // conflict against a start that isn't one.
   const SHEDDING_KINDS = new Set(['trade', 'add', 'drop', 'ir']);
   const shedByPos = new Map(); // pos -> Map(component root -> Set(player ids))
   for (const a of actions) {
@@ -1371,7 +1502,9 @@ async function checkConflictRules(allActions, snapshot, index, baseline) {
   }
 
   // Rule 2: adds with no drop (needs_slot) must not outnumber the bench
-  // slots that will actually be open.
+  // slots that will actually be open, and (Rule 2b, below) neither must a
+  // trade whose `get` outnumbers its `give` — Sleeper refuses either move
+  // when there's nowhere on the roster to put the extra body.
   //
   // Baseline open slots credits this set's own `drop` and `ir` actions
   // (they free a slot) and debits its `activate` actions (they fill one) —
@@ -1380,8 +1513,22 @@ async function checkConflictRules(allActions, snapshot, index, baseline) {
   // conditional "world": follow the after chain to the trade it is waiting
   // on, and check it against an allowance that includes *that* trade's net
   // roster-size effect (give.length - get.length), since if the trade
-  // lands, it does change the count.
-  //
+  // lands, it does change the count. Computed unconditionally (not only
+  // when there's a slotless add) because Rule 2b needs the same baseline.
+  const me = snapshot.teams.find((t) => t.roster_id === snapshot.my_roster_id);
+  const bnCount = (snapshot.league.roster_positions ?? []).filter((p) => p === 'BN').length;
+  const benchLen = me?.bench.length ?? 0;
+  const dropCount = actions.filter((a) => a.kind === 'drop').length;
+  const irCount = actions.filter((a) => a.kind === 'ir').length;
+  const activateCount = actions.filter((a) => a.kind === 'activate').length;
+  const openSlots = bnCount - benchLen + dropCount + irCount - activateCount;
+
+  const creditParts = [];
+  if (dropCount) creditParts.push(`+ ${dropCount} drop${dropCount === 1 ? '' : 's'}`);
+  if (irCount) creditParts.push(`+ ${irCount} ir`);
+  if (activateCount) creditParts.push(`- ${activateCount} activate${activateCount === 1 ? '' : 's'}`);
+  const creditStr = creditParts.length ? ` ${creditParts.join(' ')}` : '';
+
   // Mutual exclusion (adds that cover the same slot) is if_not links
   // between slotless adds themselves — after never merges two adds into
   // one group (both run), and an add if_not a trade doesn't group with
@@ -1389,20 +1536,6 @@ async function checkConflictRules(allActions, snapshot, index, baseline) {
   // if the trade falls through both still want a slot).
   const needsSlotActions = actions.filter((a) => a.kind === 'add' && a.needs_slot);
   if (needsSlotActions.length) {
-    const me = snapshot.teams.find((t) => t.roster_id === snapshot.my_roster_id);
-    const bnCount = (snapshot.league.roster_positions ?? []).filter((p) => p === 'BN').length;
-    const benchLen = me?.bench.length ?? 0;
-    const dropCount = actions.filter((a) => a.kind === 'drop').length;
-    const irCount = actions.filter((a) => a.kind === 'ir').length;
-    const activateCount = actions.filter((a) => a.kind === 'activate').length;
-    const openSlots = bnCount - benchLen + dropCount + irCount - activateCount;
-
-    const creditParts = [];
-    if (dropCount) creditParts.push(`+ ${dropCount} drop${dropCount === 1 ? '' : 's'}`);
-    if (irCount) creditParts.push(`+ ${irCount} ir`);
-    if (activateCount) creditParts.push(`- ${activateCount} activate${activateCount === 1 ? '' : 's'}`);
-    const creditStr = creditParts.length ? ` ${creditParts.join(' ')}` : '';
-
     const byId = new Map(actions.map((a) => [a.id, a]));
     function worldOf(action) {
       let cur = action;
@@ -1448,6 +1581,47 @@ async function checkConflictRules(allActions, snapshot, index, baseline) {
           );
         }
       }
+    }
+  }
+
+  // Rule 2b: a trade whose `get` outnumbers its `give` brings home more
+  // bodies than it sends away, and needs that many bench slots open to
+  // land — Sleeper refuses a trade the roster has no room for, same as it
+  // refuses an overflowing add. Checked against the same `openSlots`
+  // baseline as Rule 2, above (a trade is never credited toward it, for the
+  // same "landing is unknown" reason Rule 2 isn't credited by other
+  // trades). Unlike an add, a single trade can need more than one slot, so
+  // this sums surplus rather than counting groups. `if_not`-linked trades
+  // are alternatives — only one can land, so the group counts once at its
+  // largest surplus — `after`-linked or unlinked trades are not, and each
+  // counts in full, the same distinction Rule 2's if_not-only grouping
+  // already draws.
+  const tradeGetSurplus = (a) => (a.get?.length ?? 0) - (a.give?.length ?? 0);
+  const surplusTrades = actions.filter((a) => a.kind === 'trade' && tradeGetSurplus(a) > 0);
+  if (surplusTrades.length) {
+    const memberIds = new Set(surplusTrades.map((a) => a.id));
+    const findGroup = componentsOver(actions, memberIds, ['if_not']);
+    const groups = new Map(); // group root -> trade actions
+    for (const a of surplusTrades) {
+      const g = findGroup(a.id);
+      if (!groups.has(g)) groups.set(g, []);
+      groups.get(g).push(a);
+    }
+    let surplusSum = 0;
+    const parts = [];
+    for (const group of groups.values()) {
+      const top = group.reduce((m, a) => (tradeGetSurplus(a) > tradeGetSurplus(m) ? a : m), group[0]);
+      surplusSum += tradeGetSurplus(top);
+      parts.push(
+        group.length === 1
+          ? `${top.id} (+${tradeGetSurplus(top)})`
+          : `max of ${group.map((a) => `${a.id} (+${tradeGetSurplus(a)})`).join(' / ')}`
+      );
+    }
+    if (surplusSum > openSlots) {
+      errors.push(
+        `trade(s) ${parts.join(', ')} would bring home ${surplusSum} more player(s) than they send out, but only ${openSlots} bench slot(s) would be open (${bnCount} BN slot(s) - ${benchLen} on bench${creditStr}); link them with if_not or add a drop`
+      );
     }
   }
 
@@ -1554,7 +1728,7 @@ async function compile() {
       problems.push(`${rel(filePath)}: ${error}`);
       continue;
     }
-    const result = await validateReportBlock(block, snapshot, index, baseline, { lifecycle: true });
+    const result = await validateReportBlock(block, snapshot, index, baseline, { lifecycle: true, source: type });
     if (result.problems) {
       problems.push(...result.problems.map((p) => `${rel(filePath)} ${p}`));
       continue;
@@ -1580,7 +1754,7 @@ async function compile() {
     process.exit(1);
   }
 
-  // Dedupe across sources by kind+player (kind+with for trade); keep the newest report file.
+  // Dedupe across sources by kind+player; keep the newest report file.
   // Filenames are `YYYY-MM-DD-<type>.md`, so comparing them as strings orders
   // by date correctly — but two different types published on the same date
   // compare by type name instead, which is an accident of alphabetization,
@@ -1597,7 +1771,8 @@ async function compile() {
   const remap = new Map(); // loser id -> { winner: winner id, report: winner's report file }
   const byKey = new Map();
   for (const entry of collected) {
-    const key = entry.action.kind === 'trade' ? `trade:${entry.action.with}` : `${entry.action.kind}:${entry.action.player}`;
+    if (entry.action.kind === 'trade') continue; // trades dedupe by partner, below
+    const key = `${entry.action.kind}:${entry.action.player}`;
     const existing = byKey.get(key);
     if (!existing) {
       byKey.set(key, entry);
@@ -1614,7 +1789,51 @@ async function compile() {
       byKey.set(key, winner);
     }
   }
-  const deduped = [...byKey.values()].map((e) => finalizeAction(e.action, e.source, e.report, e.week));
+
+  // Trades dedupe by PARTNER, not by a single winner-takes-the-key rule, and
+  // the two directions are deliberately different: cross-report supersession
+  // is a feature (a newer trades report revising or re-sending an offer to
+  // roster 8 must still replace an older report's offer to roster 8), but
+  // within ONE report every offer to a partner is real and survives — a
+  // primary offer plus an if_not fallback, or two genuinely separate
+  // offers. The old flat `trade:${with}` key couldn't tell those apart: a
+  // second same-report offer to a partner hit neither the "new key" nor the
+  // "different report" branch above, so it was silently dropped. Same-report
+  // collisions (literal duplicates, or two offers with no distinct id) are
+  // now rejected earlier, in validateReportBlock, so every entry reaching
+  // this point is already known-distinct within its own report.
+  const tradesByPartner = new Map(); // with -> entries[]
+  for (const entry of collected) {
+    if (entry.action.kind !== 'trade') continue;
+    const w = entry.action.with;
+    if (!tradesByPartner.has(w)) tradesByPartner.set(w, []);
+    tradesByPartner.get(w).push(entry);
+  }
+  const tradeEntries = [];
+  for (const [withId, entries] of tradesByPartner) {
+    const maxReport = entries.reduce((m, e) => (e.report > m ? e.report : m), entries[0].report);
+    const winners = entries.filter((e) => e.report === maxReport);
+    const losers = entries.filter((e) => e.report !== maxReport);
+    for (const loser of losers) {
+      const sameDay = loser.report.slice(0, 10) === maxReport.slice(0, 10);
+      if (sameDay) {
+        console.error(
+          `actions.mjs: warning — same-day duplicate trade offer to roster ${withId} in ${loser.report} and ${maxReport}; keeping ${maxReport}'s offer(s) (alphabetical tie-break, not true recency), dropping ${loser.report}'s`
+        );
+      }
+      // Only remap when there's exactly one surviving offer to retarget a
+      // stale link onto — with more than one, which offer a link "really"
+      // meant is a guess this won't make; the link is left to drop instead,
+      // the same as any other target no longer in the compiled set (see
+      // reconcileLinks below).
+      if (winners.length === 1) {
+        remap.set(computeId(loser), { winner: computeId(winners[0]), report: winners[0].report });
+      }
+    }
+    tradeEntries.push(...winners);
+  }
+
+  const deduped = [...byKey.values(), ...tradeEntries].map((e) => finalizeAction(e.action, e.source, e.report, e.week));
 
   // A link can point at an id dedupe just removed. Retarget links to a
   // dedupe loser onto the winner that replaced it, then drop (with a
@@ -1684,7 +1903,21 @@ async function check(fileArg) {
     console.error(`${fileArg}: ${error}`);
     process.exit(1);
   }
-  const result = await validateReportBlock(block, snapshot, index, baseline);
+  // Inferred from the filename, once we know the file itself is readable —
+  // a bad filename is a real problem, but "the file doesn't exist" should
+  // say so rather than being masked by "can't tell which routine". The
+  // same-report trade-id check inside validateReportBlock needs to know the
+  // source's default id prefix before it can tell two same-partner offers
+  // apart, same as compile() already does per report, so this still runs
+  // before validateReportBlock.
+  const source = inferSource(path.basename(filePath));
+  if (source === null) {
+    console.error(
+      `${fileArg}: can't tell which routine this report belongs to — name it <date>-<type>.md or <anything>-<type>.md, where <type> is one of ${TYPES.join(', ')}`
+    );
+    process.exit(1);
+  }
+  const result = await validateReportBlock(block, snapshot, index, baseline, { source });
 
   if (result.actionResults) {
     for (const r of result.actionResults) {
@@ -1700,6 +1933,17 @@ async function check(fileArg) {
       } else {
         for (const p of r.problems) console.log(`  ${p}`);
       }
+    }
+    // Some problems are cross-action (e.g. two trade offers to the same
+    // partner colliding on id, or an exact give/get restatement) and are
+    // never attached to any single action's own `problems` — they land
+    // directly in the block-level list below, computed after every action
+    // already validated OK on its own. Print those too, or a report could
+    // exit non-zero here while every line above says "OK" and nothing says
+    // why the run still failed.
+    const perActionProblems = new Set(result.actionResults.flatMap((r) => r.problems));
+    for (const p of result.problems ?? []) {
+      if (!perActionProblems.has(p)) console.log(`  ${p}`);
     }
   } else if (result.problems) {
     // Block-level failures (bad week/verdict/next_check/actions, or a block
@@ -1720,13 +1964,6 @@ async function check(fileArg) {
   // validate cross-source links. Conflict rules run against actions.json's
   // *other-source* actions only — the source being checked is about to
   // replace whatever it currently holds there.
-  const source = inferSource(path.basename(filePath));
-  if (source === null) {
-    console.error(
-      `${fileArg}: can't tell which routine this report belongs to — name it <date>-<type>.md or <anything>-<type>.md, where <type> is one of ${TYPES.join(', ')}`
-    );
-    process.exit(1);
-  }
   const reportName = path.basename(filePath);
   const localActions = result.actions.map((a) => finalizeAction(a, source, reportName, block.week));
   const compiledActions = await loadActionsJson();
