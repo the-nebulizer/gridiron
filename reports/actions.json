@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-09-17T21:52:36.424Z",
+  "compiled_at": "2026-09-17T23:34:32.181Z",
   "season": "2026",
   "week": 2,
   "games_have_started": true,
@@ -129,7 +129,7 @@
         "starts": "Brian Robinson is depth (RB4)",
         "need": "RB: you have 3 — starts 3, no cover · gives QB depth (you have 4, start 2)",
         "cost": "gives Bryce Young — 0 starters, 1 bench · no FAAB",
-        "later": "opens no holes"
+        "later": "opens a W13 SUPERFLEX downgrade"
       }
     }
   ]
