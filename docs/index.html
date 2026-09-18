@@ -63,7 +63,7 @@
   .act.done .move{color:var(--chalk-dim);font-weight:500}
   .act .move .meta{font-family:var(--mono);font-size:13px;font-weight:400;color:var(--chalk-dim)}
   .act .chip{font-family:var(--mono);font-size:12px;color:var(--amber);border:1px solid var(--line);padding:2px 9px;white-space:nowrap;align-self:start;justify-self:end}
-  .act.done .chip,.act.gone .chip{color:var(--chalk-dim)}
+  .act.done .chip,.act.gone .chip,.act.stale .chip{color:var(--chalk-dim)}
   .act .kind{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--amber);margin-right:10px;vertical-align:middle}
   /* the case: the compiler's evidence for the move, a small two-column grid spanning the same
      columns as .why — label left, answer right, only the lines the action actually carries */
@@ -72,9 +72,10 @@
   .act .case .v{color:var(--chalk)}
   .act .why{grid-column:2/-1;font-size:16px;color:var(--chalk-dim)}
   /* dependents: drawn under the action they wait on, indented with padding — no extra columns */
-  .act.waiting .glyph,.act.superseded .glyph{color:var(--chalk-dim)}
-  .act.waiting .move,.act.superseded .move{color:var(--chalk-dim);font-weight:500}
-  .act.waiting .kind,.act.superseded .kind{color:var(--chalk-dim)}
+  /* stale shares the same muted treatment: shelved news, not a live instruction */
+  .act.waiting .glyph,.act.superseded .glyph,.act.stale .glyph{color:var(--chalk-dim)}
+  .act.waiting .move,.act.superseded .move,.act.stale .move{color:var(--chalk-dim);font-weight:500}
+  .act.waiting .kind,.act.superseded .kind,.act.stale .kind{color:var(--chalk-dim)}
   .act.waiting .case .v{color:var(--chalk-dim)}
   .act .lead{font-family:var(--mono);font-size:12px;font-weight:400;letter-spacing:.04em;color:var(--chalk-dim)}
   .act.nest{border-bottom-style:dotted}
@@ -537,8 +538,18 @@ function resolveDependencies(items){
   return list.map((_,n)=>res(n));
 }
 
-/* live = {week, players:Set(my ids), starters:[], reserve:[],
-           ownerOf(id)->name|null, dismissed:Set(keys)} */
+/* live = {week, players:Set(my ids), starters:[], reserve:[], ownerOf(id)->name|null,
+           games:{team->gamesByTeam entry}|null, teamOf(id)->team|null, dismissed:Set(keys)} */
+
+// A team's kickoff locks every one of its players' starting slots — Sleeper refuses a start/for
+// swap once the game is under way, same rule scripts/actions.mjs' kickedOffGame enforces at
+// compile time. live.games is null whenever the scores feed hasn't loaded; treated as unknown,
+// never as kicked off, so a network hiccup can't strand every open start as stale.
+function teamKickedOff(live, team){
+  if(!live.games || !team) return false;
+  const g = live.games[team];
+  return !!(g && (g.started || g.live || g.over));
+}
 function actionState(a, live){
   // Ids come out of JSON, so one arriving as a number would silently miss a Set of strings —
   // and a missed `drop` reads as "done", i.e. the card claiming a move Ben never made.
@@ -564,8 +575,16 @@ function actionState(a, live){
       return {state:'open'};
     }
     case 'drop':     return {state: has(player) ? 'open' : 'done'};
-    case 'start':    return starters.includes(player) && (!a.for || !starters.includes(S(a.for)))
-                       ? {state:'done'} : has(player) ? {state:'open'} : lost();
+    case 'start': {
+      if(starters.includes(player) && (!a.for || !starters.includes(S(a.for)))) return {state:'done'};
+      if(!has(player)) return lost();
+      // The benched `for` player's team is never on the compiled action (only his name/id are —
+      // see scripts/actions.mjs finalizeAction), so it's resolved fresh from the player file, the
+      // same source `ownerOf` and `resolve()` already draw from.
+      const forTeam = a.for && live.teamOf ? live.teamOf(a.for) : null;
+      if(teamKickedOff(live, a.team) || teamKickedOff(live, forTeam)) return {state:'stale'};
+      return {state:'open'};
+    }
     case 'ir':       return reserve.includes(player) ? {state:'done'}
                        : has(player) ? {state:'open'} : lost();
     case 'activate': return has(player) && !reserve.includes(player) ? {state:'done'}
@@ -632,8 +651,10 @@ function actionRow(i, m, o){
   const depth = Math.max(0, Math.min(3, Math.round(Number(o.depth)||0)));
   // A numbered primary carries its place in the standing order; a dependent carries a muted hook.
   const glyph = i.state==='done' ? '✓' : i.state==='gone' ? '✕' : i.state==='superseded' ? '⊘'
-    : o.num ? String(o.num) : nested ? '↳' : '●';
-  const chip = i.deadline_label || DEADLINE[i.urgency] || 'when you can';
+    : i.state==='stale' ? '⏱' : o.num ? String(o.num) : nested ? '↳' : '●';
+  // A stale start's deadline_label/urgency argued for a move that's no longer on offer — a
+  // one-word "stale" chip replaces it rather than showing a kickoff window that's already past.
+  const chip = i.state==='stale' ? 'stale' : (i.deadline_label || DEADLINE[i.urgency] || 'when you can');
   const date = (String(i.report||'').match(/^\d{4}-\d{2}-\d{2}/)||[String(i.report||'').replace(/\.md$/,'')])[0];
   const dism = (i.kind==='trade' && i.state==='open')
     ? `<button class="dismiss" data-dismiss="${esc(dismissKey(i))}">Dismiss</button>` : '';
@@ -647,12 +668,19 @@ function actionRow(i, m, o){
   const lead = nested
     ? `<span class="lead">${i.link==='if_not' ? 'If that falls through:' : 'Then:'}</span> ` : '';
   const kind = kindTag(i);
+  // A stale action's own `why` argued for the move while it was still open; once kickoff has
+  // taken it off the table that argument is moot, so state_reason (when the compiler could name
+  // one — see docs/ACTIONS.md "stale") replaces it. No reason (a plain week rollover) means the
+  // "stale" chip above is the whole story — outcomes, not reasoning, per CLAUDE.md.
+  const whyLine = i.state==='stale'
+    ? (i.state_reason ? `<div class="why">${esc(i.state_reason)}</div>` : '')
+    : (i.why ? `<div class="why">${esc(i.why)}</div>` : '');
   return `<div class="act ${esc(i.state)}${depth ? ` nest nest-${depth}` : ''}">
       <div class="glyph" aria-hidden="true">${esc(glyph)}</div>
       <div class="move">${kind ? `<span class="kind">${esc(kind)}</span>` : ''}${lead}${actionHeadline(i)}</div>
       <div class="chip">${esc(chip)}</div>
       ${caseGrid(i)}
-      ${i.why ? `<div class="why">${esc(i.why)}</div>` : ''}
+      ${whyLine}
       ${offer}
       <div class="src"><span>${src}</span>${dism}</div>
     </div>`;
@@ -661,14 +689,17 @@ function actionRow(i, m, o){
 /* m = {ok, week, now, league, items:[action+state, resolved by resolveDependencies],
         alerts:[actionItems() output], nextCheck, drift} */
 function renderDoNow(m){
-  const items = (m.items||[]).filter(i=>i.state!=='stale' && i.state!=='dismissed');
+  // `stale` used to be dropped here entirely — a start whose kickoff (or week) passed it by
+  // vanished with no trace, even though the compiler names why (see actionRow's whyLine). It's
+  // shelved alongside done/gone/superseded instead, below, so the fact it happened is visible.
+  const items = (m.items||[]).filter(i=>i.state!=='dismissed');
   // Primaries are everything open that isn't hanging off another action, numbered in the
   // standing order: lineup, then claims, then trades; urgency, then report date, within each.
   const open = items.filter(i=>i.state==='open' && !i.parent_id)
     .sort((a,b)=> kindRank(a.kind)-kindRank(b.kind)
                || urgRank(a.urgency)-urgRank(b.urgency)
                || String(b.report||'').localeCompare(String(a.report||'')));
-  const shelved = items.filter(i=>i.state==='done' || i.state==='gone' || i.state==='superseded');
+  const shelved = items.filter(i=>i.state==='done' || i.state==='gone' || i.state==='superseded' || i.state==='stale');
   const alerts = m.alerts||[];
 
   // Waiting dependents hang under their parent. They are not instructions yet, so they are
@@ -701,14 +732,16 @@ function renderDoNow(m){
         ? 'No actions compiled yet — the next routine run writes them.'
         : `<b>Nothing to do.</b> <span class="next">Next: ${esc(m.nextCheck||'Waivers run Tue 7am')}</span>` }</div>`;
 
-  // "Done", "gone" and "superseded" are three different pieces of news: a move you made, one you
-  // can no longer make, and a fallback you no longer need.
+  // "Done", "gone", "stale" and "superseded" are four different pieces of news: a move you made,
+  // one you can no longer make, a start whose window (kickoff or the week itself) closed before
+  // you acted, and a fallback you no longer need.
   if(shelved.length){
     const nDone = shelved.filter(i=>i.state==='done').length;
     const nGone = shelved.filter(i=>i.state==='gone').length;
-    const nSup  = shelved.length - nDone - nGone;
+    const nStale = shelved.filter(i=>i.state==='stale').length;
+    const nSup  = shelved.length - nDone - nGone - nStale;
     const label = [nDone?`Done (${nDone})`:'', nGone?`no longer possible (${nGone})`:'',
-                   nSup?`superseded (${nSup})`:''].filter(Boolean).join(' · ');
+                   nStale?`stale (${nStale})`:'', nSup?`superseded (${nSup})`:''].filter(Boolean).join(' · ');
     body += `<details class="donedrop"><summary>${label}</summary>${shelved.map(i=>actionRow(i,m)).join('')}</details>`;
   }
 
@@ -755,7 +788,11 @@ async function fetchActions(url){
 }
 function pickNextCheck(sources){
   const all = Object.values(sources||{}).filter(s=>s && s.next_check);
-  const freshest = (arr)=> arr.slice().sort((a,b)=>String(b.report||'').localeCompare(String(a.report||'')))[0];
+  // written_at is a real timestamp, so it orders two sources compiled the same day correctly;
+  // report's filename date alone can't tell a 7am waivers run from a 6pm lineup run on the same
+  // date apart. Falls back to the filename compare for any source that doesn't carry one.
+  const sortKey = (s)=> typeof s.written_at==='string' && s.written_at ? s.written_at : String(s.report||'');
+  const freshest = (arr)=> arr.slice().sort((a,b)=>sortKey(b).localeCompare(sortKey(a)))[0];
   const pick = freshest(all.filter(s=>!s.stale)) || freshest(all);
   return pick ? pick.next_check : 'Waivers run Tue 7am';
 }
@@ -963,9 +1000,12 @@ function render(state, got, failed){
     const r = rosters.find(x=>x.roster_id!==CFG.me && (x.players||[]).some(q=>String(q)===String(pid)));
     return r ? name(r.roster_id) : null;
   };
+  // player id -> team code, for actionState's kickoff check on a start's benched `for` side —
+  // the compiled action carries his name but not his team (see actionState above).
+  const teamOf = (pid)=> (resolve(players, pid)||{}).team;
   const live = { week:wk,
     players:new Set((me.players||[]).map(String)), starters:(me.starters||[]).map(String),
-    reserve:(me.reserve||[]).map(String), ownerOf, dismissed:dismissedSet() };
+    reserve:(me.reserve||[]).map(String), ownerOf, games, teamOf, dismissed:dismissedSet() };
   // A malformed actions.json is a bad data file, not a reason to blank the whole page.
   const rawActions = actionsDoc && Array.isArray(actionsDoc.actions) ? actionsDoc.actions : [];
   const verified = resolveDependencies(rawActions.filter(a=>a && typeof a==='object').map(a=>{

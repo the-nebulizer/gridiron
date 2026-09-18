@@ -273,6 +273,28 @@ console.log('\nlifecycle — the world moving on is not a report bug');
   check('an unresolvable player id still fails the compile', r.code === 1 && /not found/.test(r.out), r.out);
 }
 
+{
+  // A start still open once its own kickoff has passed can't be carried out
+  // any more — Sleeper already locked the slot — so it goes stale at compile
+  // time the same way a week-behind start does, rather than sitting on the
+  // card as an instruction Ben can no longer act on.
+  const snap = fixture();
+  snap.games = {
+    BBB: { kickoff: '2026-09-21', status: 'pre_game', opponent: 'CCC', home: true },
+    CCC: { kickoff: '2026-09-21', status: 'in_game', opponent: 'BBB', home: false },
+  };
+  const dir = await sandbox(snap, {
+    '2026-09-15-lineup.md': block([{ kind: 'start', player: 'qb3', for: 'qb2', slot: 'SUPER_FLEX', urgency: 'before_kickoff', why: 'Fixture swap.' }]),
+  });
+  const r = runActions(dir);
+  check('a start whose own kickoff has passed still compiles', r.code === 0, r.out);
+  check('...and it is reported stale', /stale — start Quinn Three.*kicked off/.test(r.out), r.out);
+  const written = JSON.parse(readFileSync(path.join(dir, 'reports', 'actions.json'), 'utf8'));
+  const action = written.actions.find((a) => a.player === 'qb3');
+  check('...carrying state: "stale" with a reason naming who kicked off',
+    action?.state === 'stale' && /Quinn Three.*kicked off/.test(action?.state_reason ?? ''), JSON.stringify(action));
+}
+
 // ---- 2. strict mode: --check is the write-time gate -----------------------
 
 console.log('\nstrict --check — a report must never name a move you cannot make');
@@ -307,6 +329,48 @@ await strict('a start naming a player on IR/reserve is rejected', [{ kind: 'star
   });
   const r = runActions(dir, ['--check', 'reports/2026-09-15-lineup.md']);
   check('a start naming a player on a bye this week is rejected', r.code === 1 && /on a bye this week/.test(r.out), r.out);
+}
+{
+  // Sleeper locks a player's starting slot at his own kickoff — a swap
+  // naming either side of a locked slot is a move Ben can no longer make in
+  // the app, the same as a bye or an IR player above. Both games still
+  // pre_game is the control: the swap is legal right up to kickoff.
+  const snap = fixture();
+  snap.games = {
+    BBB: { kickoff: '2026-09-21', status: 'pre_game', opponent: 'CCC', home: true },
+    CCC: { kickoff: '2026-09-21', status: 'pre_game', opponent: 'BBB', home: false },
+  };
+  const dir = await sandbox(snap, {
+    '2026-09-15-lineup.md': block([{ kind: 'start', player: 'qb3', for: 'qb2', slot: 'SUPER_FLEX', urgency: 'before_kickoff', why: 'Still pre-game.' }]),
+  });
+  const r = runActions(dir, ['--check', 'reports/2026-09-15-lineup.md']);
+  check('a swap between two players whose games are still pre_game passes', r.code === 0, r.out);
+}
+{
+  // The incoming player's own game has left pre_game.
+  const snap = fixture();
+  snap.games = {
+    BBB: { kickoff: '2026-09-21', status: 'pre_game', opponent: 'CCC', home: true },
+    CCC: { kickoff: '2026-09-21', status: 'in_game', opponent: 'BBB', home: false },
+  };
+  const dir = await sandbox(snap, {
+    '2026-09-15-lineup.md': block([{ kind: 'start', player: 'qb3', for: 'qb2', slot: 'SUPER_FLEX', urgency: 'before_kickoff', why: 'Too late.' }]),
+  });
+  const r = runActions(dir, ['--check', 'reports/2026-09-15-lineup.md']);
+  check('a start naming a player whose own game is already in_game is rejected', r.code === 1 && /Quinn Three.*already kicked off/.test(r.out), r.out);
+}
+{
+  // The bench side of the swap has kicked off instead — same lock, other end.
+  const snap = fixture();
+  snap.games = {
+    BBB: { kickoff: '2026-09-21', status: 'in_game', opponent: 'CCC', home: true },
+    CCC: { kickoff: '2026-09-21', status: 'pre_game', opponent: 'BBB', home: false },
+  };
+  const dir = await sandbox(snap, {
+    '2026-09-15-lineup.md': block([{ kind: 'start', player: 'qb3', for: 'qb2', slot: 'SUPER_FLEX', urgency: 'before_kickoff', why: 'The bench side kicked off.' }]),
+  });
+  const r = runActions(dir, ['--check', 'reports/2026-09-15-lineup.md']);
+  check('a start whose benched "for" is already in_game is also rejected', r.code === 1 && /Quinn Two.*already kicked off/.test(r.out), r.out);
 }
 await strict('a strict run still rejects an add already rostered elsewhere', [{ kind: 'add', player: 'opp1', mode: 'waiver', urgency: 'now', why: 'Not free.' }], { expect: /already rostered by Them/ });
 // games_have_started flips once and stays flipped — the fixture's default
@@ -376,6 +440,12 @@ console.log('\nsequencing — four routines, one card');
   const written = JSON.parse(readFileSync(path.join(dir, 'reports', 'actions.json'), 'utf8'));
   const action = written.actions.find((a) => a.player === 'fa1');
   check('...and the compiled action carries no after field', !!action && !('after' in action), JSON.stringify(action));
+  // The sandbox is not a git checkout, so this is the mtime fallback — it
+  // still has to be a real ISO timestamp, or the dashboard's next-check sort
+  // silently degrades to comparing filenames again.
+  const wa = written.sources?.waivers?.written_at;
+  check('every compiled source carries a written_at the page can sort on, even with no git',
+    typeof wa === 'string' && !Number.isNaN(Date.parse(wa)) && wa.endsWith('Z'), JSON.stringify(written.sources));
 }
 {
   // --check is the write-time gate on the one report the author is looking
@@ -1040,6 +1110,44 @@ console.log('\nsync — the Tuesday/Wednesday assumption is checked, not just ty
     /waiver_clear_days=1/.test(ctx.waiverAssumptionWarning({ waiver_day_of_week: 2, waiver_clear_days: 1 }) ?? ''));
 }
 
+{
+  // buildGames turns the raw schedule into snapshot.games, pulled out and
+  // pinned the same way as waiverAssumptionWarning above, so a future
+  // "helpfully" synthesized kickoff time, or a week filter that lets a bye
+  // team's old game leak through, breaks the suite instead of shipping quietly.
+  const src = readFileSync(path.join(root, 'scripts', 'sync.mjs'), 'utf8');
+  const from = src.indexOf('function buildGames');
+  const to = src.indexOf('\n}', from) + 2;
+  check('sync.mjs still carries buildGames as one pure function', from !== -1 && to > from);
+
+  const ctx = {};
+  vm.createContext(ctx);
+  new vm.Script(src.slice(from, to) + ';this.buildGames=buildGames;').runInContext(ctx);
+
+  const schedule = [
+    { week: 2, date: '2026-09-20', home: 'ARI', away: 'SEA', status: 'pre_game', game_id: 'a' },
+    { week: 2, date: '2026-09-17', home: 'BUF', away: 'DET', status: 'complete', game_id: 'b' },
+    { week: 2, date: '2026-09-21', home: 'LAR', away: 'NYG', status: 'canceled', game_id: 'c' },
+    // A different week's game for a team that's on bye in week 2 — proves
+    // the filter is on week, not just "have I seen this team before".
+    { week: 1, date: '2026-09-13', home: 'KC', away: 'MIA', status: 'complete', game_id: 'd' },
+  ];
+  const games = ctx.buildGames(schedule, 2);
+
+  check('a team playing this week gets an entry naming its opponent',
+    games.ARI?.opponent === 'SEA' && games.SEA?.opponent === 'ARI', JSON.stringify(games.ARI));
+  check("kickoff is exactly the schedule's bare date — never a synthesized time or timezone",
+    games.ARI.kickoff === '2026-09-20' && !/[T:]/.test(games.ARI.kickoff), games.ARI.kickoff);
+  check('home/away is recorded per side, not copied from one team onto both',
+    games.ARI.home === true && games.SEA.home === false);
+  check('status passes through as the schedule has it, canceled included — silence would read as no game at all',
+    games.LAR?.status === 'canceled', JSON.stringify(games.LAR));
+  check("a team on bye this week (or only seen in another week's game) gets no entry",
+    games.KC === undefined && games.MIA === undefined, JSON.stringify(Object.keys(games)));
+  check('teams are sorted by code for a stable read, not schedule order',
+    JSON.stringify(Object.keys(games)) === JSON.stringify([...Object.keys(games)].sort()), Object.keys(games).join(','));
+}
+
 // ---- 6. the command line itself -------------------------------------------
 // A what-if tool that ignores an argument answers "this move changes nothing"
 // when it has in fact ignored the move. That is worse than crashing.
@@ -1110,8 +1218,16 @@ console.log('\npublish — a recompile that changes nothing must not commit');
   const first = JSON.parse(readFileSync(path.join(dir, 'reports', 'actions.json'), 'utf8'));
   spawnSync(process.execPath, ['scripts/actions.mjs'], { cwd: dir, encoding: 'utf8' });
   const second = JSON.parse(readFileSync(path.join(dir, 'reports', 'actions.json'), 'utf8'));
-  check('a repeat compile changes only compiled_at', first.compiled_at !== second.compiled_at &&
-    JSON.stringify({ ...first, compiled_at: 0 }) === JSON.stringify({ ...second, compiled_at: 0 }));
+  // written_at moves too, and legitimately: the first compile saw an
+  // uncommitted report (mtime), the recompile sees its commit time. Both are
+  // metadata, and publish-report.mjs ignores both when deciding whether a
+  // rebase-recompile is worth a commit — so the churn check here must too.
+  const substance = (doc) => JSON.stringify({ ...doc, compiled_at: 0,
+    sources: Object.fromEntries(Object.entries(doc.sources ?? {}).map(([k, v]) => [k, { ...v, written_at: 0 }])) });
+  check('a repeat compile changes only compiled_at and written_at', first.compiled_at !== second.compiled_at &&
+    substance(first) === substance(second));
+  check('...and written_at moved from mtime to commit time once the report was committed',
+    first.sources?.lineup?.written_at !== second.sources?.lineup?.written_at, JSON.stringify([first.sources, second.sources]));
   check('...and the fixture repo is otherwise untouched', git('rev-parse', 'HEAD').stdout.trim() === before);
 }
 
@@ -1190,6 +1306,22 @@ console.log('\ndashboard — actionState must agree with the compiler on every l
     ['trade accepted',        (()=>{const f=fixture(); f.teams[0].bench=[P.opp1]; f.teams[1].bench=[P.qb3]; return f;})(), { kind:'trade', with:2, with_owner:'Them', give:['qb3'], get:['opp1'] }],
     ['trade I cannot honour', (()=>{const f=fixture(); f.teams[0].bench=[]; return f;})(), { kind:'trade', with:2, with_owner:'Them', give:['qb3'], get:['opp1'] }],
     ['trade target moved on', (()=>{const f=fixture(); f.teams[1].starters=[P.opp2]; f.teams[1].bench=[]; return f;})(), { kind:'trade', with:2, with_owner:'Them', give:['qb3'], get:['opp1'] }],
+    // A start still open once a kickoff has passed is the newest way for the two sides to
+    // disagree: the engine reads snapshot.games (scripts/actions.mjs kickedOffGame), the card
+    // reads live.games (docs/index.html teamKickedOff) — two different shapes of the same fact,
+    // built from two different feeds, that have to land on the same verdict.
+    ['start blocked by its own kickoff', (()=>{const f=fixture(); f.games={
+        BBB:{kickoff:'2026-09-21',status:'pre_game',opponent:'CCC',home:true},
+        CCC:{kickoff:'2026-09-21',status:'in_game',opponent:'BBB',home:false}}; return f;})(),
+      { kind:'start', player:'qb3', for:'qb2', slot:'SUPER_FLEX', team:'CCC' }],
+    ['start blocked by the benched side\'s kickoff', (()=>{const f=fixture(); f.games={
+        BBB:{kickoff:'2026-09-21',status:'in_game',opponent:'CCC',home:true},
+        CCC:{kickoff:'2026-09-21',status:'pre_game',opponent:'BBB',home:false}}; return f;})(),
+      { kind:'start', player:'qb3', for:'qb2', slot:'SUPER_FLEX', team:'CCC' }],
+    ['start still open — both games still pre_game', (()=>{const f=fixture(); f.games={
+        BBB:{kickoff:'2026-09-21',status:'pre_game',opponent:'CCC',home:true},
+        CCC:{kickoff:'2026-09-21',status:'pre_game',opponent:'BBB',home:false}}; return f;})(),
+      { kind:'start', player:'qb3', for:'qb2', slot:'SUPER_FLEX', team:'CCC' }],
   ];
 
   const disagreed = [];
@@ -1201,13 +1333,31 @@ console.log('\ndashboard — actionState must agree with the compiler on every l
         [...x.starters, ...x.bench, ...x.reserve].filter(Boolean).some(p => p.id === String(id)));
       return t ? t.owner : null;
     };
+    // scripts/actions.mjs keys a game by {status, kickoff, opponent, home}; docs/index.html's
+    // gamesByTeam keys it by {started, live, over, ...} off a richer live feed — translated here
+    // so one fixture (snap.games) can drive both sides of the comparison.
+    const games = snap.games && Object.fromEntries(Object.entries(snap.games).map(([team, g]) =>
+      [team, { started: g.status !== 'pre_game', live: g.status === 'in_game', over: g.status === 'complete' }]));
+    const teamOf = (id) => {
+      const p = snap.teams.flatMap(t => [...t.starters, ...t.bench, ...t.reserve]).filter(Boolean).find(x => x.id === String(id));
+      return p ? p.team : null;
+    };
     const live = { week: snap.week, players: new Set(mineIds), starters: me.starters.filter(Boolean).map(p => p.id),
-                   reserve: me.reserve.map(p => p.id), ownerOf, dismissed: new Set() };
+                   reserve: me.reserve.map(p => p.id), ownerOf, games, teamOf, dismissed: new Set() };
     const page = ctx.actionState({ ...action, week: snap.week }, live).state;
     const engine = lifecycleState(action, snap, buildIndex(snap));
     if (page !== engine) disagreed.push(`${label}: card says "${page}", compiler says "${engine}"`);
   }
-  check('all sixteen lifecycle scenarios agree', disagreed.length === 0, disagreed.join('\n'));
+  check('all nineteen lifecycle scenarios agree', disagreed.length === 0, disagreed.join('\n'));
+
+  // The scores feed can fail to load independently of the schedule/roster feeds that carry the
+  // rest of the page — live.games is then null (see render()'s `got.scores ? gamesByTeam(...) :
+  // null`), and a kickoff that has genuinely happened must read as unknown, not as stale, or one
+  // blip at Sleeper hides a start Ben still needs to make.
+  const missingFeedLive = { week: 2, players: new Set(['qb3']), starters: ['qb1','rb1','rb2','wr1','wr2','te1','wr3','qb2','k1','df1'],
+                             reserve: [], ownerOf: () => null, games: null, teamOf: () => 'CCC', dismissed: new Set() };
+  const missingFeedState = ctx.actionState({ kind: 'start', player: 'qb3', for: 'qb2', slot: 'SUPER_FLEX', team: 'CCC', week: 2 }, missingFeedLive).state;
+  check('a missing scores feed reads a start as open, never stale', missingFeedState === 'open', missingFeedState);
 }
 
 console.log('\ndashboard — dependency resolution');
@@ -1245,6 +1395,44 @@ console.log('\ndashboard — dependency resolution');
     R([{id:'t', kind:'trade', state:'open'}, {id:'w', kind:'add', state:'gone', if_not:'t'}]).w === 'gone');
   check('a fallback already done stays done even under a still-open parent',
     R([{id:'t', kind:'trade', state:'open'}, {id:'w', kind:'add', state:'done', if_not:'t'}]).w === 'done');
+}
+
+console.log('\ndashboard — pickNextCheck orders sources by when they were actually written');
+
+{
+  // pickNextCheck is self-contained (no esc, no other do-now helpers), so it's pulled out on its
+  // own, the same source-slice + vm technique as buildGames above rather than the whole do-now
+  // slice.
+  const html = readFileSync(path.join(root, 'docs', 'index.html'), 'utf8');
+  const src = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)][0][1];
+  const from = src.indexOf('function pickNextCheck');
+  const to = src.indexOf('function rosterDrifted');
+  check('the page still carries pickNextCheck as one pure function', from !== -1 && to > from);
+
+  const ctx = {};
+  vm.createContext(ctx);
+  new vm.Script(src.slice(from, to) + ';this.pickNextCheck=pickNextCheck;').runInContext(ctx);
+
+  // Two sources compiled the same day used to be indistinguishable — the filename compare only
+  // carries a date, so a 7am waivers run and a 6pm lineup run tied and fell back to alphabetical
+  // order (lineup < waivers), silently showing the wrong one's next_check.
+  check('written_at (a real timestamp) picks the later same-day source, filenames aside',
+    ctx.pickNextCheck({
+      waivers: { report: '2026-09-16-waivers.md', next_check: 'Waivers run Tue 7am', written_at: '2026-09-16T07:05:00Z' },
+      lineup:  { report: '2026-09-16-lineup.md',  next_check: 'Lineup, Thu 7am',     written_at: '2026-09-16T18:20:00Z' },
+    }) === 'Lineup, Thu 7am');
+  check('a source with no written_at falls back to the filename compare exactly as before',
+    ctx.pickNextCheck({
+      waivers: { report: '2026-09-15-waivers.md', next_check: 'Waivers run Tue 7am' },
+      lineup:  { report: '2026-09-16-lineup.md',  next_check: 'Lineup, Thu 7am' },
+    }) === 'Lineup, Thu 7am');
+  check('a stale source is skipped even when its written_at is newest',
+    ctx.pickNextCheck({
+      waivers: { report: '2026-09-16-waivers.md', next_check: 'Waivers run Tue 7am', written_at: '2026-09-16T07:05:00Z' },
+      lineup:  { report: '2026-09-10-lineup.md',  next_check: 'Stale.', written_at: '2026-09-17T09:00:00Z', stale: true },
+    }) === 'Waivers run Tue 7am');
+  check('no sources at all keeps the empty-state default', ctx.pickNextCheck({}) === 'Waivers run Tue 7am');
+  check('a missing sources object keeps the same default', ctx.pickNextCheck(undefined) === 'Waivers run Tue 7am');
 }
 
 // ---- the case — the card has to convince in four lines ---------------------
@@ -1569,7 +1757,7 @@ console.log('\n  the dashboard: caseGrid, kindTag — extending the do-now pure 
   const escSrc = "const esc=(s)=>String(s??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[c]));\n";
   const ctx = {};
   vm.createContext(ctx);
-  new vm.Script(escSrc + slice + ';this.actionRow=actionRow;this.caseGrid=caseGrid;this.kindTag=kindTag;').runInContext(ctx);
+  new vm.Script(escSrc + slice + ';this.actionRow=actionRow;this.caseGrid=caseGrid;this.kindTag=kindTag;this.renderDoNow=renderDoNow;').runInContext(ctx);
 
   const openAdd = {
     id: 'w1', kind: 'add', mode: 'waiver', state: 'open', urgency: 'by_tuesday',
@@ -1596,6 +1784,44 @@ console.log('\n  the dashboard: caseGrid, kindTag — extending the do-now pure 
   check('a start row is tagged lineup', ctx.kindTag({ kind: 'start' }) === 'lineup');
   check('a fcfs add is tagged add, not claim (pre-season, first-come-first-served)',
     ctx.kindTag({ kind: 'add', mode: 'fcfs' }) === 'add');
+
+  // A stale start's own `why` argued for a move that's off the table now — state_reason (when
+  // the compiler could name one) takes its place, muted, instead of piling a second explanation on top.
+  const staleWithReason = {
+    id: 's1', kind: 'start', state: 'stale', urgency: 'before_kickoff',
+    name: 'Quinn Five', pos: 'QB', team: 'VVV', for_name: 'Quinn Four', slot: 'SUPER_FLEX',
+    why: 'Better matchup this week.', state_reason: "Quinn Five's game has already kicked off (in_game)",
+    report: '2026-09-14-lineup.md', source: 'lineup',
+  };
+  const staleRow = ctx.actionRow(staleWithReason, { now: '14:02' });
+  check('a stale row carries the muted state class', staleRow.includes('class="act stale"'), staleRow);
+  check('...with a one-word "stale" chip, not a kickoff deadline that has already passed',
+    staleRow.includes('<div class="chip">stale</div>'), staleRow);
+  check('...and the kickoff reason shown, not the routine\'s now-moot "why"',
+    staleRow.includes('Quinn Five') && staleRow.includes('already kicked off') && !staleRow.includes('Better matchup'), staleRow);
+  check('...in the same muted .why row every other action\'s "why" already uses',
+    staleRow.includes('class="why"'), staleRow);
+  check('...no case grid either — the argument for the move is over',
+    !staleRow.includes('class="case"'), staleRow);
+
+  // No state_reason (a plain week rollover carries none) — the chip alone has to say it all;
+  // CLAUDE.md's dashboard rule is outcomes, not reasoning, so no prose fills the gap.
+  const staleNoReason = { ...staleWithReason, state_reason: undefined };
+  const staleNoReasonRow = ctx.actionRow(staleNoReason, { now: '14:02' });
+  check('a stale row with no reason shows no why line at all', !staleNoReasonRow.includes('class="why"'), staleNoReasonRow);
+
+  // The card used to drop a stale start with no trace at all (see renderDoNow's old `state!=='stale'`
+  // filter) — now it's shelved like done/gone/superseded: visible, muted, not mistaken for a live ask.
+  const cardHtml = ctx.renderDoNow({
+    items: [
+      { id: 'o1', kind: 'add', mode: 'waiver', state: 'open', urgency: 'now', name: 'Free Three', pos: 'WR', team: 'TTT', report: '2026-09-16-waivers.md', source: 'waivers' },
+      staleWithReason,
+    ],
+    week: 2, league: '123', now: '14:02',
+  });
+  check('a stale start does not count toward "N open"', /<b>1 open<\/b>/.test(cardHtml), cardHtml);
+  check('...it is named in the shelved summary', /stale \(1\)/.test(cardHtml), cardHtml);
+  check('...and its reason is reachable inside that disclosure', /already kicked off/.test(cardHtml), cardHtml);
 }
 
 // ---- the modules must be importable without doing anything ------------

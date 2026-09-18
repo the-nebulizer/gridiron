@@ -161,9 +161,18 @@ function recompileActionsAfterRebase() {
   try {
     const committed = JSON.parse(git('show', `HEAD:${compiled}`));
     const recompiled = JSON.parse(readFileSync(path.resolve(root, compiled), 'utf8'));
-    delete committed.compiled_at;
-    delete recompiled.compiled_at;
-    if (JSON.stringify(committed) === JSON.stringify(recompiled)) {
+    // `sources.*.written_at` is metadata of the same kind: it flips from a
+    // report's mtime to its commit time the moment that report lands on
+    // main, which is exactly what has just happened on this path.
+    const substance = (doc) => {
+      const { compiled_at, sources, ...rest } = doc;
+      const trimmed = Object.fromEntries(Object.entries(sources ?? {}).map(([k, v]) => {
+        const { written_at, ...keep } = v ?? {};
+        return [k, keep];
+      }));
+      return JSON.stringify({ ...rest, sources: trimmed });
+    };
+    if (substance(committed) === substance(recompiled)) {
       git('checkout', '--', compiled);
       console.log(`Recompiled ${compiled} after the rebase — nothing but the timestamp moved, so leaving the committed copy alone.`);
       return { ok: true };

@@ -38,6 +38,30 @@ const playersCachedAt = (await stat(path.join(dataDir, 'players.json'))).mtime.t
 const byes = sleeper.byeWeeks(schedule);
 const scheduleTeams = new Set(schedule.flatMap((g) => [g.home, g.away]));
 
+// Each team's game for the CURRENT week, keyed by team code, so a routine can
+// look up games[player.team] instead of re-scanning the schedule itself.
+// Checked against a raw schedule response (2026-09-18, week 2): every entry
+// is exactly {status, date, home, week, game_id, away}, and `date` is a bare
+// calendar date ("2026-09-20") — no time-of-day, no timezone, no separate
+// kickoff field anywhere in the payload. So `kickoff` below is that date
+// string, unchanged, not a real timestamp; never synthesize a time-of-day
+// from a slot guess (early/late/SNF/MNF) — a wrong invented kickoff is worse
+// than an honestly date-only one for a Sunday check deciding how much time
+// is left. A team on bye this week gets no entry, so a lookup miss reads as
+// "no game", not as a stale game from last week. Unlike byeWeeks, a canceled
+// game still gets an entry here — its status says "canceled" plainly, which
+// is more useful to a reader than silence.
+function buildGames(schedule, week) {
+  const games = {};
+  for (const g of schedule) {
+    if (g.week !== week) continue;
+    games[g.home] = { kickoff: g.date, status: g.status, opponent: g.away, home: true };
+    games[g.away] = { kickoff: g.date, status: g.status, opponent: g.home, home: false };
+  }
+  return Object.fromEntries(Object.entries(games).sort());
+}
+const games = buildGames(schedule, week);
+
 const txWeeks = week > 1 ? [week - 1, week] : [week];
 const transactionsRaw = (
   await Promise.all(txWeeks.map((w) => sleeper.getTransactions(config.league_id, w)))
@@ -221,6 +245,9 @@ const snapshot = {
   // Team -> bye week for all 32 NFL teams, so any player's bye is derivable
   // without re-fetching the schedule (and without anyone recalling one).
   byes: Object.fromEntries([...byes.entries()].sort()),
+  // This week's kickoff/status/opponent per team, one entry per team with a
+  // game this week (see buildGames above for what `kickoff` actually holds).
+  games,
   my_roster_id: config.roster_id,
   teams,
   matchup: myMatchup

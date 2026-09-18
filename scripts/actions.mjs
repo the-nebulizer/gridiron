@@ -6,7 +6,11 @@
 // snapshot.week and is never a hard error by itself — a source is marked
 // `stale: true` when its week is behind the live snapshot week (informational
 // only). Staleness only drops `start` actions at compile time; every other
-// kind stays open. Every compiled action carries its source's `week`.
+// kind stays open. Every compiled action carries its source's `week`. A
+// `start` can also go stale on its own, mid-week: an open one whose player or
+// benched `for` has already kicked off compiles with `state: 'stale'` (see
+// lifecycleState) rather than sitting on the card as an instruction Sleeper
+// will no longer let Ben carry out.
 //
 // Two modes, deliberately different in strictness:
 //
@@ -26,7 +30,8 @@
 // Usage:
 //   node scripts/actions.mjs                 # compile newest report per type -> reports/actions.json
 //   node scripts/actions.mjs --check <file>  # strict validation of one report, no write
-import { readFile, writeFile, readdir } from 'node:fs/promises';
+import { readFile, writeFile, readdir, stat } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
 import { SLOT_ELIGIBILITY, buildOutlook } from './outlook.mjs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -558,6 +563,39 @@ export function buildCase(action, snapshot, index, baseline) {
 
 // ---- lifecycle: has the world already moved past this action? ----
 
+// A team's kickoff locks every one of its players' roster slots — Sleeper
+// refuses a start/for swap once the game has left pre_game, and (once a real
+// kickoff time exists in the schedule payload — it doesn't yet, see
+// scripts/sync.mjs buildGames) once that time has passed even if the status
+// field hasn't flipped. Returns the snapshot.games entry when the team is
+// locked, else null, so a team with no game this week (a bye) reads the same
+// as one that's still pre_game rather than throwing on a missing lookup.
+function kickedOffGame(snapshot, team) {
+  const game = team ? snapshot.games?.[team] : null;
+  if (!game) return null;
+  const hasKickoffTime = typeof game.kickoff === 'string' && /[T:]/.test(game.kickoff);
+  const kickoffPassed = hasKickoffTime && !Number.isNaN(Date.parse(game.kickoff)) && Date.parse(game.kickoff) < Date.now();
+  return game.status !== 'pre_game' || kickoffPassed ? game : null;
+}
+
+// The one-sentence version of kickedOffGame, for the `state_reason` a stale
+// start carries — without it the card (or anyone reading actions.json) would
+// have to reverse-engineer "kicked off" from a bare state string. Only ever
+// called once lifecycleState has already decided the action is stale, so one
+// of the two lookups here is guaranteed to hit.
+function staleStartReason(action, snapshot, index) {
+  const playerGame = kickedOffGame(snapshot, index.byId.get(action.player)?.team);
+  if (playerGame) {
+    return `${index.byId.get(action.player)?.name ?? action.player}'s game has already kicked off (${playerGame.status})`;
+  }
+  const forId = action.for;
+  const forGame = isNonEmptyString(forId) ? kickedOffGame(snapshot, index.byId.get(forId)?.team) : null;
+  if (forGame) {
+    return `${index.byId.get(forId)?.name ?? forId}'s game has already kicked off (${forGame.status})`;
+  }
+  return 'kickoff has passed';
+}
+
 // The same done/gone tests docs/ACTIONS.md section 3 defines and docs/index.html
 // applies live. Exported so the suite can hold the page's copy to it —
 // the compiler and the card must never disagree about what "done" means. Computed from the RAW action (before validation) so that an
@@ -583,7 +621,14 @@ export function lifecycleState(action, snapshot, index) {
     case 'start': {
       if (!isNonEmptyString(p)) return 'open';
       if (starters.has(p) && (!isNonEmptyString(action.for) || !starters.has(action.for))) return 'done';
-      return mine.has(p) ? 'open' : 'gone';
+      if (!mine.has(p)) return 'gone';
+      // Sleeper locks a player's starting slot at his own kickoff — a start
+      // still open after either side's game has left pre_game can no longer
+      // be carried out, so it goes stale the same as a start whose week has
+      // rolled over (docs/ACTIONS.md "stale").
+      const forTeam = isNonEmptyString(action.for) ? index.byId.get(action.for)?.team : null;
+      if (kickedOffGame(snapshot, index.byId.get(p)?.team) || kickedOffGame(snapshot, forTeam)) return 'stale';
+      return 'open';
     }
     case 'ir':
       if (!isNonEmptyString(p)) return 'open';
@@ -865,6 +910,13 @@ async function validateAndBuildAction(action, i, snapshot, index, problems, opts
       if (resolved.bye_week === snapshot.week && worldFail(`${resolved.name} is on a bye this week`)) {
         bad = true;
       }
+      // Sleeper locks a player's starting slot at his own kickoff — a swap
+      // naming him once his game has left pre_game is a move Ben can no
+      // longer make, the same as a bye or an IR player above.
+      const playerGame = kickedOffGame(snapshot, resolved.team);
+      if (playerGame && worldFail(`${resolved.name}'s game has already kicked off (${playerGame.status}) — his slot is locked`)) {
+        bad = true;
+      }
       const nonBnSlots = (snapshot.league.roster_positions ?? []).filter((p) => p !== 'BN');
       const slotOk = isNonEmptyString(action.slot) && nonBnSlots.includes(action.slot);
       if (!slotOk) {
@@ -906,6 +958,13 @@ async function validateAndBuildAction(action, i, snapshot, index, problems, opts
             if (forSlot !== null && forSlot !== action.slot) {
               if (worldFail(`${resolved.name} is going into ${action.slot} but ${forResolved?.name ?? action.for} is starting at ${forSlot} — that leaves ${forSlot} empty; bench the player who holds ${action.slot} instead`)) bad = true;
             }
+          }
+          // The benched player's own kickoff locks him in just as surely as
+          // the incoming player's does — Sleeper won't move either side of a
+          // slot once that slot's game has started.
+          if (live && forResolved) {
+            const forGame = kickedOffGame(snapshot, forResolved.team);
+            if (forGame && worldFail(`${forResolved.name}'s game has already kicked off (${forGame.status}) — his slot is locked`)) bad = true;
           }
         }
       } else if (live && slotOk) {
@@ -1092,6 +1151,11 @@ async function validateReportBlock(block, snapshot, index, baseline, { lifecycle
     });
     if (built && state !== 'open') {
       built.state = state;
+      // "stale" is the one lifecycle state that isn't self-explanatory from
+      // the action's own fields (done/gone both are: the player just is or
+      // isn't where the action says) — a reason string is what the card, or
+      // anyone reading actions.json, would show for it.
+      if (state === 'stale') built.state_reason = staleStartReason(block.actions[i], snapshot, index);
       // A finished or impossible action consumes nothing and needs no bench
       // slot, so it must not trip the sequencing rules against live actions.
       built.consumes = [];
@@ -1187,6 +1251,7 @@ function finalizeAction(action, source, report, week) {
   const id = action.id ?? `${source}:${action.kind}:${idKey}`;
   const out = { id, source, report, kind: action.kind, week };
   if (action.state !== undefined) out.state = action.state;
+  if (action.state_reason !== undefined) out.state_reason = action.state_reason;
   if (action.after !== undefined) out.after = action.after;
   if (action.if_not !== undefined) out.if_not = action.if_not;
   if (action.player !== undefined) {
@@ -1703,6 +1768,27 @@ const describe = (a) =>
     ? `trade with ${a.with_owner ?? a.with} (${(a.give_names ?? []).join(', ')} for ${(a.get_names ?? []).join(', ')})`
     : `${a.kind} ${a.name ?? a.player}${a.for_name ? ` for ${a.for_name}` : ''}${a.drop_name ? ` (drop ${a.drop_name})` : ''}`;
 
+
+// When a report was actually written, as the dashboard's "next check" line
+// needs it. Filenames carry only a date, so on a day all four routines publish
+// the page's "freshest report" sort fell through to alphabetical order of the
+// type name — waivers always won, and the empty card pointed at "Lineup, Thu
+// 7am" on a Saturday. The last commit time is the honest answer for anything
+// already on main; a report that isn't committed yet, or has been edited
+// since, is the one being written right now, and its mtime says so. Any git
+// failure (no repo, no git, a fresh sandbox) falls back to mtime the same
+// way — this is a sort key, never a reason to fail the compile.
+async function reportWrittenAt(filePath) {
+  try {
+    const dirty = execFileSync('git', ['status', '--porcelain', '--', filePath], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+    if (!dirty) {
+      const committed = execFileSync('git', ['log', '-1', '--format=%cI', '--', filePath], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+      if (committed && !Number.isNaN(Date.parse(committed))) return new Date(committed).toISOString();
+    }
+  } catch { /* not a git checkout, or git missing — mtime below */ }
+  return (await stat(filePath)).mtime.toISOString();
+}
+
 // ---- compile mode ----
 
 async function compile() {
@@ -1740,6 +1826,7 @@ async function compile() {
       verdict: block.verdict,
       next_check: block.next_check,
       stale: result.stale,
+      written_at: await reportWrittenAt(filePath),
     };
     // A stale source (week behind the live snapshot) only expires its `start`
     // actions — everything else stays open until done or superseded.
@@ -1876,14 +1963,17 @@ async function compile() {
   const dependentCount = finalActions.filter((a) => a.after !== undefined || a.if_not !== undefined).length;
   const done = finalActions.filter((a) => a.state === 'done');
   const gone = finalActions.filter((a) => a.state === 'gone');
-  const openCount = finalActions.length - done.length - gone.length;
+  const stale = finalActions.filter((a) => a.state === 'stale');
+  const openCount = finalActions.length - done.length - gone.length - stale.length;
   console.log(
     `wrote reports/actions.json — week ${output.week}, ${openCount} open action(s) (${dependentCount} dependent on another action), sources: ${Object.keys(sources).join(', ') || '(none)'}`
   );
   // Say what has already happened rather than letting it pass in silence: a
-  // done action is advice that worked, a gone one is advice overtaken.
+  // done action is advice that worked, a gone one is advice overtaken, and a
+  // stale one is a start whose own kickoff (or whose week) passed it by.
   for (const a of done) console.log(`  done — ${describe(a)}`);
   for (const a of gone) console.log(`  gone — ${describe(a)} (no longer possible)`);
+  for (const a of stale) console.log(`  stale — ${describe(a)} (${a.state_reason ?? 'week behind'})`);
   // Parts of a still-open action that reality has overtaken. Not fatal here —
   // the report was written before the move — but the next run of that routine
   // should rewrite it, so say so every time.
