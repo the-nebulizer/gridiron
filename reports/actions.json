@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-09-17T23:34:32.181Z",
+  "compiled_at": "2026-09-18T15:59:02.460Z",
   "season": "2026",
   "week": 2,
   "games_have_started": true,
@@ -33,28 +33,32 @@
       "week": 2,
       "verdict": "Hold — bench and IR are both full and nothing on the wire is worth the swap.",
       "next_check": "Lineup, Thu 7am",
-      "stale": false
+      "stale": false,
+      "written_at": "2026-09-17T02:09:01.000Z"
     },
     "lineup": {
       "report": "2026-09-17-lineup.md",
       "week": 2,
       "verdict": "Hold — the lineup is already right; Chicago Bears is in at DEF and every slot is filled and healthy.",
       "next_check": "Inactives, Sun 10am",
-      "stale": false
+      "stale": false,
+      "written_at": "2026-09-17T12:15:00.000Z"
     },
     "trades": {
       "report": "2026-09-17-trades.md",
       "week": 2,
       "verdict": "Still two trades worth sending: Cousins + Meyers to Tally241 for Aaron Jones, and Bryce Young to amandaberry for Brian Robinson.",
       "next_check": "Waivers, Tue 7am",
-      "stale": false
+      "stale": false,
+      "written_at": "2026-09-17T21:53:19.000Z"
     },
     "inactives": {
       "report": "2026-09-17-inactives.md",
       "week": 2,
       "verdict": "Nothing to flip — Jared Goff has no injury designation ahead of tonight's Lions-Bills opener.",
       "next_check": "Trades, Mon 7am",
-      "stale": false
+      "stale": false,
+      "written_at": "2026-09-17T02:09:01.000Z"
     }
   },
   "actions": [
