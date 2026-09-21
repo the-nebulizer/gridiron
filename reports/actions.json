@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-09-20T15:09:35.444Z",
+  "compiled_at": "2026-09-21T12:14:40.251Z",
   "season": "2026",
   "week": 2,
   "games_have_started": true,
@@ -45,12 +45,12 @@
       "written_at": "2026-09-17T12:15:00.000Z"
     },
     "trades": {
-      "report": "2026-09-17-trades.md",
+      "report": "2026-09-21-trades.md",
       "week": 2,
       "verdict": "Still two trades worth sending: Cousins + Meyers to Tally241 for Aaron Jones, and Bryce Young to amandaberry for Brian Robinson.",
       "next_check": "Waivers, Tue 7am",
       "stale": false,
-      "written_at": "2026-09-17T21:53:19.000Z"
+      "written_at": "2026-09-21T12:14:35.091Z"
     },
     "inactives": {
       "report": "2026-09-20-inactives.md",
@@ -58,14 +58,14 @@
       "verdict": "Hold — every starter is a confirmed go for today's early games; no pivot needed.",
       "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-09-20T15:09:30.056Z"
+      "written_at": "2026-09-20T15:09:37.000Z"
     }
   },
   "actions": [
     {
       "id": "jones",
       "source": "trades",
-      "report": "2026-09-17-trades.md",
+      "report": "2026-09-21-trades.md",
       "kind": "trade",
       "week": 2,
       "with": 8,
@@ -103,7 +103,7 @@
     {
       "id": "robinson",
       "source": "trades",
-      "report": "2026-09-17-trades.md",
+      "report": "2026-09-21-trades.md",
       "kind": "trade",
       "week": 2,
       "if_not": "jones",
