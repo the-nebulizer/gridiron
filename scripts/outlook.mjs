@@ -23,11 +23,11 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { SLOT_ELIGIBILITY, buildOutlook } from './outlook-core.mjs';
+import { SLOT_ELIGIBILITY, buildOutlook, fillSlots } from './outlook-core.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-export { SLOT_ELIGIBILITY, buildOutlook };
+export { SLOT_ELIGIBILITY, buildOutlook, fillSlots };
 
 // ---- CLI ----
 

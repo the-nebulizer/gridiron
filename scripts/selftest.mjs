@@ -12,7 +12,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
-import { buildOutlook, SLOT_ELIGIBILITY } from './outlook.mjs';
+import { buildOutlook, SLOT_ELIGIBILITY, fillSlots } from './outlook.mjs';
 import { lifecycleState, buildIndex } from './actions.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -53,15 +53,26 @@ const P = {
   // theirs
   opp1: { id: 'opp1', name: 'Other One', position: 'RB', team: 'MMM', bye_week: 8, injury_status: null },
   opp2: { id: 'opp2', name: 'Other Two', position: 'WR', team: 'NNN', bye_week: 8, injury_status: null },
+  // A body on the OTHER manager's bench, so the partner-side case line has a
+  // "benches" case to describe and not only a "starts" one.
+  opp3: { id: 'opp3', name: 'Other Three', position: 'RB', team: 'OP3', bye_week: 12, injury_status: null },
   // free agents
   fa1: { id: 'fa1', name: 'Free One', position: 'TE', team: 'OOO', bye_week: 6, injury_status: null },
   fa2: { id: 'fa2', name: 'Free Two', position: 'K', team: 'PPP', bye_week: 9, injury_status: null },
   fa3: { id: 'fa3', name: 'Free Three', position: 'WR', team: 'TTT', bye_week: 3, injury_status: null },
+  // Two unrostered backs, so a test can have two independent claims land at
+  // one position — the shape Rule 1b exists to catch.
+  fa4: { id: 'fa4', name: 'Free Four', position: 'RB', team: 'F4F', bye_week: 12, injury_status: null },
+  fa5: { id: 'fa5', name: 'Free Five', position: 'RB', team: 'F5F', bye_week: 14, injury_status: null },
   // bench depth for the outlook fixture, on byes that collide with nothing
   // interesting — without it every single bye reads as an empty FLEX.
   rb4: { id: 'rb4', name: 'Rush Four', position: 'RB', team: 'QQQ', bye_week: 8, injury_status: null },
   rb5: { id: 'rb5', name: 'Rush Five', position: 'RB', team: 'RRR', bye_week: 14, injury_status: null },
   wr4: { id: 'wr4', name: 'Wide Four', position: 'WR', team: 'SSS', bye_week: 12, injury_status: null },
+  // A second tight end and kicker, so a no-cover test can hand a position
+  // genuine cover instead of proving the point by accident.
+  te2: { id: 'te2', name: 'Tight Two', position: 'TE', team: 'E1E', bye_week: 12, injury_status: null },
+  k2: { id: 'k2', name: 'Kick Two', position: 'K', team: 'E2E', bye_week: 12, injury_status: null },
   // a bye pair for the crunch-week tightening tests below: shares a week
   // with nothing else, so on their own they isolate the bye-count clause.
   safe_rb: { id: 'safe_rb', name: 'Safe RB', position: 'RB', team: 'WWW', bye_week: 4, injury_status: null },
@@ -116,12 +127,21 @@ function fixture(overrides = {}) {
 // every fixture here is written as depth/no-starter unless a test says
 // otherwise by setting `displaces` itself.
 const block = (actions, extra = {}) => {
-  const withDisplaces = actions.map((a) =>
-    (a?.kind === 'add' || a?.kind === 'trade') && !('displaces' in a) ? { ...a, displaces: null } : a
-  );
+  // `evidence` is filled the same way and for the same reason: every fixture
+  // here predates the rule, and a fixture written to probe some other rule
+  // must not fail on a field it was never about. null is the honest default —
+  // these rosters carry no outside claim. Tests that probe the field itself
+  // use blockRaw, or pass an explicit `evidence`.
+  const filled = actions.map((a) => {
+    if (a?.kind !== 'add' && a?.kind !== 'trade') return a;
+    let out = a;
+    if (!('displaces' in out)) out = { ...out, displaces: null };
+    if (!('evidence' in out)) out = { ...out, evidence: null };
+    return out;
+  });
   return (
     '# Fixture report\n\n```actions\n' +
-    JSON.stringify({ week: 2, verdict: 'Fixture.', next_check: 'Lineup, Thu 7am', actions: withDisplaces, ...extra }, null, 2) +
+    JSON.stringify({ week: 2, verdict: 'Fixture.', next_check: 'Lineup, Thu 7am', actions: filled, ...extra }, null, 2) +
     '\n```\n'
   );
 };
@@ -1045,6 +1065,138 @@ console.log('\noutlook — the SUPER_FLEX the lineup fills with a QB is demand, 
     JSON.stringify(o.roster_shape.lineup_demand));
 }
 
+// "No cover" used to be a count — activeCount <= lineup_demand — and
+// lineup_demand credits a flex slot to whatever position is sitting in it.
+// So three backs behind RB/RB/FLEX read "no cover at RB" while the week walk
+// in the same object showed every RB bye fielding a full lineup off the spare
+// receivers. Three live recommendations were argued from that flag on
+// 2026-09-22, and because the "depth is priced like depth" guard exempts
+// every position no_cover names, the same flag switched off the check that
+// would have capped a $20 bid on a bench back.
+console.log('\noutlook — no cover means the lineup actually breaks, not that a count is tight');
+
+{
+  // Three RBs for RB, RB and an RB-held FLEX — but four WRs behind two WR
+  // slots, so the flex has cover even though the count looks tight.
+  const base = outlookSnap(
+    [P.qb1, P.rb1, P.rb2, P.wr1, P.wr2, P.te1, P.rb3, P.qb2, P.k1, P.df1],
+    [P.qb3, P.wr3, P.wr4, P.te2, P.k2],
+    []
+  );
+  const o = buildOutlook(base);
+  check('the flex is read as RB demand, so the count still looks tight',
+    o.roster_shape.lineup_demand.RB === 3 && o.roster_shape.active_by_position.RB === 3,
+    JSON.stringify(o.roster_shape.lineup_demand));
+  check('...but RB is NOT uncovered, because a receiver fills the flex',
+    !o.roster_shape.no_cover_positions.includes('RB'),
+    JSON.stringify(o.roster_shape.no_cover_positions));
+  check('...and that agrees with the week walk: no RB bye empties a slot a back fills',
+    o.weeks.every((w) => !(w.empty_slots ?? []).some((slot) => SLOT_ELIGIBILITY[slot].includes('RB'))),
+    JSON.stringify(o.weeks.filter((w) => w.empty_slots)));
+
+  // This fixture carries one defense on purpose, so a week really does break,
+  // and here that break is at a position the flag names. Note what is NOT
+  // claimed: no_cover asks "if one body goes down today", while a bye can
+  // take two at once, so a week can break at a position that is covered
+  // today. That question is `weeks[]`, and conflating the two is how the old
+  // count came to be trusted for something it never measured.
+  const holes = o.weeks.filter((w) => w.empty_slots).flatMap((w) => w.empty_slots);
+  check('...and the week that does break here breaks at a position it names',
+    holes.length > 0 && holes.every((slot) =>
+      SLOT_ELIGIBILITY[slot].some((pos) => o.roster_shape.no_cover_positions.includes(pos))),
+    JSON.stringify({ holes, no_cover: o.roster_shape.no_cover_positions }));
+}
+{
+  // Strip the spare receivers and tight ends: now the flex genuinely has
+  // nobody behind it, and RB must be reported uncovered.
+  const bare = outlookSnap(
+    [P.qb1, P.rb1, P.rb2, P.wr1, P.wr2, P.te1, P.rb3, P.qb2, P.k1, P.df1],
+    [P.qb3],
+    []
+  );
+  const o = buildOutlook(bare);
+  check('with no spare receiver or tight end, RB really is uncovered',
+    o.roster_shape.no_cover_positions.includes('RB'),
+    JSON.stringify(o.roster_shape.no_cover_positions));
+}
+{
+  // A single tight end is the shape the flag was always right about.
+  const o = buildOutlook(outlookSnap(
+    [P.qb1, P.rb1, P.rb2, P.wr1, P.wr2, P.te1, P.rb3, P.qb2, P.k1, P.df1],
+    [P.qb3, P.wr3, P.wr4, P.rb4, P.k2],
+    []
+  ));
+  check('one tight end is uncovered and thin at once',
+    o.roster_shape.no_cover_positions.includes('TE') && o.roster_shape.thin_positions.includes('TE'),
+    JSON.stringify(o.roster_shape));
+  check('every thin position is still an uncovered one',
+    o.roster_shape.thin_positions.every((p) => o.roster_shape.no_cover_positions.includes(p)),
+    JSON.stringify(o.roster_shape));
+}
+{
+  // The QB case the count got right for the wrong reason: two QBs against a
+  // QB slot and a QB-held SUPER_FLEX is legal after a loss but downgraded,
+  // so it stays uncovered even though no slot goes empty.
+  const o = buildOutlook(outlookSnap(
+    [P.qb1, P.rb1, P.rb2, P.wr1, P.wr2, P.te1, P.rb3, P.qb2, P.k1, P.df1],
+    [P.wr3, P.wr4, P.rb4, P.te2, P.k2],
+    []
+  ));
+  check('two QBs for a QB slot plus a QB-held SUPER_FLEX is uncovered',
+    o.roster_shape.no_cover_positions.includes('QB'),
+    JSON.stringify(o.roster_shape.no_cover_positions));
+  check('...and a third arm gives it cover',
+    !buildOutlook(outlookSnap(
+      [P.qb1, P.rb1, P.rb2, P.wr1, P.wr2, P.te1, P.rb3, P.qb2, P.k1, P.df1],
+      [P.qb3, P.wr3, P.wr4, P.rb4, P.te2],
+      []
+    )).roster_shape.no_cover_positions.includes('QB'));
+}
+
+{
+  // The invariant the fix actually rests on, swept rather than sampled: for
+  // every position, no_cover must agree exactly with re-solving the lineup
+  // without one body there. The old count agreed by accident on some rosters
+  // and not others, which is why one flag could contradict the week walk
+  // beside it. Deterministic generator — a flaky suite proves nothing.
+  let seed = 20260922;
+  const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+  const POS = ['QB', 'RB', 'WR', 'TE', 'K', 'DEF'];
+  let falsePositives = 0, falseNegatives = 0, notSubset = 0, rosters = 0;
+  for (let trial = 0; trial < 600; trial++) {
+    const n = 1 + Math.floor(rnd() * 18);
+    const players = Array.from({ length: n }, (_, i) => ({
+      id: `s${i}`, name: `S ${i}`, position: POS[Math.floor(rnd() * POS.length)],
+      team: `T${i}`, bye_week: 1 + Math.floor(rnd() * 18), injury_status: null,
+    }));
+    const starters = players.slice(0, 10);
+    while (starters.length < 10) starters.push(null);
+    const o = buildOutlook(outlookSnap(starters, players.slice(10), []));
+    const sh = o.roster_shape;
+    const nc = sh.no_cover_positions;
+    rosters++;
+    if (!sh.thin_positions.every((x) => nc.includes(x))) notSubset++;
+    const qbFlex = (sh.flex_preferences ?? []).filter((f) => f.position === 'QB').length;
+    const qbWanted = (sh.dedicated_slots.QB ?? 0) + qbFlex;
+    for (const pos of Object.keys(sh.lineup_demand)) {
+      const have = sh.active_by_position[pos] ?? 0;
+      let breaks;
+      if (have === 0) breaks = true;
+      else {
+        const idx = players.findIndex((x) => x.position === pos);
+        const solved = fillSlots(SLOTS, players.filter((_, i) => i !== idx));
+        breaks = solved.empty.length > 0 || (pos === 'QB' && qbFlex > 0 && qbWanted > have - 1);
+      }
+      if (nc.includes(pos) && !breaks) falsePositives++;
+      if (!nc.includes(pos) && breaks) falseNegatives++;
+    }
+  }
+  check(`no_cover never names a position that survives losing one body (${rosters} rosters)`,
+    falsePositives === 0, `${falsePositives} false positive(s)`);
+  check('...and never misses one that does not', falseNegatives === 0, `${falseNegatives} false negative(s)`);
+  check('...and thin stays a subset of it throughout', notSubset === 0, `${notSubset} roster(s)`);
+}
+
 // A flat "2+ byes" threshold flagged any two unrelated players sharing a
 // week as crunch even with a full bench sitting behind them — burying the
 // weeks that actually can't field a legal kicker or defense in a longer list
@@ -1718,6 +1870,295 @@ console.log('\n  a trade case — the incoming player, the give, and the outlook
     !/W13 SUPERFLEX downgrade/.test(r.out), r.out);
 }
 
+// A trades report argued an offer was easy because the player was "still on
+// Tally241's bench" when the snapshot had him in their STARTING lineup. The
+// compiler held that fact and never looked at it, so the card repeated the
+// claim and the offer sat unanswered for four days. The partner's own side of
+// a deal is computed now, not asserted.
+console.log('\n  a trade case — the other manager\'s side, read off their roster');
+
+{
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-trades.md': block([{ kind: 'trade', with: 2, give: ['qb3'], get: ['opp1'], displaces: null, urgency: 'this_week', why: 'Asks for a starter.' }]),
+  });
+  const r = runActions(dir, ['--check', 'reports/2026-09-15-trades.md']);
+  check('the asks line says the partner STARTS the player being requested',
+    /asks: Them starts Other One — one of 1 RB they carry/.test(r.out), r.out);
+  check('...and names the shape that does not get accepted',
+    /asks them to bench a starter for bench pieces/.test(r.out), r.out);
+  check('...and warns about it without failing the report',
+    r.code === 0 && /warning — action\[0\] \(trade\): asks Them to give up Other One — in their starting lineup/.test(r.out),
+    `code=${r.code}\n${r.out}`);
+}
+{
+  // The same offer, for a player their own bench carries: a real difference
+  // in how likely it is to be taken, and the card now shows it.
+  const snap = fixture();
+  snap.teams = snap.teams.map((t) => (t.roster_id === 2 ? { ...t, bench: [P.opp3] } : t));
+  const dir = await sandbox(snap, {
+    '2026-09-15-trades.md': block([{ kind: 'trade', with: 2, give: ['qb3'], get: ['opp3'], displaces: null, urgency: 'this_week', why: 'Asks for a bench body.' }]),
+  });
+  const r = runActions(dir, ['--check', 'reports/2026-09-15-trades.md']);
+  check('a request for a player on the partner\'s bench reads "benches"',
+    /asks: Them benches Other Three — one of 2 RBs they carry/.test(r.out), r.out);
+  check('...carries no "bench a starter" tail', !/bench a starter for bench pieces/.test(r.out), r.out);
+  check('...and raises no warning', !/warning —/.test(r.out), r.out);
+}
+{
+  // Asking for their starter while sending one of mine is an ordinary trade,
+  // not the lopsided shape — the tail and the warning must both stay quiet.
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-trades.md': block([{ kind: 'trade', with: 2, give: ['rb1'], get: ['opp1'], displaces: null, urgency: 'this_week', why: 'Starter for starter.' }]),
+  });
+  const r = runActions(dir, ['--check', 'reports/2026-09-15-trades.md']);
+  check('starter-for-starter draws no lopsided tail',
+    /asks: Them starts Other One/.test(r.out) && !/bench a starter for bench pieces/.test(r.out), r.out);
+  check('...and no warning', !/warning — action\[0\] \(trade\)/.test(r.out), r.out);
+}
+{
+  // An injury tag the partner is carrying belongs on the line too — it is
+  // half of what makes an offer look better or worse than it reads.
+  const snap = fixture();
+  snap.teams[1] = { ...snap.teams[1], starters: [{ ...P.opp1, injury_status: 'Questionable' }, P.opp2] };
+  const dir = await sandbox(snap, {
+    '2026-09-15-trades.md': block([{ kind: 'trade', with: 2, give: ['qb3'], get: ['opp1'], displaces: null, urgency: 'this_week', why: 'Hurt starter.' }]),
+  });
+  const r = runActions(dir, ['--check', 'reports/2026-09-15-trades.md']);
+  check('the partner-side line carries the incoming player\'s injury tag',
+    /asks: Them starts Other One, Questionable/.test(r.out), r.out);
+}
+
+// Three open actions on the card at once (a $20 claim for a fourth back and
+// two trade offers each bringing a back home), all arguing one thin-RB need,
+// none aware of the others: every case is measured against a single baseline,
+// so each said "you have 3" while together they made it 5. Rule 1a caught the
+// mirror image — two actions SHEDDING a position — and this side went unseen.
+// The class of claim the compiler cannot check, and the one these moves turn
+// on: a player's role, health or return date. A waivers report argued a $20
+// bid with "Charbonnet's return is still weeks off ... not close to being
+// activated" while his coach had him on an aggressive timetable targeting
+// Week 5 — unfalsifiable prose, and wrong. `evidence` makes the claim an
+// explicit, auditable answer, exactly as `displaces` did for "who starts".
+console.log('\n  the tradeoff verdict the card reads');
+
+// Byes are what make a week break, so these fixtures put every bye past the
+// last fantasy week: the baseline then has no holes at all, and any hole in
+// the what-if is one the move itself opened. Reusing the shared fixture here
+// measured the move against a roster that was already short, which is a
+// different (and much less clear) question.
+const noByes = (players) => players.map((q) => ({ ...q, bye_week: 99 }));
+const calmSnap = (starters, bench) => {
+  const base = fixture();
+  return {
+    ...base,
+    teams: base.teams.map((t) => (t.roster_id === 1
+      ? { ...t, starters: noByes(starters), bench: noByes(bench), reserve: [] }
+      : t)),
+  };
+};
+const CALM_STARTERS = [P.qb1, P.rb1, P.rb2, P.wr1, P.wr2, P.te1, P.rb4, P.qb2, P.k1, P.df1];
+
+{
+  // Drop the only tight end to add a fourth back: the TE slot cannot be
+  // filled in any week after it, and nothing on the calendar improves. The
+  // shape of the claim that led the card on 2026-09-22.
+  const dir = await sandbox(calmSnap(CALM_STARTERS, [P.qb3, P.wr3, P.wr4, P.k2]), {
+    '2026-09-15-waivers.md': block([{ kind: 'add', player: 'fa4', drop: 'te1', mode: 'waiver', faab: 2, urgency: 'by_tuesday', why: 'A back for the only TE.' }]),
+  });
+  const compiled = runActions(dir, []);
+  check('the compile writes the card', compiled.code === 0, compiled.out);
+  const doc = JSON.parse(readFileSync(path.join(dir, 'reports', 'actions.json'), 'utf8'));
+  const t = doc.actions[0].case.tradeoff;
+  check('a move that opens a hole and closes none is net costs_only',
+    t.net === 'costs_only' && t.fixes.length === 0 && t.opens.length > 0, JSON.stringify(t));
+  check('...and the opened slots are named, not just counted',
+    t.opens.every((o) => typeof o.week === 'number' && typeof o.slot === 'string' && typeof o.kind === 'string')
+      && t.opens.every((o) => o.slot === 'TE'),
+    JSON.stringify(t.opens));
+}
+{
+  // The same roster, a plain depth add that changes no week either way. The
+  // flag has to mean something when it appears, so this must not be flagged.
+  const dir = await sandbox(calmSnap(CALM_STARTERS, [P.qb3, P.wr3, P.te2, P.k2]), {
+    '2026-09-15-waivers.md': block([{ kind: 'add', player: 'fa4', mode: 'waiver', faab: 2, urgency: 'by_tuesday', why: 'Ordinary depth.' }]),
+  });
+  runActions(dir, []);
+  const doc = JSON.parse(readFileSync(path.join(dir, 'reports', 'actions.json'), 'utf8'));
+  check('depth that changes nothing on the calendar is neutral',
+    doc.actions[0].case.tradeoff.net === 'neutral', JSON.stringify(doc.actions[0].case.tradeoff));
+}
+{
+  // Whatever the fixture, the verdict must agree with the lists it is drawn
+  // from — that agreement is the whole reason the card can act on it. The
+  // shared fixture is deliberately a messy roster here.
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-waivers.md': block([{ kind: 'add', player: 'fa4', drop: 'te1', mode: 'waiver', faab: 2, urgency: 'by_tuesday', why: 'Messy roster.' }]),
+    '2026-09-15-trades.md': block([{ kind: 'trade', with: 2, give: ['qb3'], get: ['opp1'], urgency: 'this_week', why: 'And a trade.' }]),
+  });
+  runActions(dir, []);
+  const doc = JSON.parse(readFileSync(path.join(dir, 'reports', 'actions.json'), 'utf8'));
+  const withTradeoff = doc.actions.filter((a) => a.case && a.case.tradeoff);
+  check('every compiled action carries a tradeoff verdict', withTradeoff.length === doc.actions.length,
+    JSON.stringify(doc.actions.map((a) => a.id)));
+  check('...and every verdict matches the fixes/opens it came from',
+    withTradeoff.every(({ case: c }) => {
+      const f = c.tradeoff.fixes.length, o = c.tradeoff.opens.length;
+      const want = o && !f ? 'costs_only' : f && !o ? 'fixes_only' : f && o ? 'mixed' : 'neutral';
+      return c.tradeoff.net === want;
+    }),
+    JSON.stringify(withTradeoff.map((a) => a.case.tradeoff.net)));
+}
+
+console.log('\n  evidence — the claim a move rests on, or an explicit "none"');
+
+{
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-waivers.md': blockRaw([{ kind: 'add', player: 'fa1', mode: 'waiver', faab: 5, displaces: null, urgency: 'by_tuesday', why: 'No evidence key at all.' }]),
+  });
+  const r = runActions(dir, ['--check', 'reports/2026-09-15-waivers.md']);
+  check('an add with no evidence key fails --check',
+    r.code === 1 && /evidence is required/.test(r.out), `code=${r.code}\n${r.out}`);
+}
+{
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-waivers.md': blockRaw([{ kind: 'add', player: 'fa1', mode: 'waiver', faab: 5, displaces: null, evidence: null, urgency: 'by_tuesday', why: 'Roster-only call.' }]),
+  });
+  const r = runActions(dir, ['--check', 'reports/2026-09-15-waivers.md']);
+  check('...and an explicit null is a real answer, not a missing one', r.code === 0, `code=${r.code}\n${r.out}`);
+}
+{
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-waivers.md': blockRaw([{ kind: 'add', player: 'fa1', mode: 'waiver', faab: 5, displaces: null, urgency: 'by_tuesday', why: 'Cited.',
+      evidence: { note: 'Coach says he is on an aggressive timetable, targeting Week 5.', url: 'https://example.com/news', as_of: '2026-09-22' } }]),
+  });
+  const r = runActions(dir, ['--check', 'reports/2026-09-15-waivers.md']);
+  check('a well-formed note and link validate', r.code === 0, `code=${r.code}\n${r.out}`);
+  const compiled = runActions(dir, []);
+  check('...and reach the card through actions.json', compiled.code === 0, compiled.out);
+  const doc = JSON.parse(readFileSync(path.join(dir, 'reports', 'actions.json'), 'utf8'));
+  check('...with the note, the link and the date intact',
+    doc.actions[0].evidence.note.startsWith('Coach says') && doc.actions[0].evidence.url === 'https://example.com/news'
+      && doc.actions[0].evidence.as_of === '2026-09-22',
+    JSON.stringify(doc.actions[0].evidence));
+}
+{
+  // The card turns the url into a link, so a non-http scheme is a script
+  // injection rather than a source — refused at write time as well as escaped
+  // at render time.
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-waivers.md': blockRaw([{ kind: 'add', player: 'fa1', mode: 'waiver', faab: 5, displaces: null, urgency: 'by_tuesday', why: 'Bad scheme.',
+      evidence: { note: 'Looks like a citation.', url: 'javascript:alert(1)' } }]),
+  });
+  const r = runActions(dir, ['--check', 'reports/2026-09-15-waivers.md']);
+  check('a non-http(s) evidence url is rejected',
+    r.code === 1 && /evidence\.url must be an http\(s\) link/.test(r.out), `code=${r.code}\n${r.out}`);
+}
+{
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-waivers.md': blockRaw([{ kind: 'add', player: 'fa1', mode: 'waiver', faab: 5, displaces: null, urgency: 'by_tuesday', why: 'Note but no link.',
+      evidence: { note: 'Heard it somewhere.' } }]),
+  });
+  const r = runActions(dir, ['--check', 'reports/2026-09-15-waivers.md']);
+  check('a note with no link is rejected — the point is that Ben can check it',
+    r.code === 1 && /evidence\.url must be an http\(s\) link/.test(r.out), `code=${r.code}\n${r.out}`);
+}
+{
+  // Compile runs over other routines' older reports; one written before the
+  // rule must never stop a publish, exactly as with displaces.
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-waivers.md': blockRaw([{ kind: 'add', player: 'fa1', mode: 'waiver', faab: 5, displaces: null, urgency: 'by_tuesday', why: 'Predates the rule.' }]),
+  });
+  const r = runActions(dir, []);
+  check('a pre-rule report still compiles, with the gap noted',
+    r.code === 0 && /evidence is required/.test(r.out), `code=${r.code}\n${r.out}`);
+  const doc = JSON.parse(readFileSync(path.join(dir, 'reports', 'actions.json'), 'utf8'));
+  check('...and is marked as missing rather than silently looking sourced',
+    doc.actions[0].evidence_missing === true && doc.actions[0].evidence === undefined,
+    JSON.stringify(doc.actions[0]));
+}
+
+console.log('\n  two actions that buy the same need must know about each other');
+
+{
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-waivers.md': block([
+      { kind: 'add', player: 'fa4', mode: 'waiver', faab: 2, urgency: 'by_tuesday', why: 'One back.' },
+      { kind: 'add', player: 'fa5', mode: 'waiver', faab: 2, urgency: 'by_tuesday', why: 'A second back, unlinked.' },
+    ]),
+  });
+  const r = runActions(dir, ['--check', 'reports/2026-09-15-waivers.md']);
+  check('two unlinked adds at one position fail --check',
+    r.code === 1 && /each bring in a RB and are not linked/.test(r.out), `code=${r.code}\n${r.out}`);
+  check('...and the message says what the roster would actually look like',
+    /you carry 4 RB against a lineup that starts 2/.test(r.out), r.out);
+}
+{
+  // The documented way to say "these are alternatives": one claim, not two.
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-waivers.md': block([
+      { kind: 'add', id: 'first', player: 'fa4', mode: 'waiver', faab: 2, urgency: 'by_tuesday', why: 'First choice.' },
+      { kind: 'add', id: 'second', if_not: 'first', player: 'fa5', mode: 'waiver', faab: 2, urgency: 'by_tuesday', why: 'Fallback.' },
+    ]),
+  });
+  const r = runActions(dir, ['--check', 'reports/2026-09-15-waivers.md']);
+  check('if_not alternatives are one claim on the position, so they pass',
+    r.code === 0 && !/each bring in a RB/.test(r.out), `code=${r.code}\n${r.out}`);
+}
+{
+  // Genuinely filling a hole must never be flagged: one back for two RB
+  // slots wants two arrivals, and ends level rather than two deep.
+  const snap = fixture();
+  snap.teams = snap.teams.map((t) => (t.roster_id === 1
+    ? { ...t, starters: [P.qb1, P.rb1, null, P.wr1, P.wr2, P.te1, P.wr3, P.qb2, P.k1, P.df1] }
+    : t));
+  const dir = await sandbox(snap, {
+    '2026-09-15-waivers.md': block([
+      { kind: 'add', player: 'fa4', mode: 'waiver', faab: 2, urgency: 'by_tuesday', why: 'Fills the empty RB slot.' },
+      { kind: 'add', player: 'fa5', mode: 'waiver', faab: 2, urgency: 'by_tuesday', why: 'And the spare behind it.' },
+    ]),
+  });
+  const r = runActions(dir, ['--check', 'reports/2026-09-15-waivers.md']);
+  check('two arrivals that only fill a real hole are not a double-buy',
+    r.code === 0 && !/each bring in a RB/.test(r.out), `code=${r.code}\n${r.out}`);
+}
+{
+  // Two routines each SWAPPING at one position is not a double-buy — each
+  // nets zero. Flagging it would have printed "you carry 3 K", a number that
+  // is simply untrue; the real conflict, if any, is Rule 1's to report.
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-waivers.md': block([{ kind: 'add', player: 'fa4', drop: 'rb1', mode: 'waiver', faab: 2, urgency: 'by_tuesday', why: 'Swap a back.' }]),
+    '2026-09-15-trades.md': block([{ kind: 'trade', with: 2, give: ['rb2'], get: ['opp1'], urgency: 'this_week', why: 'Swap another back.' }]),
+  });
+  const r = runActions(dir, []);
+  check('two swaps at one position are not a double-buy', !/each bring in a RB/.test(r.out), r.out);
+}
+{
+  // Bringing a body back off IR raises the active count exactly as an add
+  // does, so an activate and a claim at one position are two claims on it.
+  const snap = fixture();
+  snap.teams = snap.teams.map((t) => (t.roster_id === 1 ? { ...t, reserve: [{ ...P.rb3, injury_status: 'Out' }] } : t));
+  const dir = await sandbox(snap, {
+    '2026-09-15-waivers.md': block([
+      { kind: 'activate', player: 'rb3', urgency: 'this_week', why: 'Back off IR.' },
+      { kind: 'add', player: 'fa4', mode: 'waiver', faab: 2, urgency: 'by_tuesday', why: 'And a claim at the same spot.' },
+    ]),
+  });
+  const r = runActions(dir, ['--check', 'reports/2026-09-15-waivers.md']);
+  check('an activate plus a claim at one position is caught',
+    r.code === 1 && /each bring in a RB and are not linked/.test(r.out), `code=${r.code}\n${r.out}`);
+}
+{
+  // Across sources at compile time it is a warning, not a failure: one
+  // routine must never be stopped from publishing by another's open action.
+  const dir = await sandbox(fixture(), {
+    '2026-09-15-waivers.md': block([{ kind: 'add', player: 'fa4', mode: 'waiver', faab: 2, urgency: 'by_tuesday', why: 'A back on waivers.' }]),
+    '2026-09-15-trades.md': block([{ kind: 'trade', with: 2, give: ['qb3'], get: ['opp1'], urgency: 'this_week', why: 'A back by trade.' }]),
+  });
+  const r = runActions(dir, []);
+  check('a cross-source double-buy warns at compile time and still writes the card',
+    r.code === 0 && /warning — actions .*each bring in a RB and are not linked/.test(r.out), `code=${r.code}\n${r.out}`);
+}
+
 console.log('\n  a start case — who comes in, who sits, and the bench player\'s status');
 
 {
@@ -1780,6 +2221,44 @@ console.log('\n  the dashboard: caseGrid, kindTag — extending the do-now pure 
   const doneRow = ctx.actionRow({ ...openAdd, state: 'done' }, { now: '14:02' }, { num: 1 });
   check('a done add with the same case does NOT render the case grid — the argument is over',
     !doneRow.includes('class="case"'), doneRow);
+
+  // The payoff of `evidence` is that Ben can click it. A note with a good
+  // link becomes an anchor; a bad scheme becomes plain text, because this file
+  // is re-read from the repo at runtime and must not trust what it finds.
+  const cited = { ...openAdd, evidence: { note: 'Coach: aggressive timetable, Week 5 target.', url: 'https://example.com/news', as_of: '2026-09-22' } };
+  const citedRow = ctx.actionRow(cited, { now: '14:02' }, { num: 1 });
+  check('an open action with evidence renders a clickable source',
+    citedRow.includes('class="evidence"') && citedRow.includes('href="https://example.com/news"')
+      && citedRow.includes('rel="noopener noreferrer"') && citedRow.includes('Week 5 target.'),
+    citedRow);
+  check('...and shows the date it was true as of', citedRow.includes('2026-09-22'), citedRow);
+
+  const badScheme = ctx.actionRow({ ...openAdd, evidence: { note: 'Not a source.', url: 'javascript:alert(1)' } }, { now: '14:02' }, { num: 1 });
+  check('a non-http evidence url is never turned into a link',
+    badScheme.includes('class="evidence"') && !badScheme.includes('href') && !badScheme.includes('javascript:'),
+    badScheme);
+
+  const doneCited = ctx.actionRow({ ...cited, state: 'done' }, { now: '14:02' }, { num: 1 });
+  check('a finished action drops its source line along with its case',
+    !doneCited.includes('class="evidence"'), doneCited);
+
+  // The move that fixes nothing and opens a hole used to be drawn exactly like one that helps,
+  // with both facts sitting in the grid below it in the same weight and colour.
+  const negative = { ...openAdd, case: { ...openAdd.case, later: 'opens a W11 TE hole',
+    tradeoff: { net: 'costs_only', fixes: [], opens: [{ week: 11, slot: 'TE', kind: 'hole' }] } } };
+  const negRow = ctx.actionRow(negative, { now: '14:02' }, { num: 1 });
+  check('a move that only costs is flagged on the row',
+    negRow.includes('class="flag"') && /costs more than it fixes/.test(negRow), negRow);
+
+  for (const net of ['fixes_only', 'mixed', 'neutral']) {
+    const row = ctx.actionRow({ ...openAdd, case: { ...openAdd.case, tradeoff: { net, fixes: [], opens: [] } } }, { now: '14:02' }, { num: 1 });
+    check(`a ${net} move carries no flag`, !row.includes('class="flag"'), row);
+  }
+  const doneNeg = ctx.actionRow({ ...negative, state: 'done' }, { now: '14:02' }, { num: 1 });
+  check('a finished move is not flagged — the decision is behind us', !doneNeg.includes('class="flag"'), doneNeg);
+  const noTradeoff = ctx.actionRow(openAdd, { now: '14:02' }, { num: 1 });
+  check('an action from before the field existed is not flagged either',
+    !noTradeoff.includes('class="flag"'), noTradeoff);
 
   check('a start row is tagged lineup', ctx.kindTag({ kind: 'start' }) === 'lineup');
   check('a fcfs add is tagged add, not claim (pre-season, first-come-first-served)',

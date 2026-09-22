@@ -65,12 +65,16 @@
   .act .chip{font-family:var(--mono);font-size:12px;color:var(--amber);border:1px solid var(--line);padding:2px 9px;white-space:nowrap;align-self:start;justify-self:end}
   .act.done .chip,.act.gone .chip,.act.stale .chip{color:var(--chalk-dim)}
   .act .kind{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--amber);margin-right:10px;vertical-align:middle}
+  .act .flag{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--flag);border:1px solid var(--flag);padding:1px 7px;margin-left:10px;white-space:nowrap;vertical-align:middle}
   /* the case: the compiler's evidence for the move, a small two-column grid spanning the same
      columns as .why — label left, answer right, only the lines the action actually carries */
   .act .case{grid-column:2/-1;display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;margin:8px 0 2px;font-size:13px;line-height:1.35}
   .act .case .k{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--chalk-dim);padding-top:2px}
   .act .case .v{color:var(--chalk)}
   .act .why{grid-column:2/-1;font-size:16px;color:var(--chalk-dim)}
+  .act .evidence{grid-column:2/-1;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:5px;font-size:13px}
+  .act .evidence .k{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--chalk-dim)}
+  .act .evidence .asof{font-family:var(--mono);font-size:11px;color:var(--chalk-dim)}
   /* dependents: drawn under the action they wait on, indented with padding — no extra columns */
   /* stale shares the same muted treatment: shelved news, not a live instruction */
   .act.waiting .glyph,.act.superseded .glyph,.act.stale .glyph{color:var(--chalk-dim)}
@@ -634,7 +638,9 @@ const kindTag = (i)=> i.kind==='add' && i.mode==='fcfs' ? 'add' : (KIND_TAG[i.ki
 
 // The case: up to four short lines, always in this order, always with these labels. Shelved
 // items (done/gone/superseded) don't draw it — it argued for a move that is over.
-const CASE_LINES = [['starts','Starts'], ['need','Need'], ['cost','Cost'], ['later','Later']];
+// 'asks' is the trade-only line: what the deal asks of the other manager, computed from their
+// own roster rather than asserted by the report (see docs/ACTIONS.md "The case").
+const CASE_LINES = [['starts','Starts'], ['need','Need'], ['cost','Cost'], ['asks','Asks'], ['later','Later']];
 function caseGrid(i){
   if(i.state!=='open' && i.state!=='waiting') return '';
   const c = i.case;
@@ -664,10 +670,31 @@ function actionRow(i, m, o){
   // the trade is still his to send, so it's folded away on a live open trade and nowhere else.
   const offer = (i.kind==='trade' && i.state==='open' && typeof i.message==='string' && i.message.trim())
     ? `<details class="offer"><summary>Offer message</summary><pre>${esc(i.message)}</pre></details>` : '';
+  // The claim the move rests on, and where it came from — the one class of assertion the
+  // compiler cannot check (a player's role, health, return date) and the class that got a $20
+  // bid argued off a return timeline that was two weeks out, not "still weeks off". Shown only
+  // while the action is live, and only as a link when the url really is one: this file is
+  // re-read from the repo at runtime, so a "javascript:" url is treated as no url at all
+  // rather than trusted because the compiler also checks it.
+  const ev = i.evidence;
+  const evUrl = (ev && typeof ev.url==='string' && /^https?:\/\//i.test(ev.url)) ? ev.url : '';
+  const evidence = (ev && typeof ev.note==='string' && ev.note && (i.state==='open' || i.state==='waiting'))
+    ? `<div class="evidence"><span class="k">Source</span>${evUrl
+        ? `<a href="${esc(evUrl)}" target="_blank" rel="noopener noreferrer">${esc(ev.note)}</a>`
+        : `<span>${esc(ev.note)}</span>`}${ev.as_of ? ` <span class="asof">${esc(ev.as_of)}</span>` : ''}</div>`
+    : '';
   // What the link means, in Ben's words: do this next, or do this instead.
   const lead = nested
     ? `<span class="lead">${i.link==='if_not' ? 'If that falls through:' : 'Then:'}</span> ` : '';
   const kind = kindTag(i);
+  // A move the compiler has already worked out costs more than it fixes must not be drawn like
+  // one that helps. On 2026-09-22 the top row of this card opened a Week 11 tight-end hole and
+  // closed nothing — both facts were sitting in the case grid below it, in the same weight and
+  // colour as everything else, and the move read as the week's recommendation anyway. The
+  // specifics stay in the Later line; this only says which way they add up.
+  const net = i.case && i.case.tradeoff && i.case.tradeoff.net;
+  const flag = ((i.state==='open' || i.state==='waiting') && net==='costs_only')
+    ? '<span class="flag">costs more than it fixes</span>' : '';
   // A stale action's own `why` argued for the move while it was still open; once kickoff has
   // taken it off the table that argument is moot, so state_reason (when the compiler could name
   // one — see docs/ACTIONS.md "stale") replaces it. No reason (a plain week rollover) means the
@@ -677,10 +704,11 @@ function actionRow(i, m, o){
     : (i.why ? `<div class="why">${esc(i.why)}</div>` : '');
   return `<div class="act ${esc(i.state)}${depth ? ` nest nest-${depth}` : ''}">
       <div class="glyph" aria-hidden="true">${esc(glyph)}</div>
-      <div class="move">${kind ? `<span class="kind">${esc(kind)}</span>` : ''}${lead}${actionHeadline(i)}</div>
+      <div class="move">${kind ? `<span class="kind">${esc(kind)}</span>` : ''}${lead}${actionHeadline(i)}${flag}</div>
       <div class="chip">${esc(chip)}</div>
       ${caseGrid(i)}
       ${whyLine}
+      ${evidence}
       ${offer}
       <div class="src"><span>${src}</span>${dism}</div>
     </div>`;

@@ -155,13 +155,6 @@ export function buildOutlook(snapshot, { add = [], drop = [] } = {}) {
   const thin = Object.entries(dedicated)
     .filter(([pos, need]) => (activeCounts[pos] ?? 0) <= need)
     .map(([pos]) => pos);
-  // The same question asked against what the lineup starts rather than what
-  // it dedicates: no spare body for a slot I fill at that position every
-  // week. Strictly wider than `thin` — every thin position is also uncovered.
-  const noCover = Object.entries(lineupDemand)
-    .filter(([pos, need]) => (activeCounts[pos] ?? 0) <= need)
-    .map(([pos]) => pos);
-
   // A flex slot that admits a quarterback and that the lineup fills with one
   // is a QB slot in all but name: at 6-point passing touchdowns a startable
   // QB there beats a WR/TE almost every time, so a week that can only put a
@@ -170,6 +163,40 @@ export function buildOutlook(snapshot, { add = [], drop = [] } = {}) {
   // categorical — an RB at FLEX instead of a WR is an ordinary week.
   const qbFlexSlots = flexPreferences.filter((f) => f.position === 'QB').map((f) => f.slot);
   const qbSlotsWanted = (dedicated.QB ?? 0) + qbFlexSlots.length;
+
+  // "No cover" asks whether losing ONE body at a position actually breaks the
+  // lineup — and it asks as a real assignment, not as a count.
+  //
+  // It used to be `activeCount <= lineup_demand`, and lineup_demand counts a
+  // flex slot as demand at whatever position currently sits in it. That read
+  // three backs behind two RB slots and a flex as "no cover at RB", purely
+  // because a back happened to be in the flex — while the week-by-week walk
+  // below, solving the same roster properly, showed every RB bye still
+  // fielding a full lineup, because FLEX takes a receiver just as happily.
+  // Two fields of one object contradicting each other was not cosmetic: three
+  // recommendations at once (a $20 waiver bid and two trade offers) were
+  // argued from that flag, and the "depth is priced like depth" guard in
+  // actions.mjs exempts every position it names, so the same bad flag also
+  // switched off the check that would have caught the overspend.
+  //
+  // An unfillable dedicated slot is the plain break. For a QB-eligible flex
+  // slot the lineup fills with a quarterback, falling below that count is a
+  // break too — legal, but a downgrade the legality test cannot see, on the
+  // same reasoning as `downgraded_slots` below.
+  //
+  // Still strictly wider than `thin`: if a position has no more bodies than
+  // the slots only it can fill, removing one must leave one of them empty.
+  const noCover = [];
+  for (const pos of Object.keys(lineupDemand)) {
+    const have = activeCounts[pos] ?? 0;
+    if (have === 0) { noCover.push(pos); continue; }
+    // Any one body will do — for a fillability test, bodies at a position are
+    // interchangeable, so removing the first is removing the spare.
+    const idx = active.findIndex((p) => p.position === pos);
+    const withoutOne = fillSlots(slotNames, active.filter((_, i) => i !== idx));
+    const downgrades = pos === 'QB' && qbFlexSlots.length > 0 && qbSlotsWanted > have - 1;
+    if (withoutOne.empty.length || downgrades) noCover.push(pos);
+  }
 
   const firstWeek = Math.max(snapshot.week ?? 1, 1);
   const playoffStart = league.playoff_week_start ?? 15;

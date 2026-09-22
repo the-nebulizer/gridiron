@@ -280,6 +280,25 @@ function namesList(names) {
 // no holes" even when it spent the only quarterback covering a future bye.
 // Each entry carries `kind` ('hole' or 'downgrade') so opensLine can group
 // and word the two kinds separately rather than merging them.
+// The same fixes/opens the `later` line reads, kept as structured data so the
+// card can act on it instead of the reader having to parse a sentence.
+//
+// This is the gap that let the worst move of 2026-09-22 sit at the top of the
+// card: the compiler had already worked out that the claim fixed nothing on
+// the calendar and opened a Week 11 tight-end hole, printed both facts in the
+// case grid — and then drew the row exactly like a good move. Two neutral
+// lines of evidence against a move are easy to read past when everything
+// around them looks the same. `net` names the verdict the lines add up to, so
+// the page can show it.
+function tradeoffOf(fixes, opens) {
+  const shape = (xs) => xs.map(({ week, slot, kind }) => ({ week, slot, kind }));
+  const net = opens.length && !fixes.length ? 'costs_only'
+    : fixes.length && !opens.length ? 'fixes_only'
+    : fixes.length && opens.length ? 'mixed'
+    : 'neutral';
+  return { net, fixes: shape(fixes), opens: shape(opens) };
+}
+
 function diffWeeks(baseline, whatIf) {
   const fixes = []; // { week, slot, kind }
   const opens = []; // { week, slot, kind }
@@ -422,6 +441,7 @@ function buildAddCase(action, snapshot, index, baseline) {
   const player = playerObjFor(index, action.player);
   const whatIf = buildOutlook(snapshot, { add: [player], drop: action.drop ? [action.drop] : [] });
   const { fixes, opens } = diffWeeks(baseline, whatIf);
+  c.tradeoff = tradeoffOf(fixes, opens);
 
   if (!action.displaces_missing && !action.displaces) {
     const fixWeeks = [...new Set(fixes.map((f) => f.week))].sort((a, b) => a - b);
@@ -437,6 +457,47 @@ function buildAddCase(action, snapshot, index, baseline) {
   c.later = later;
 
   return c;
+}
+
+// What the deal asks of the OTHER manager, read off their roster instead of
+// asserted in prose. A trades report argued an offer was easy because the
+// player was "still on Tally241's bench" when the snapshot had him in their
+// starting lineup — a fact the compiler already held and never checked, so
+// the card repeated the mistake and the offer sat unanswered for four days.
+// The partner's own side is computed here so a report cannot misdescribe it.
+//
+// Returns '' when the partner can't be resolved: a missing line is drawn as
+// nothing, which is honest, where a "?" would read as a fact.
+export function partnerAskLine(action, snapshot, index) {
+  const partner = action.with;
+  const theirTeam = (snapshot.teams ?? []).find((t) => t.roster_id === partner);
+  if (!theirTeam) return '';
+  const owner = index.ownerName.get(partner) ?? action.with_owner ?? `roster ${partner}`;
+  const theirStarters = index.teamStarterIds.get(partner) ?? new Set();
+  const theirReserve = index.teamReserveIds.get(partner) ?? new Set();
+  const theirAll = [...(theirTeam.starters ?? []), ...(theirTeam.bench ?? []), ...(theirTeam.reserve ?? [])]
+    .filter(Boolean);
+
+  const clauses = (action.get ?? []).map((id) => {
+    const info = index.byId.get(id) ?? {};
+    const name = info.name ?? id;
+    const where = theirStarters.has(id) ? 'starts' : theirReserve.has(id) ? 'has on IR' : 'benches';
+    const hurt = info.injury_status ? `, ${info.injury_status}` : '';
+    const atPos = info.pos ? theirAll.filter((p) => p.position === info.pos).length : 0;
+    const depth = info.pos ? ` — one of ${atPos} ${info.pos}${atPos === 1 ? '' : 's'} they carry` : '';
+    return `${owner} ${where} ${name}${hurt}${depth}`;
+  });
+  if (!clauses.length) return '';
+
+  // The shape that does not get accepted, and the one the false premise hid:
+  // asking a manager to pull a starter out of their lineup while sending them
+  // nothing that starts in mine. Stated, not scored — whether it is worth
+  // sending is still the report's call.
+  const myStarters = index.teamStarterIds.get(snapshot.my_roster_id) ?? new Set();
+  const asksStarter = (action.get ?? []).some((id) => theirStarters.has(id));
+  const sendsStarter = (action.give ?? []).some((id) => myStarters.has(id));
+  const tail = asksStarter && !sendsStarter ? ' · asks them to bench a starter for bench pieces' : '';
+  return clauses.join('; ') + tail;
 }
 
 function buildTradeCase(action, snapshot, index, baseline) {
@@ -485,9 +546,13 @@ function buildTradeCase(action, snapshot, index, baseline) {
   for (const id of giveIds) (myStarters.has(id) ? starters++ : bench++);
   c.cost = `gives ${giveNames.join(', ')} — ${starters} starter${starters === 1 ? '' : 's'}, ${bench} bench · no FAAB`;
 
+  const asks = partnerAskLine(action, snapshot, index);
+  if (asks) c.asks = asks;
+
   const getPlayers = getIds.map((id) => playerObjFor(index, id));
   const whatIf = buildOutlook(snapshot, { add: getPlayers, drop: giveIds });
   const { fixes, opens } = diffWeeks(baseline, whatIf);
+  c.tradeoff = tradeoffOf(fixes, opens);
   let later = fixesAndOpensLine(fixes, opens);
   const freed = giveIds.length - getIds.length;
   if (freed > 0) later += ` · frees ${freed} bench slot${freed === 1 ? '' : 's'}`;
@@ -536,6 +601,7 @@ function buildRemovalCase(action, snapshot, index, baseline) {
     ? buildOutlook(snapshot, { add: [player] })
     : buildOutlook(snapshot, { drop: [action.player] });
   const { fixes, opens } = diffWeeks(baseline, whatIf);
+  c.tradeoff = tradeoffOf(fixes, opens);
   let later = fixesAndOpensLine(fixes, opens);
   if (action.kind === 'drop' || action.kind === 'ir') later += lossSuffix(baseline, pos);
   c.later = later;
@@ -779,6 +845,60 @@ async function validateAndBuildAction(action, i, snapshot, index, problems, opts
     out.displaces_name = dName;
   }
 
+  // ---- evidence: required on add/trade — docs/ACTIONS.md "The case".
+  //
+  // The snapshot settles who is rostered, and the compiler checks every claim
+  // it can. What it cannot check is the one class of claim these moves
+  // actually turn on: a player's role, health, or return date, which comes
+  // from web research and lands in the report as unfalsifiable prose. On
+  // 2026-09-22 a waivers report argued a $20 bid with "Charbonnet's return is
+  // still weeks off the earliest optimistic date, and he's not close to being
+  // activated" when his own coach had him on an aggressive timetable he was
+  // on track to meet, targeting Week 5 — the bid was for two weeks of a
+  // backup who was about to be third in that backfield.
+  //
+  // So the field is not a citation for its own sake: it makes the claim
+  // auditable on the card, where Ben can click it. It follows `displaces`
+  // exactly — an explicit answer is required, and `null` is a real answer
+  // meaning "decided from the roster alone, no outside claim" — so a routine
+  // that cannot research is never blocked from publishing, only from being
+  // silent about which it is.
+  function resolveEvidence() {
+    if (!live) return;
+    if (!('evidence' in action)) {
+      const msg = `evidence is required: {note, url} for the injury/role claim this rests on, or null if it rests only on the roster`;
+      if (worldFail(msg)) bad = true;
+      else out.evidence_missing = true;
+      return;
+    }
+    const e = action.evidence;
+    if (e === null) { out.evidence = null; return; }
+    if (typeof e !== 'object' || Array.isArray(e)) {
+      push(`(${kind}) evidence must be an object {note, url[, as_of]} or null`);
+      bad = true;
+      return;
+    }
+    if (!isNonEmptyString(e.note) || e.note.length > 200) {
+      push(`(${kind}) evidence.note must be a non-empty string of at most 200 characters`);
+      bad = true;
+      return;
+    }
+    // Only http(s). The card turns this into a link, and a "javascript:" or
+    // "data:" url in a file the page re-reads is a script injection, not a
+    // source — rejected here as well as escaped there.
+    if (!isNonEmptyString(e.url) || !/^https?:\/\//i.test(e.url)) {
+      push(`(${kind}) evidence.url must be an http(s) link to where the claim came from`);
+      bad = true;
+      return;
+    }
+    if (e.as_of !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(String(e.as_of))) {
+      push(`(${kind}) evidence.as_of must be a YYYY-MM-DD date when present`);
+      bad = true;
+      return;
+    }
+    out.evidence = { note: e.note, url: e.url, ...(e.as_of !== undefined ? { as_of: String(e.as_of) } : {}) };
+  }
+
   if (kind !== 'trade') {
     if (!isNonEmptyString(action.player)) {
       push(`(${kind}) player is required`);
@@ -861,6 +981,7 @@ async function validateAndBuildAction(action, i, snapshot, index, problems, opts
       }
 
       await resolveDisplaces(resolved);
+      resolveEvidence();
 
       // "Depth is priced like depth": a slotless waiver add at a position
       // that isn't thin, bidding more than DEPTH_BID_CAP of my remaining
@@ -1066,6 +1187,18 @@ async function validateAndBuildAction(action, i, snapshot, index, problems, opts
           // displaces refers to get[0] — the player the trade actually
           // installs in my lineup; the rest of `get` is depth (see the case).
           await resolveDisplaces(getResolved[0]);
+          resolveEvidence();
+          // A warning in both modes, never fatal: whether an offer is worth
+          // sending is the report's judgment, and a report that says why it
+          // is asking for a starter anyway is doing its job. What is not
+          // allowed is not noticing — so this is printed even on --check.
+          const theirStarters = index.teamStarterIds.get(withNum) ?? new Set();
+          const askedStarters = get.filter((gid) => theirStarters.has(gid));
+          const sendsStarter = give && give.some((gid) => myStarters.has(gid));
+          if (live && askedStarters.length && !sendsStarter) {
+            const names = askedStarters.map((gid) => index.byId.get(gid)?.name ?? gid);
+            warnings.push(`action[${i}] (trade): asks ${out.with_owner} to give up ${names.join(', ')} — in their starting lineup — while sending only bench players; say why they would take it`);
+          }
         } else {
           bad = true;
         }
@@ -1292,6 +1425,11 @@ function finalizeAction(action, source, report, week) {
     out.displaces = action.displaces;
     out.displaces_name = action.displaces_name;
   }
+  // Same presence-not-truthiness reasoning as displaces: an explicit null
+  // ("no outside claim") must survive into the JSON distinct from a report
+  // written before the rule, which carries evidence_missing instead.
+  if (action.evidence !== undefined) out.evidence = action.evidence;
+  if (action.evidence_missing) out.evidence_missing = true;
   out.consumes = action.consumes ?? [];
   if (action.needs_slot) out.needs_slot = true;
   out.urgency = action.urgency;
@@ -1484,7 +1622,7 @@ function groupLinked(actions) {
 // check: the file's own actions plus reports/actions.json's other-source
 // actions). Returns { errors, warnings } — errors fail the run, the faab
 // warning does not.
-async function checkConflictRules(allActions, snapshot, index, baseline) {
+async function checkConflictRules(allActions, snapshot, index, baseline, { strict = false } = {}) {
   const errors = [];
   const warnings = [];
   // Done and gone actions are history: they hold no player, need no bench
@@ -1564,6 +1702,74 @@ async function checkConflictRules(allActions, snapshot, index, baseline) {
     errors.push(
       `actions ${ids.join(', ')} each give up a ${pos} and are not linked; if all of them land you keep ${left} ${pos} against a lineup that starts ${starts}, but each one's case is measured as if the others never happened — link them with after/if_not`
     );
+  }
+
+  // Rule 1b: Rule 1a's mirror image, on the ACQUIRING side — two or more
+  // unlinked actions that each bring in a body at the SAME position, where
+  // between them they leave the roster well past what the lineup starts
+  // there. It is the same blind spot for the same reason: every action's case
+  // is measured against one baseline, so none of them can see the others'
+  // arrivals, and each one's `need` line reads "you have 3" while together
+  // they make it 5.
+  //
+  // This shipped. On 2026-09-22 the card carried three open actions at once —
+  // a $20 waiver claim for a fourth running back, and two trade offers each
+  // bringing back a running back — all three arguing the same thin-RB need,
+  // none of them aware of the others. Two of them landing would have left six
+  // backs behind a lineup that starts three, with the kicker and defense
+  // holes that actually break weeks still unaddressed.
+  //
+  // `if_not` alternatives are one claim, as everywhere else: components are
+  // collapsed with the same union-find Rule 1a uses, and a component counts
+  // once, at its largest single arrival. Only bites at an overshoot of two or
+  // more, so genuinely filling a hole is never flagged — a roster two backs
+  // deep behind three starting slots wants two arrivals and gets no warning.
+  // `activate` counts as an arrival: bringing a body back off IR raises the
+  // active count at that position exactly as an add does, so "activate the
+  // running back on IR" plus "claim a running back" is the same double-buy.
+  const ARRIVING_KINDS = new Set(['add', 'trade', 'activate']);
+  // Each action's NET effect at a position, not its arrivals: an add with a
+  // drop at the same position, or a trade sending back what it brings home,
+  // is a swap and changes no count. Counting arrivals alone would flag two
+  // routines each replacing the kicker with "you carry 3 K" — a number that
+  // is simply untrue, and the real conflict there (both consuming a body) is
+  // Rule 1's and Rule 1a's to report.
+  const netAtPos = (a, pos) => {
+    const incoming = a.kind === 'trade' ? (a.get ?? []) : (a.player !== undefined ? [a.player] : []);
+    const outgoing = a.kind === 'trade' ? (a.give ?? []) : (a.drop !== undefined ? [a.drop] : []);
+    const at = (ids) => ids.filter((pid) => index.byId.get(pid)?.pos === pos).length;
+    return at(incoming) - at(outgoing);
+  };
+  const positionsTouched = new Set();
+  for (const a of actions) {
+    if (!ARRIVING_KINDS.has(a.kind)) continue;
+    const incoming = a.kind === 'trade' ? (a.get ?? []) : (a.player !== undefined ? [a.player] : []);
+    for (const pid of incoming) {
+      const pos = index.byId.get(pid)?.pos;
+      if (pos) positionsTouched.add(pos);
+    }
+  }
+  for (const pos of positionsTouched) {
+    if (!shape) break;
+    // Within one if_not chain only one alternative can land, so a component
+    // contributes its largest net gain, not the sum of its members'.
+    const byComponent = new Map(); // component root -> largest net gain
+    for (const a of actions) {
+      if (!ARRIVING_KINDS.has(a.kind)) continue;
+      const net = netAtPos(a, pos);
+      if (net <= 0) continue;
+      const root = find1(a.id);
+      byComponent.set(root, Math.max(byComponent.get(root) ?? 0, net));
+    }
+    if (byComponent.size < 2) continue;
+    const gained = [...byComponent.values()].reduce((t, n) => t + n, 0);
+    const have = shape.active_by_position[pos] ?? 0;
+    const starts = shape.lineup_demand?.[pos] ?? shape.dedicated_slots?.[pos] ?? 0;
+    const after = have + gained;
+    if (after - starts < 2) continue;
+    const ids = actions.filter((a) => ARRIVING_KINDS.has(a.kind) && netAtPos(a, pos) > 0).map((a) => a.id);
+    const msg = `actions ${ids.join(', ')} each bring in a ${pos} and are not linked; if they all land you carry ${after} ${pos} against a lineup that starts ${starts}, but each one's case is measured as if the others never happened — link them with after/if_not, or drop one`;
+    if (strict) errors.push(msg); else warnings.push(msg);
   }
 
   // Rule 2: adds with no drop (needs_slot) must not outnumber the bench
@@ -2017,7 +2223,7 @@ async function check(fileArg) {
         console.log(`  action[${r.index}] OK — ${label}`);
         // So the routine can see what the card will actually say before it
         // publishes — the case is computed here the same way compile() does.
-        for (const key of ['starts', 'need', 'cost', 'later']) {
+        for (const key of ['starts', 'need', 'cost', 'asks', 'later']) {
           if (a.case?.[key] !== undefined) console.log(`      ${key}: ${a.case[key]}`);
         }
       } else {
@@ -2068,13 +2274,20 @@ async function check(fileArg) {
 
   const otherSourceActions = compiledActions.filter((a) => a.source !== source);
   const conflictSet = [...localActions, ...otherSourceActions];
-  const conflict = await checkConflictRules(conflictSet, snapshot, index, baseline);
+  const conflict = await checkConflictRules(conflictSet, snapshot, index, baseline, { strict: true });
   if (conflict.errors.length) {
     for (const p of conflict.errors) console.log(`  ${p}`);
     console.error(`\n${fileArg}: FAILED (${conflict.errors.length} problem(s))`);
     process.exit(1);
   }
   for (const w of conflict.warnings) console.error(`actions.mjs: warning — ${w}`);
+  // Per-action warnings used to be dropped on the floor here. Nothing
+  // populated them in strict mode when this path was written — worldFail
+  // routes to `problems` under --check — so the omission was invisible until
+  // a check gained a warning that is deliberately never fatal (a trade that
+  // asks a manager for a starter). A warning a routine cannot see is a
+  // warning that does nothing.
+  for (const w of result.driftWarnings ?? []) console.error(`actions.mjs: warning — ${w}`);
 
   const linkCount = localActions.filter((a) => a.after !== undefined || a.if_not !== undefined).length;
   const linkSummary = `, ${linkCount} after/if_not link(s) resolved`;

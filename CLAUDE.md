@@ -45,7 +45,7 @@ Two exceptions, both hard constraints rather than preferences:
 
 Every sync computes `snapshot.outlook` (`scripts/outlook.mjs`) and every routine reads it:
 
-- `roster_shape` — how many I have at each position, how many the lineup actually starts there (`lineup_demand`, which counts the flex slots my lineup fills at that position — never `dedicated_slots`, which says I start one QB in a superflex league), which bench and IR slots are open, `thin_positions` (can't fill the dedicated slot) and `no_cover_positions` (no spare body for what the lineup starts).
+- `roster_shape` — how many I have at each position, how many the lineup actually starts there (`lineup_demand`, which counts the flex slots my lineup fills at that position — never `dedicated_slots`, which says I start one QB in a superflex league), which bench and IR slots are open, `thin_positions` (can't fill the dedicated slot) and `no_cover_positions` (losing one body there actually breaks the lineup). Both are solved as real assignments, never as counts: three backs behind two RB slots and a flex is **not** a shortage when a spare receiver can fill that flex, and a flag that said otherwise once drove three recommendations at once.
 - `weeks` — for **every week still to come**, who is on bye and which starting slots cannot be filled at all, plus the weeks that are legal but weaker: no quarterback left for the SUPER_FLEX my lineup fills with one, so a flex body starts there. The question is solved as a real assignment against the league's slots, so FLEX and SUPER_FLEX are accounted for; a bare count per position is not an answer.
 - `crunch_weeks`, `playoff_weeks`, `weeks_until_trade_deadline` — what to plan budget and trades around.
 
@@ -77,6 +77,14 @@ A session with the Artifact tool that has just published reports should also ref
 ## Sequencing
 
 Every routine reads `reports/actions.json` before writing. Open actions from the other routines are standing commitments this week, not suggestions to override. Conflicts over the same player get linked with `after` / `if_not` per `docs/ACTIONS.md`, and the compiler refuses to write `reports/actions.json` when a conflict is left unlinked.
+
+The same applies one level up, in **both directions**, because every action's case is measured against one baseline and so no action can see another's effect: two open actions that between them **shed** a position down to what the lineup starts, and two that between them **bring in** two more bodies than it starts, both have to be linked or reduced. The second half of that is why a card once carried a $20 claim for a fourth running back plus two trade offers each bringing a back home, all three arguing one need.
+
+## Claims of fact
+
+The snapshot settles who is rostered and the compiler checks everything it can derive from it. The one class of claim it cannot check is the one an add or a trade usually turns on — a player's **role, health, or return date** — so every `add` and `trade` carries `evidence` (`{note, url, as_of}`, or `null` for "this rests on the roster alone"), and the card renders it as a link Ben can click. See `docs/ACTIONS.md` "Evidence". This is not citation for its own sake: a $20 bid once shipped on "his return is still weeks off … not close to being activated" when the player's own coach had him on track for two weeks later, and nothing in the system could contradict it.
+
+Two related habits the compiler now enforces rather than requests: read a partner's own roster before describing what an offer asks of them (the card computes it into the `Asks` line, so a report that contradicts it is wrong on the record), and trust `no_cover_positions` over your own count of a position — it re-solves the lineup without one body there, so a flex slot a spare receiver could fill is not a shortage. A move the compiler works out to be net-negative on the calendar is marked **costs more than it fixes** on the card; that is a computed fact, not a veto, and the report is where the case for making it anyway belongs.
 
 ## Usage discipline
 
