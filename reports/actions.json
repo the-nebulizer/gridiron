@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-09-22T14:03:10.813Z",
+  "compiled_at": "2026-09-22T14:35:19.110Z",
   "season": "2026",
   "week": 3,
   "games_have_started": true,
@@ -34,7 +34,7 @@
       "verdict": "Hold — no claim this week. Cancel the $20 Emanuel Wilson bid and keep the bench seat for Zach Charbonnet's return.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-09-22T14:02:26.526Z"
+      "written_at": "2026-09-22T14:03:19.000Z"
     },
     "lineup": {
       "report": "2026-09-17-lineup.md",
@@ -50,7 +50,7 @@
       "verdict": "Send Bryce Young to amandaberry for Brian Robinson. Pull the Cousins + Meyers offer to Tally241 — it spends your best chip on a back who doesn't start.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-09-22T14:03:06.413Z"
+      "written_at": "2026-09-22T14:32:27.707Z"
     },
     "inactives": {
       "report": "2026-09-20-inactives.md",
@@ -85,6 +85,11 @@
       "message": "Hey — you're starting Lawrence and Love with nobody behind either one, and Bryce Young is Carolina's starter with a Week 5 bye, so he covers both of your quarterbacks' off weeks (Lawrence in 7, Love in 11) instead of just one. Would you do Young for Brian Robinson? You're carrying five backs and he's behind Bijan; I could use a body at running back.",
       "displaces": null,
       "displaces_name": null,
+      "evidence": {
+        "note": "Brian Robinson has 22 touches for 98 yards in a backup role behind Bijan, and was limited Monday with an ankle.",
+        "url": "https://www.rotowire.com/football/headlines/brian-robinson-injury-dealing-with-ankle-injury-638473",
+        "as_of": "2026-09-22"
+      },
       "consumes": [
         "9228"
       ],
@@ -92,8 +97,20 @@
       "why": "Spends the cheapest of four quarterbacks on a real back, and Young covers both of amandaberry's quarterback byes — a pitch the earlier version never made.",
       "case": {
         "starts": "Brian Robinson is depth (RB4)",
-        "need": "RB: you have 3 — starts 3, no cover · gives QB depth (you have 4, start 2)",
+        "need": "RB: you have 3 — not thin · gives QB depth (you have 4, start 2)",
         "cost": "gives Bryce Young — 0 starters, 1 bench · no FAAB",
+        "asks": "amandaberry benches Brian Robinson, Questionable — one of 5 RBs they carry",
+        "tradeoff": {
+          "net": "costs_only",
+          "fixes": [],
+          "opens": [
+            {
+              "week": 13,
+              "slot": "SUPER_FLEX",
+              "kind": "downgrade"
+            }
+          ]
+        },
         "later": "opens a W13 SUPERFLEX downgrade"
       }
     }
