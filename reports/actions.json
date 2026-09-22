@@ -1,7 +1,7 @@
 {
-  "compiled_at": "2026-09-21T12:14:40.251Z",
+  "compiled_at": "2026-09-22T12:08:39.850Z",
   "season": "2026",
-  "week": 2,
+  "week": 3,
   "games_have_started": true,
   "roster": {
     "starters": [
@@ -29,19 +29,19 @@
   },
   "sources": {
     "waivers": {
-      "report": "2026-09-17-waivers.md",
-      "week": 2,
-      "verdict": "Hold — bench and IR are both full and nothing on the wire is worth the swap.",
+      "report": "2026-09-22-waivers.md",
+      "week": 3,
+      "verdict": "Add Emanuel Wilson for $20 FAAB; drop Mike Gesicki to make room.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-09-17T02:09:01.000Z"
+      "written_at": "2026-09-22T12:08:33.229Z"
     },
     "lineup": {
       "report": "2026-09-17-lineup.md",
       "week": 2,
       "verdict": "Hold — the lineup is already right; Chicago Bears is in at DEF and every slot is filled and healthy.",
       "next_check": "Inactives, Sun 10am",
-      "stale": false,
+      "stale": true,
       "written_at": "2026-09-17T12:15:00.000Z"
     },
     "trades": {
@@ -49,19 +49,48 @@
       "week": 2,
       "verdict": "Still two trades worth sending: Cousins + Meyers to Tally241 for Aaron Jones, and Bryce Young to amandaberry for Brian Robinson.",
       "next_check": "Waivers, Tue 7am",
-      "stale": false,
-      "written_at": "2026-09-21T12:14:35.091Z"
+      "stale": true,
+      "written_at": "2026-09-21T12:14:42.000Z"
     },
     "inactives": {
       "report": "2026-09-20-inactives.md",
       "week": 2,
       "verdict": "Hold — every starter is a confirmed go for today's early games; no pivot needed.",
       "next_check": "Trades, Mon 7am",
-      "stale": false,
+      "stale": true,
       "written_at": "2026-09-20T15:09:37.000Z"
     }
   },
   "actions": [
+    {
+      "id": "waivers:add:11435",
+      "source": "waivers",
+      "report": "2026-09-22-waivers.md",
+      "kind": "add",
+      "week": 3,
+      "player": "11435",
+      "name": "Emanuel Wilson",
+      "pos": "RB",
+      "team": "SEA",
+      "drop": "4993",
+      "drop_name": "Mike Gesicki",
+      "mode": "waiver",
+      "faab": 20,
+      "displaces": null,
+      "displaces_name": null,
+      "consumes": [
+        "4993"
+      ],
+      "urgency": "by_tuesday",
+      "deadline_label": "claims process Wed morning",
+      "why": "Seattle's clear short-yardage/goal-line back with Charbonnet still out and Price banged up; running back is the one spot on my roster with no backup at all.",
+      "case": {
+        "starts": "Bench — RB4 behind Ashton Jeanty, Bucky Irving, Jaylen Warren",
+        "need": "RB: you have 3 — starts 3, no cover · fixes nothing on the calendar",
+        "cost": "$20 of $92 · 8 of 12 teams still have $100 · #1 most-added in Sleeper this week · drops Mike Gesicki (TE, bench)",
+        "later": "opens a W11 TE hole"
+      }
+    },
     {
       "id": "jones",
       "source": "trades",
