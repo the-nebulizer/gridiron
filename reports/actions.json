@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-09-22T12:08:39.850Z",
+  "compiled_at": "2026-09-22T14:03:10.813Z",
   "season": "2026",
   "week": 3,
   "games_have_started": true,
@@ -31,10 +31,10 @@
     "waivers": {
       "report": "2026-09-22-waivers.md",
       "week": 3,
-      "verdict": "Add Emanuel Wilson for $20 FAAB; drop Mike Gesicki to make room.",
+      "verdict": "Hold — no claim this week. Cancel the $20 Emanuel Wilson bid and keep the bench seat for Zach Charbonnet's return.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-09-22T12:08:33.229Z"
+      "written_at": "2026-09-22T14:02:26.526Z"
     },
     "lineup": {
       "report": "2026-09-17-lineup.md",
@@ -45,12 +45,12 @@
       "written_at": "2026-09-17T12:15:00.000Z"
     },
     "trades": {
-      "report": "2026-09-21-trades.md",
-      "week": 2,
-      "verdict": "Still two trades worth sending: Cousins + Meyers to Tally241 for Aaron Jones, and Bryce Young to amandaberry for Brian Robinson.",
-      "next_check": "Waivers, Tue 7am",
-      "stale": true,
-      "written_at": "2026-09-21T12:14:42.000Z"
+      "report": "2026-09-22-trades.md",
+      "week": 3,
+      "verdict": "Send Bryce Young to amandaberry for Brian Robinson. Pull the Cousins + Meyers offer to Tally241 — it spends your best chip on a back who doesn't start.",
+      "next_check": "Lineup, Thu 7am",
+      "stale": false,
+      "written_at": "2026-09-22T14:03:06.413Z"
     },
     "inactives": {
       "report": "2026-09-20-inactives.md",
@@ -63,79 +63,11 @@
   },
   "actions": [
     {
-      "id": "waivers:add:11435",
-      "source": "waivers",
-      "report": "2026-09-22-waivers.md",
-      "kind": "add",
-      "week": 3,
-      "player": "11435",
-      "name": "Emanuel Wilson",
-      "pos": "RB",
-      "team": "SEA",
-      "drop": "4993",
-      "drop_name": "Mike Gesicki",
-      "mode": "waiver",
-      "faab": 20,
-      "displaces": null,
-      "displaces_name": null,
-      "consumes": [
-        "4993"
-      ],
-      "urgency": "by_tuesday",
-      "deadline_label": "claims process Wed morning",
-      "why": "Seattle's clear short-yardage/goal-line back with Charbonnet still out and Price banged up; running back is the one spot on my roster with no backup at all.",
-      "case": {
-        "starts": "Bench — RB4 behind Ashton Jeanty, Bucky Irving, Jaylen Warren",
-        "need": "RB: you have 3 — starts 3, no cover · fixes nothing on the calendar",
-        "cost": "$20 of $92 · 8 of 12 teams still have $100 · #1 most-added in Sleeper this week · drops Mike Gesicki (TE, bench)",
-        "later": "opens a W11 TE hole"
-      }
-    },
-    {
-      "id": "jones",
-      "source": "trades",
-      "report": "2026-09-21-trades.md",
-      "kind": "trade",
-      "week": 2,
-      "with": 8,
-      "with_owner": "Tally241",
-      "give": [
-        "1166",
-        "5947"
-      ],
-      "give_names": [
-        "Kirk Cousins",
-        "Jakobi Meyers"
-      ],
-      "get": [
-        "4199"
-      ],
-      "get_names": [
-        "Aaron Jones"
-      ],
-      "message": "Hey — I've got more QB depth than I need and saw you're thin behind Maye/Nix. Would you do Kirk Cousins + Jakobi Meyers for Aaron Jones? Cousins is Vegas's actual Week 1 starter, so it's a real QB2/bye-week option for you, not a stash. I could use another back with an actual role given how thin my RB room is right now.",
-      "displaces": null,
-      "displaces_name": null,
-      "consumes": [
-        "1166",
-        "5947"
-      ],
-      "urgency": "this_week",
-      "why": "Cousins is a real starting QB for a team with no backup, and it turns your extra depth into a running back with an actual role.",
-      "case": {
-        "starts": "Aaron Jones is depth (RB4)",
-        "need": "RB: you have 3 — starts 3, no cover · gives QB depth (you have 4, start 2) · gives WR depth (you have 4, start 2)",
-        "cost": "gives Kirk Cousins, Jakobi Meyers — 0 starters, 2 bench · no FAAB",
-        "later": "opens no holes · frees 1 bench slot"
-      }
-    },
-    {
       "id": "robinson",
       "source": "trades",
-      "report": "2026-09-21-trades.md",
+      "report": "2026-09-22-trades.md",
       "kind": "trade",
-      "week": 2,
-      "if_not": "jones",
+      "week": 3,
       "with": 9,
       "with_owner": "amandaberry",
       "give": [
@@ -150,14 +82,14 @@
       "get_names": [
         "Brian Robinson"
       ],
-      "message": "You're carrying zero backup QB behind Lawrence/Love — I've got extra arms. Would you take Bryce Young for Brian Robinson? He's a real handcuff play for you and I could use another running back given how thin my bench is there right now.",
+      "message": "Hey — you're starting Lawrence and Love with nobody behind either one, and Bryce Young is Carolina's starter with a Week 5 bye, so he covers both of your quarterbacks' off weeks (Lawrence in 7, Love in 11) instead of just one. Would you do Young for Brian Robinson? You're carrying five backs and he's behind Bijan; I could use a body at running back.",
       "displaces": null,
       "displaces_name": null,
       "consumes": [
         "9228"
       ],
-      "urgency": "optional",
-      "why": "The fallback if Tally241 passes — but it spends the only quarterback who covers Lamar Jackson's Week 13 bye.",
+      "urgency": "this_week",
+      "why": "Spends the cheapest of four quarterbacks on a real back, and Young covers both of amandaberry's quarterback byes — a pitch the earlier version never made.",
       "case": {
         "starts": "Brian Robinson is depth (RB4)",
         "need": "RB: you have 3 — starts 3, no cover · gives QB depth (you have 4, start 2)",
