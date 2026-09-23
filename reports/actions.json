@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-09-22T14:35:19.110Z",
+  "compiled_at": "2026-09-23T12:18:28.974Z",
   "season": "2026",
   "week": 3,
   "games_have_started": true,
@@ -29,12 +29,12 @@
   },
   "sources": {
     "waivers": {
-      "report": "2026-09-22-waivers.md",
+      "report": "2026-09-23-waivers.md",
       "week": 3,
-      "verdict": "Hold — no claim this week. Cancel the $20 Emanuel Wilson bid and keep the bench seat for Zach Charbonnet's return.",
-      "next_check": "Lineup, Thu 7am",
+      "verdict": "Add the New York Giants defense and drop Chicago — the Bears are down to their third quarterback and the pool is free today. Carolina is the fallback if the Giants are gone.",
+      "next_check": "Inactives, Sun 10am",
       "stale": false,
-      "written_at": "2026-09-22T14:03:19.000Z"
+      "written_at": "2026-09-23T12:18:08.031Z"
     },
     "lineup": {
       "report": "2026-09-17-lineup.md",
@@ -50,7 +50,7 @@
       "verdict": "Send Bryce Young to amandaberry for Brian Robinson. Pull the Cousins + Meyers offer to Tally241 — it spends your best chip on a back who doesn't start.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-09-22T14:32:27.707Z"
+      "written_at": "2026-09-22T14:35:19.000Z"
     },
     "inactives": {
       "report": "2026-09-20-inactives.md",
@@ -62,6 +62,107 @@
     }
   },
   "actions": [
+    {
+      "id": "nyg",
+      "source": "waivers",
+      "report": "2026-09-23-waivers.md",
+      "kind": "add",
+      "week": 3,
+      "player": "NYG",
+      "name": "New York Giants",
+      "pos": "DEF",
+      "team": "NYG",
+      "drop": "CHI",
+      "drop_name": "Chicago Bears",
+      "mode": "fcfs",
+      "displaces": "CHI",
+      "displaces_name": "Chicago Bears",
+      "evidence": {
+        "note": "Giants host Cam Ward, already sacked five times in two games; Chicago is down to Case Keenum with Bagent in concussion protocol.",
+        "url": "https://www.fantasypros.com/2026/09/lets-stream-defenses-week-3-2026-fantasy-football/",
+        "as_of": "2026-09-23"
+      },
+      "consumes": [
+        "CHI"
+      ],
+      "urgency": "now",
+      "deadline_label": "free today — first come, first served",
+      "why": "Home against a rookie quarterback getting sacked twice a game, and it costs nothing but the Bears, who are starting their third-string QB.",
+      "case": {
+        "starts": "Starts over Chicago Bears at DEF",
+        "tradeoff": {
+          "net": "mixed",
+          "fixes": [
+            {
+              "week": 10,
+              "slot": "DEF",
+              "kind": "hole"
+            }
+          ],
+          "opens": [
+            {
+              "week": 8,
+              "slot": "DEF",
+              "kind": "hole"
+            }
+          ]
+        },
+        "need": "DEF: you have 1 — your thinnest spot · fixes W10",
+        "cost": "$0, first come first served · drops Chicago Bears (DEF, starter)",
+        "later": "opens a W8 DEF hole · drops your only DEF"
+      }
+    },
+    {
+      "id": "car",
+      "source": "waivers",
+      "report": "2026-09-23-waivers.md",
+      "kind": "add",
+      "week": 3,
+      "if_not": "nyg",
+      "player": "CAR",
+      "name": "Carolina Panthers",
+      "pos": "DEF",
+      "team": "CAR",
+      "drop": "CHI",
+      "drop_name": "Chicago Bears",
+      "mode": "fcfs",
+      "displaces": "CHI",
+      "displaces_name": "Chicago Bears",
+      "evidence": {
+        "note": "Cleveland is 28th in yards per game and has given up seven sacks in two games with Watson at quarterback.",
+        "url": "https://www.si.com/onsi/fantasy/nfl/fantasy-football-week-3-defense-special-teams-streamers-top-5-d-st-waiver-wire-pickups",
+        "as_of": "2026-09-23"
+      },
+      "consumes": [
+        "CHI"
+      ],
+      "urgency": "now",
+      "deadline_label": "free today — first come, first served",
+      "why": "Same idea one seat over if the Giants get taken first: Cleveland's offense is bottom-five and leaking pressure.",
+      "case": {
+        "starts": "Starts over Chicago Bears at DEF",
+        "tradeoff": {
+          "net": "mixed",
+          "fixes": [
+            {
+              "week": 10,
+              "slot": "DEF",
+              "kind": "hole"
+            }
+          ],
+          "opens": [
+            {
+              "week": 5,
+              "slot": "DEF",
+              "kind": "hole"
+            }
+          ]
+        },
+        "need": "DEF: you have 1 — your thinnest spot · fixes W10",
+        "cost": "$0, first come first served · drops Chicago Bears (DEF, starter)",
+        "later": "opens a W5 DEF hole · drops your only DEF"
+      }
+    },
     {
       "id": "robinson",
       "source": "trades",
