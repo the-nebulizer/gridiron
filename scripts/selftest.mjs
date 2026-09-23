@@ -13,7 +13,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
 import { buildOutlook, SLOT_ELIGIBILITY, fillSlots } from './outlook.mjs';
-import { lifecycleState, buildIndex } from './actions.mjs';
+import { streamOptions, streamSeason, parseOpponent } from './stream.mjs';
+import { lifecycleState, buildIndex, freeAgencyIsOpen } from './actions.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const verbose = process.argv.includes('-v');
@@ -1242,6 +1243,186 @@ console.log('\noutlook — a bye-only week is only crunch when it actually costs
 // outlook.mjs is — the guard is pulled out of the file as text and run
 // standalone instead, the same way section 8 below runs a slice of
 // docs/index.html's script through vm rather than a browser.
+// "Which defense do I stream" is a weekly question, and the snapshot could not
+// answer the half that decides it: who each team plays. The full-season
+// schedule was fetched on every sync (it is where byes come from) and thrown
+// away except for the current week. Kicker and defense were also the two
+// positions whose free-agent pool was capped — at 8 of 19 unrostered defenses,
+// sorted by how many people had added them, which is the opposite of where a
+// good matchup hides.
+// An `fcfs` add was rejected on games_have_started alone, which is only right
+// until the week's waiver run happens. Afterwards Sleeper hands the pool back
+// out first-come-first-serve for the rest of the week — and that window is
+// exactly when a streamed defense or kicker gets picked up, after Thursday's
+// news rather than in Tuesday's blind bids. So the mode a weekly stream needs
+// was the one mode the compiler refused in season.
+console.log('\nfirst-come-first-serve is read off the transaction log, not the calendar');
+
+{
+  const base = { games_have_started: true, week: 3, transactions: [] };
+  check('before any game, the pool is open — that is pre-season',
+    freeAgencyIsOpen({ ...base, games_have_started: false }) === true);
+  check('in season with no evidence yet, we do NOT claim it is open',
+    freeAgencyIsOpen(base) === false);
+  check('a completed free-agent ADD this week proves the pool is open',
+    freeAgencyIsOpen({ ...base, transactions: [
+      { type: 'free_agent', status: 'complete', week: 3, adds: [{ id: 'x' }] }] }) === true);
+  check('...but a drop-only free-agent move proves nothing about adding',
+    freeAgencyIsOpen({ ...base, transactions: [
+      { type: 'free_agent', status: 'complete', week: 3, adds: [], drops: [{ id: 'x' }] }] }) === false);
+  check('...nor does a waiver claim, which is the opposite of first-come-first-serve',
+    freeAgencyIsOpen({ ...base, transactions: [
+      { type: 'waiver', status: 'complete', week: 3, adds: [{ id: 'x' }] }] }) === false);
+  check('...nor does last week\'s open pool, which has since closed and reopened',
+    freeAgencyIsOpen({ ...base, transactions: [
+      { type: 'free_agent', status: 'complete', week: 2, adds: [{ id: 'x' }] }] }) === false);
+  check('...nor a free-agent add that failed',
+    freeAgencyIsOpen({ ...base, transactions: [
+      { type: 'free_agent', status: 'failed', week: 3, adds: [{ id: 'x' }] }] }) === false);
+}
+{
+  // End to end: the same fcfs add is refused without evidence and accepted
+  // with it, so the guard still catches a stale mode rather than waving it
+  // through — "add now, $0" about a player who actually locks until
+  // Wednesday is the mistake with a deadline attached.
+  const closed = fixture({ games_have_started: true, transactions: [] });
+  const dirClosed = await sandbox(closed, {
+    '2026-09-15-waivers.md': block([{ kind: 'add', player: 'fa1', mode: 'fcfs', urgency: 'now', why: 'Claims it is a race.' }]),
+  });
+  const rClosed = runActions(dirClosed, ['--check', 'reports/2026-09-15-waivers.md']);
+  check('an fcfs add with nothing showing the pool is open fails --check',
+    rClosed.code === 1 && /first-come-first-serve yet/.test(rClosed.out), `code=${rClosed.code}\n${rClosed.out}`);
+
+  const open = fixture({ games_have_started: true, transactions: [
+    { week: 2, at: Date.now(), type: 'free_agent', status: 'complete', by: ['Them'],
+      adds: [{ id: 'fa3', name: 'Free Three', position: 'WR', team: 'TTT', bye_week: 3, injury_status: null }], drops: [], faab_bid: null }] });
+  const dirOpen = await sandbox(open, {
+    '2026-09-15-waivers.md': block([{ kind: 'add', player: 'fa1', mode: 'fcfs', urgency: 'now', why: 'The pool really is open.' }]),
+  });
+  const rOpen = runActions(dirOpen, ['--check', 'reports/2026-09-15-waivers.md']);
+  check('...and passes once this week\'s log shows an instant add', rOpen.code === 0, `code=${rOpen.code}\n${rOpen.out}`);
+}
+
+console.log('\nstream — the weekly kicker/defense question, grounded in the schedule');
+
+const streamSnap = (overrides = {}) => ({
+  week: 3,
+  my_roster_id: 1,
+  league: { roster_positions: [...SLOTS, 'BN'], playoff_week_start: 15 },
+  teams: [{
+    roster_id: 1, owner: 'Me',
+    starters: [{ id: 'CHI', name: 'Chicago Bears', position: 'DEF', team: 'CHI', bye_week: 10 },
+               { id: 'k1', name: 'Kick One', position: 'K', team: 'LAC', bye_week: 7 }],
+    bench: [], reserve: [],
+  }],
+  available: {
+    DEF: [
+      { id: 'NYG', name: 'New York Giants', position: 'DEF', team: 'NYG', bye_week: 8, net_adds: 999 },
+      { id: 'ARI', name: 'Arizona Cardinals', position: 'DEF', team: 'ARI', bye_week: 3, net_adds: 0 },
+      { id: 'BUF', name: 'Buffalo Bills', position: 'DEF', team: 'BUF', bye_week: 7, net_adds: 1 },
+    ],
+    K: [{ id: 'k9', name: 'Kick Nine', position: 'K', team: 'DAL', bye_week: 14, net_adds: 5 }],
+  },
+  team_schedule: {
+    CHI: { 3: 'PHI', 4: '@GB', 10: 'BYE', 17: 'DET', 18: '@MIN' },
+    NYG: { 3: 'TEN', 4: 'BYE', 10: '@DAL', 17: 'PHI', 18: 'DAL' },
+    ARI: { 3: 'BYE', 4: 'SF', 10: 'LAR', 17: 'SEA', 18: 'SF' },
+    BUF: { 3: 'LAC', 4: '@NE', 10: 'KC', 17: '@NYJ', 18: 'MIA' },
+    LAC: { 3: '@LV', 4: 'DEN', 10: 'PIT', 17: 'KC', 18: '@DEN' },
+    DAL: { 3: 'BAL', 4: '@NYG', 10: 'NYG', 17: 'WAS', 18: '@PHI' },
+  },
+  ...overrides,
+});
+
+{
+  check('a home game parses as home', JSON.stringify(parseOpponent('PHI')) === '{"opp":"PHI","at":false}');
+  check('an @ prefix parses as away', JSON.stringify(parseOpponent('@GB')) === '{"opp":"GB","at":true}');
+  check('a bye is null, not a guess', parseOpponent('BYE') === null);
+  check('a missing week is null too, so "no game" is never invented',
+    parseOpponent(undefined) === null && parseOpponent('') === null);
+}
+{
+  const r = streamOptions(streamSnap());
+  check('what I hold comes back with its real opponent',
+    r.held.length === 1 && r.held[0].team === 'CHI' && r.held[0].opponent.opp === 'PHI'
+      && r.held[0].opponent.at === false && r.held[0].starting === true,
+    JSON.stringify(r.held));
+  check('...and is playable, so no add is forced', r.must_add === false);
+  check('a candidate on bye this week is not offered as an option',
+    r.playable_candidates.every((c) => c.team !== 'ARI') && r.on_bye_candidates.some((c) => c.team === 'ARI'),
+    JSON.stringify({ playable: r.playable_candidates.map((c) => c.team), bye: r.on_bye_candidates.map((c) => c.team) }));
+  check('...and every candidate offered carries the opponent that decides it',
+    r.playable_candidates.every((c) => c.opponent && typeof c.opponent.opp === 'string'),
+    JSON.stringify(r.playable_candidates));
+  // The whole point of uncapping the pool: attention must not be the order.
+  check('candidates are alphabetical, NOT sorted by how many people added them',
+    JSON.stringify(r.playable_candidates.map((c) => c.team)) === '["BUF","NYG"]',
+    JSON.stringify(r.playable_candidates.map((c) => [c.team, c.net_adds])));
+}
+{
+  // The week the answer actually matters: nothing I hold can play.
+  const r = streamOptions(streamSnap(), { week: 10 });
+  check('the week my defense is on bye says so outright',
+    r.must_add === true && r.held[0].playable === false, JSON.stringify(r.held));
+  check('...and still offers the free defenses that can play it',
+    r.playable_candidates.length === 3, JSON.stringify(r.playable_candidates.map((c) => c.team)));
+}
+{
+  // A kicker is found by the team he plays for; a defense IS its team. Getting
+  // this backwards would silently return "no game" for every kicker.
+  const r = streamOptions(streamSnap(), { week: 3, position: 'K' });
+  check('a kicker resolves through his NFL team, not his player id',
+    r.held.length === 1 && r.held[0].team === 'LAC' && r.held[0].opponent.opp === 'LV' && r.held[0].opponent.at === true,
+    JSON.stringify(r.held));
+  check('...and the kicker pool is read, not the defense pool',
+    r.playable_candidates.length === 1 && r.playable_candidates[0].team === 'DAL',
+    JSON.stringify(r.playable_candidates));
+}
+{
+  const rows = streamSeason(streamSnap());
+  const weeks = rows.map((r) => r.week);
+  check('the season view stops at the last fantasy week — W18 is not a week this league plays',
+    !weeks.includes(18) && weeks.includes(17), JSON.stringify(weeks));
+  check('...and marks the fantasy playoffs',
+    rows.find((r) => r.week === 17).playoffs === true && rows.find((r) => r.week === 3).playoffs === false);
+  check('...and flags exactly the weeks nothing I hold can play',
+    JSON.stringify(rows.filter((r) => r.must_add).map((r) => r.week)) === '[10]',
+    JSON.stringify(rows.filter((r) => r.must_add).map((r) => r.week)));
+}
+{
+  // buildTeamSchedule, pinned the same way as buildGames below: a bye has to
+  // be stated, not left as a missing key for a reader to interpret.
+  const src = readFileSync(path.join(root, 'scripts', 'sync.mjs'), 'utf8');
+  const from = src.indexOf('function buildTeamSchedule');
+  const to = src.indexOf('\n}', from) + 2;
+  check('sync.mjs still carries buildTeamSchedule as one pure function', from !== -1 && to > from);
+  const ctx = {};
+  vm.createContext(ctx);
+  new vm.Script(src.slice(from, to) + ';this.buildTeamSchedule=buildTeamSchedule;').runInContext(ctx);
+  const sched = [
+    { week: 3, home: 'CHI', away: 'PHI', status: 'pre_game' },
+    { week: 3, home: 'GB', away: 'DAL', status: 'pre_game' },
+    { week: 4, home: 'GB', away: 'CHI', status: 'pre_game' },
+    { week: 2, home: 'CHI', away: 'MIN', status: 'complete' },
+    { week: 5, home: 'CHI', away: 'DAL', status: 'canceled' },
+  ];
+  const out = ctx.buildTeamSchedule(sched, 3);
+  check('home and away are distinguishable', out.CHI[3] === 'PHI' && out.CHI[4] === '@GB', JSON.stringify(out.CHI));
+  check('a week with no game is spelled BYE rather than omitted',
+    out.PHI[4] === 'BYE' && out.DAL[4] === 'BYE', JSON.stringify({ PHI: out.PHI, DAL: out.DAL }));
+  check('weeks already played are left out', !(2 in out.CHI), JSON.stringify(out.CHI));
+  check('a canceled game is not a game', !(5 in out.CHI) || out.CHI[5] === 'BYE', JSON.stringify(out.CHI));
+}
+{
+  // The cap that hid eleven of nineteen defenses.
+  const src = readFileSync(path.join(root, 'scripts', 'sync.mjs'), 'utf8');
+  const m = src.match(/const POOL_CAP = \{([^}]*)\}/);
+  check('sync.mjs still declares POOL_CAP', !!m);
+  const caps = Object.fromEntries((m?.[1] ?? '').split(',').map((kv) => kv.split(':').map((x) => x.trim())).filter((kv) => kv.length === 2));
+  check('the streamed positions are not capped below the whole league',
+    Number(caps.DEF) >= 32 && Number(caps.K) >= 32, JSON.stringify(caps));
+}
+
 console.log('\nsync — the Tuesday/Wednesday assumption is checked, not just typed');
 
 {

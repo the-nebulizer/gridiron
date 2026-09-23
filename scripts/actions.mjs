@@ -87,6 +87,32 @@ async function loadSnapshot() {
 
 // ---- id resolution: snapshot (rosters/trending/transactions) first, then data/players.json ----
 
+/**
+ * Is the unrostered pool first-come-first-serve right now?
+ *
+ * Before kickoff it always is — that is pre-season, and CLAUDE.md's calendar
+ * calibration covers it. The part that was wrong: in season, an `fcfs` add
+ * was rejected outright on `games_have_started`, on the reasoning that once
+ * games begin every unrostered player sits behind Wednesday's waiver run.
+ * That is true only until that run happens. Afterwards, and for the rest of
+ * the week, Sleeper hands the pool back out first-come-first-serve, and a
+ * streamed defense or kicker is almost always picked up in exactly that
+ * window — after Thursday's injury news, not in Tuesday's blind bids.
+ *
+ * So this asks the league's own transaction log instead of the calendar: a
+ * `free_agent` add that COMPLETED this week is proof the pool is open, since
+ * a claim that had to clear waivers would have been logged as `waiver` with a
+ * bid. No such evidence yet this week means we do not claim it is open — the
+ * safe direction, because telling Ben "add now, $0" about a player who
+ * actually locks until Wednesday is the mistake with a deadline on it.
+ */
+export function freeAgencyIsOpen(snapshot) {
+  if (!snapshot.games_have_started) return true;
+  return (snapshot.transactions ?? []).some((t) =>
+    t?.type === 'free_agent' && t.status === 'complete'
+    && t.week === snapshot.week && (t.adds ?? []).length > 0);
+}
+
 export function buildIndex(snapshot) {
   const byId = new Map(); // id -> { name, pos, team }
   const ownerOf = new Map(); // id -> roster_id
@@ -933,8 +959,8 @@ async function validateAndBuildAction(action, i, snapshot, index, problems, opts
         // was recorded in the snapshot and echoed to the compiled output but
         // never checked here, so a stale "fcfs" mode validated clean well
         // past kickoff.
-        if (action.mode === 'fcfs' && snapshot.games_have_started &&
-            worldFail(`games have started — this add needs mode: "waiver", not fcfs`)) {
+        if (action.mode === 'fcfs' && !freeAgencyIsOpen(snapshot) &&
+            worldFail(`nothing in this week's transactions shows the pool is first-come-first-serve yet — this add needs mode: "waiver", not fcfs`)) {
           bad = true;
         }
       }

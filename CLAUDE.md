@@ -30,7 +30,7 @@ The snapshot carries `season_start_date` and `games_have_started` (the latter is
 
 **Before `season_start_date`** (pre-season): unrostered players are largely first-come-first-serve — adds are instant and cost $0 FAAB, not Wednesday bids (confirm from the snapshot: `free_agent` transactions completing at creation time = FCFS mode). Recommend "add NOW", never "bid and wait". No games exist yet: no points, no inactives, no start/sit urgency; injury tags are camp designations. A routine that fires when its job doesn't exist yet (e.g. Sunday inactives with no Sunday games) writes a one-paragraph report saying exactly that and stops.
 
-**After kickoff**: players lock to waivers per league rules (Wednesday processing, FAAB bids) and the skills' normal guidance applies.
+**After kickoff**: players lock to waivers per league rules (Wednesday processing, FAAB bids) and the skills' normal guidance applies — but only until that week's run actually processes. Afterwards Sleeper hands the pool back out first-come-first-serve for the rest of the week, which is the window a streamed kicker or defense is normally picked up in (after Thursday's news, not in Tuesday's blind bids). So "in season" does not mean "always bid": check the transaction log, exactly as the pre-season note says. `actions.mjs` exports `freeAgencyIsOpen(snapshot)`, which answers it from a `free_agent` add that completed this week, and the `fcfs` mode is allowed on that evidence rather than on the calendar.
 
 ## Forward awareness (know what's coming; still decide for now)
 
@@ -48,6 +48,8 @@ Every sync computes `snapshot.outlook` (`scripts/outlook.mjs`) and every routine
 - `roster_shape` — how many I have at each position, how many the lineup actually starts there (`lineup_demand`, which counts the flex slots my lineup fills at that position — never `dedicated_slots`, which says I start one QB in a superflex league), which bench and IR slots are open, `thin_positions` (can't fill the dedicated slot) and `no_cover_positions` (losing one body there actually breaks the lineup). Both are solved as real assignments, never as counts: three backs behind two RB slots and a flex is **not** a shortage when a spare receiver can fill that flex, and a flag that said otherwise once drove three recommendations at once.
 - `weeks` — for **every week still to come**, who is on bye and which starting slots cannot be filled at all, plus the weeks that are legal but weaker: no quarterback left for the SUPER_FLEX my lineup fills with one, so a flex body starts there. The question is solved as a real assignment against the league's slots, so FLEX and SUPER_FLEX are accounted for; a bare count per position is not an answer.
 - `crunch_weeks`, `playoff_weeks`, `weeks_until_trade_deadline` — what to plan budget and trades around.
+
+**Kicker and defense are streamed, not rostered in depth**, so "which one starts this week" is a standing weekly question, not a problem to notice once. `/waivers` answers it every run — a hold ("start the one you have, they play X") counts as an answer — and `scripts/stream.mjs` supplies the grounded half: who I hold, who they play, and every unrostered option with its opponent. The pools for these two positions are deliberately uncapped in the snapshot: capped at eight, `available.DEF` showed the eight most-added defenses and hid eleven others, which for a matchup call is precisely where the answer tends to be. Matchup quality itself is judgment — the script will not rank, and its order is not a preference.
 
 Never count a position by hand, and never state a bye week from memory — both are already computed. Before recommending a swap, check what it does to the rest of the season:
 
@@ -99,6 +101,7 @@ Reports in `reports/` and the dashboard's own copy are written for Ben, not for 
 - `config.json` — league/user IDs (public data, committed)
 - `scripts/sleeper.mjs` — API client; `scripts/sync.mjs` — snapshot builder; `scripts/actions.mjs` — compiles report action blocks into `reports/actions.json`
 - `scripts/outlook.mjs` — the forward view: positional counts, and every week ahead I can't field a legal lineup. Runs inside every sync; also a what-if tool (`--add` / `--drop`)
+- `scripts/stream.mjs` — the weekly kicker/defense question: who I hold, who they play, and every unrostered option with its opponent (`--pos K`, `--season`). The snapshot's `team_schedule` is what makes this answerable — opponent per remaining week, per NFL team, out of the same schedule fetch that gives byes
 - The snapshot's `available` block is the real free-agent pool by position — `trending` is Sleeper-wide noise and hides most of it
 - `ask/`, `scripts/ask-bundle.mjs`, `scripts/outlook-core.mjs` — the "Ask about this card" page Ben publishes as a claude.ai Artifact; see `docs/ASK.md`
 - `scripts/league-activity.mjs` — what the other 11 managers have done, and who they dropped that's still claimable

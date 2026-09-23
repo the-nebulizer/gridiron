@@ -62,6 +62,29 @@ function buildGames(schedule, week) {
 }
 const games = buildGames(schedule, week);
 
+// Who each NFL team plays, for every week still to come. The full-season
+// schedule is fetched on every sync (it is where bye weeks come from) and then
+// thrown away except for this week's slice — so "who does Chicago play in
+// Week 6" was the one thing a streaming decision needs and the only thing the
+// snapshot could not answer. Stored as a compact string per week: "DAL" at
+// home, "@DAL" away, "BYE" for the off week, so a bye is stated rather than
+// inferred from a missing key.
+function buildTeamSchedule(schedule, fromWeek) {
+  const out = {};
+  const weeks = new Set();
+  for (const g of schedule) {
+    if (g.week < fromWeek || g.status === 'canceled') continue;
+    weeks.add(g.week);
+    (out[g.home] ??= {})[g.week] = g.away;
+    (out[g.away] ??= {})[g.week] = `@${g.home}`;
+  }
+  for (const team of Object.keys(out)) {
+    for (const w of weeks) if (!(w in out[team])) out[team][w] = 'BYE';
+  }
+  return out;
+}
+const teamSchedule = buildTeamSchedule(schedule, week);
+
 const txWeeks = week > 1 ? [week - 1, week] : [week];
 const transactionsRaw = (
   await Promise.all(txWeeks.map((w) => sleeper.getTransactions(config.league_id, w)))
@@ -157,7 +180,15 @@ const trendResolve = (list, direction) =>
 // including a listed NFL starter — in a superflex league. The pool is filtered
 // to players who could plausibly start (depth chart 1-2, or trending, or a
 // defense) and capped per position so it stays cheap to read.
-const POOL_CAP = { QB: 10, RB: 12, WR: 12, TE: 10, K: 6, DEF: 8 };
+// Kicker and defense are the two positions you STREAM — you pick one for a
+// matchup and move on — so the whole unrostered pool is the answer, not a
+// popularity-sorted slice of it. There are only 32 of each in the league, of
+// which 12 teams roster 13 defenses, so "uncapped" here is about 19 entries.
+// Capped at 8, the block showed the eight most-added defenses and hid the
+// eleven nobody had noticed — which, for streaming, is precisely where the
+// good matchup is. Same mistake in miniature as drawing candidates from
+// Sleeper-wide trending, which hid 81 of 87 unrostered QBs.
+const POOL_CAP = { QB: 10, RB: 12, WR: 12, TE: 10, K: 32, DEF: 32 };
 const availableByPosition = {};
 for (const [id, p] of Object.entries(players)) {
   if (allRosteredIds.has(id)) continue;
@@ -264,6 +295,8 @@ const snapshot = {
   // The free-agent pool by position, best first. This is the candidate list
   // for /waivers — `trending` alone is Sleeper-wide noise, not availability.
   available: availableByPosition,
+  // Opponent per remaining week, per NFL team — see buildTeamSchedule.
+  team_schedule: teamSchedule,
 };
 
 // CLAUDE.md, docs/LEAGUE.md, docs/ACTIONS.md and the waivers/trade skills all
