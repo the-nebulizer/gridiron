@@ -189,6 +189,9 @@
   footer{margin-top:70px;padding-top:18px;border-top:1px solid var(--line);font-family:var(--mono);font-size:13px;color:var(--chalk-dim);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
   button.refresh{font-family:var(--mono);font-size:13px;background:none;border:1px solid var(--line);color:var(--chalk);padding:5px 14px;cursor:pointer}
   button.refresh:hover{border-color:var(--amber);color:var(--amber)}
+  .callout{border:1px solid var(--line);border-left:3px solid var(--amber);background:var(--pitch);padding:11px 16px;margin:0 0 14px;line-height:1.5}
+  .callout.pending{border-left-color:var(--line);color:var(--chalk-dim)}
+  .thisweek:first-child{margin-top:32px}
   .notice{font-family:var(--mono);font-size:13px;color:var(--chalk-dim);border:1px solid var(--line);padding:8px 14px;margin:20px 0 -12px}
   .loading,.error{padding:70px 0;text-align:center;color:var(--chalk-dim);font-family:var(--mono);font-size:15px}
   .error b{color:var(--flag)}
@@ -476,10 +479,18 @@ const urgRank = (u)=>{ const i = URGENCY.indexOf(u); return i<0 ? URGENCY.length
 const dismissKey = (a)=> `${a.id||''}|${a.report||''}`;
 const titleCase = (s)=> String(s||'').charAt(0).toUpperCase()+String(s||'').slice(1);
 const prettySlot = (s)=> String(s||'').replace('SUPER_FLEX','SUPERFLEX');
-// ...and the same order as a sort key: lineup first, then the roster moves that ride on
-// Wednesday's claims, then trades. A kind the compiler shouldn't emit sorts last, never first.
-const KIND_RANK = {start:0, add:1, drop:1, ir:1, activate:1, trade:2};
-const kindRank = (k)=> KIND_RANK[k]==null ? 3 : KIND_RANK[k];
+// What the week is about today, by local weekday: Tue–Wed is waiver claims (they process
+// Wednesday), Mon is the trade hunt, and Thu through Sun is the lineup.
+const weekFocus = (day)=> day===2 || day===3 ? 'waivers' : day===1 ? 'trades' : 'lineup';
+// ...and the same focus as a sort key, so the card leads with whatever today is about. An open
+// start still leads on Monday: the only one left then is for a Monday-night game.
+// A kind the compiler shouldn't emit sorts last, never first.
+const KIND_RANK = {
+  lineup:  {start:0, add:1, drop:1, ir:1, activate:1, trade:2},
+  waivers: {add:0, drop:0, ir:0, activate:0, start:1, trade:2},
+  trades:  {start:0, trade:1, add:2, drop:2, ir:2, activate:2},
+};
+const kindRank = (k, focus)=>{ const r = KIND_RANK[focus] || KIND_RANK.lineup; return r[k]==null ? 3 : r[k]; };
 
 /* Dependency resolution. Items arrive carrying the base state actionState gave them; `after` and
    `if_not` name another action in the same compiled file. Pure, and re-runnable: the base state
@@ -722,9 +733,9 @@ function renderDoNow(m){
   // shelved alongside done/gone/superseded instead, below, so the fact it happened is visible.
   const items = (m.items||[]).filter(i=>i.state!=='dismissed');
   // Primaries are everything open that isn't hanging off another action, numbered in the
-  // standing order: lineup, then claims, then trades; urgency, then report date, within each.
+  // order today's focus puts them in (weekFocus); urgency, then report date, within each.
   const open = items.filter(i=>i.state==='open' && !i.parent_id)
-    .sort((a,b)=> kindRank(a.kind)-kindRank(b.kind)
+    .sort((a,b)=> kindRank(a.kind, m.focus)-kindRank(b.kind, m.focus)
                || urgRank(a.urgency)-urgRank(b.urgency)
                || String(b.report||'').localeCompare(String(a.report||'')));
   const shelved = items.filter(i=>i.state==='done' || i.state==='gone' || i.state==='superseded' || i.state==='stale');
@@ -1054,10 +1065,18 @@ function render(state, got, failed){
               .filter(a=>!(a.id && !a.keep && spokenFor.has(String(a.id)))),
     nextCheck: pickNextCheck(actionsDoc && actionsDoc.sources),
     drift: rosterDrifted(actionsDoc, me),
+    focus: weekFocus(new Date().getDay()),
   };
-  let html = renderDoNow(doNow);
+  const doNowHtml = renderDoNow(doNow);
+  let html = '';
 
   /* 2 — this week */
+  // The lineup call for this week, or plainly that it hasn't landed yet: from Thursday on, the
+  // lineup is the first thing on the page whether or not the call changes anything.
+  const lineupSrc = actionsDoc && actionsDoc.sources && actionsDoc.sources.lineup;
+  const lineupCall = lineupSrc && lineupSrc.week===wk && !lineupSrc.stale && lineupSrc.verdict
+    ? `<div class="callout"><b>Lineup call${lineupSrc.written_at ? ', '+esc(new Date(lineupSrc.written_at).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'})) : ''}:</b> ${esc(lineupSrc.verdict)}</div>`
+    : `<div class="callout pending">This week's lineup call hasn't landed yet. It runs Thursday morning.</div>`;
   if(matchups){
     const myStarters = (mine && mine.starters) || me.starters || [];
     const startSet = new Set(myStarters);
@@ -1071,8 +1090,8 @@ function render(state, got, failed){
         <span class="ppts">${pts!=null?pts.toFixed(1):''}</span></div>
         <div class="kick ${g&&g.live?'live':''}">${esc(label(p))}</div></div>`;
     };
-    html += `<section><h2>This week</h2>
-      <p class="sub">${games ? 'Kickoffs in your local time. ' : ''}Points fill in as games run.</p>`;
+    html += `<section class="thisweek"><h2>This week</h2>
+      <p class="sub">${games ? 'Kickoffs in your local time. ' : ''}Points fill in as games run.</p>${lineupCall}`;
     if(opp){
       html += `<div class="scorebug">
           <div class="side"><div class="team">${esc(name(CFG.me))}</div><div class="rec">${rec(CFG.me)}</div><div class="pts">${(mine.points||0).toFixed(1)}</div></div>
@@ -1098,6 +1117,9 @@ function render(state, got, failed){
     html += `<div class="benchnote"><b>Bench:</b> ${bench.map(p=>esc(p.name)).join(' · ')||'—'}<br><b>IR:</b> ${reserve.length?reserve.map(p=>esc(p.name)).join(' · '):'empty'}</div>
     </div></section>`;
   }
+  // Tuesday to Wednesday the claims lead and Monday the trades, so the card goes first; Thursday
+  // to Sunday the lineup itself is what matters, so it goes above the card.
+  html = doNow.focus==='lineup' ? html + doNowHtml : doNowHtml + html;
 
   /* 3 — league activity */
   const movesHtml = (txns||[]).slice(0,12).map(t=>{

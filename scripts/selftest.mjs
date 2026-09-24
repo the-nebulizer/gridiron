@@ -2379,7 +2379,7 @@ console.log('\n  the dashboard: caseGrid, kindTag — extending the do-now pure 
   const escSrc = "const esc=(s)=>String(s??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[c]));\n";
   const ctx = {};
   vm.createContext(ctx);
-  new vm.Script(escSrc + slice + ';this.actionRow=actionRow;this.caseGrid=caseGrid;this.kindTag=kindTag;this.renderDoNow=renderDoNow;').runInContext(ctx);
+  new vm.Script(escSrc + slice + ';this.actionRow=actionRow;this.caseGrid=caseGrid;this.kindTag=kindTag;this.renderDoNow=renderDoNow;this.weekFocus=weekFocus;').runInContext(ctx);
 
   const openAdd = {
     id: 'w1', kind: 'add', mode: 'waiver', state: 'open', urgency: 'by_tuesday',
@@ -2482,6 +2482,23 @@ console.log('\n  the dashboard: caseGrid, kindTag — extending the do-now pure 
   check('a stale start does not count toward "N open"', /<b>1 open<\/b>/.test(cardHtml), cardHtml);
   check('...it is named in the shelved summary', /stale \(1\)/.test(cardHtml), cardHtml);
   check('...and its reason is reachable inside that disclosure', /already kicked off/.test(cardHtml), cardHtml);
+
+  // The card leads with what today is about: claims Tue–Wed, the lineup Thu–Sun, trades Monday.
+  const mixed = [
+    { id: 'c1', kind: 'add', mode: 'waiver', state: 'open', urgency: 'by_tuesday', name: 'Claim Guy', pos: 'WR', team: 'TTT', report: '2026-09-22-waivers.md', source: 'waivers' },
+    { id: 's2', kind: 'start', state: 'open', urgency: 'before_kickoff', name: 'Start Guy', pos: 'RB', team: 'UUU', for_name: 'Bench Guy', slot: 'FLEX', report: '2026-09-24-lineup.md', source: 'lineup' },
+    { id: 't1', kind: 'trade', state: 'open', urgency: 'this_week', give_names: ['Trade Guy'], get_names: ['Other Guy'], with: 4, with_owner: 'rival', report: '2026-09-21-trades.md', source: 'trades' },
+  ];
+  const firstOf = (focus) => {
+    const h = ctx.renderDoNow({ items: mixed, week: 3, league: '123', now: '14:02', focus });
+    return ['Claim Guy', 'Start Guy', 'Trade Guy'].map(n => [n, h.indexOf(n)]).sort((a, b) => a[1] - b[1]).map(x => x[0]);
+  };
+  check('weekFocus: Tue and Wed are waivers, Mon is trades, Thu–Sun is the lineup',
+    [0, 1, 2, 3, 4, 5, 6].map(ctx.weekFocus).join() === 'lineup,trades,waivers,waivers,lineup,lineup,lineup');
+  check('on a waivers day the claim leads the card', firstOf('waivers').join() === 'Claim Guy,Start Guy,Trade Guy', String(firstOf('waivers')));
+  check('on a lineup day the start leads the card', firstOf('lineup').join() === 'Start Guy,Claim Guy,Trade Guy', String(firstOf('lineup')));
+  check('on trades day a Monday-night start still leads, then the trade', firstOf('trades').join() === 'Start Guy,Trade Guy,Claim Guy', String(firstOf('trades')));
+  check('no focus given (the Ask page) keeps the lineup order', firstOf(undefined).join() === 'Start Guy,Claim Guy,Trade Guy', String(firstOf(undefined)));
 }
 
 // ---- the modules must be importable without doing anything ------------
