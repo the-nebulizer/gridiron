@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-09-23T12:18:28.974Z",
+  "compiled_at": "2026-09-24T12:28:22.182Z",
   "season": "2026",
   "week": 3,
   "games_have_started": true,
@@ -14,7 +14,7 @@
       "8228",
       "3163",
       "8259",
-      "CHI"
+      "NYG"
     ],
     "bench": [
       "1166",
@@ -29,144 +29,43 @@
   },
   "sources": {
     "waivers": {
-      "report": "2026-09-23-waivers.md",
+      "report": "2026-09-24-waivers.md",
       "week": 3,
-      "verdict": "Add the New York Giants defense and drop Chicago — the Bears are down to their third quarterback and the pool is free today. Carolina is the fallback if the Giants are gone.",
-      "next_check": "Inactives, Sun 10am",
-      "stale": false,
-      "written_at": "2026-09-23T12:18:08.031Z"
-    },
-    "lineup": {
-      "report": "2026-09-17-lineup.md",
-      "week": 2,
-      "verdict": "Hold — the lineup is already right; Chicago Bears is in at DEF and every slot is filled and healthy.",
-      "next_check": "Inactives, Sun 10am",
-      "stale": true,
-      "written_at": "2026-09-17T12:15:00.000Z"
-    },
-    "trades": {
-      "report": "2026-09-22-trades.md",
-      "week": 3,
-      "verdict": "Send Bryce Young to amandaberry for Brian Robinson. Pull the Cousins + Meyers offer to Tally241 — it spends your best chip on a back who doesn't start.",
+      "verdict": "Nothing to add — the Giants defense you just picked up hosts Tennessee, and Cameron Dicker is on the road at Buffalo. Both hold.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-09-22T14:35:19.000Z"
+      "written_at": "2026-09-24T12:27:38.546Z"
+    },
+    "lineup": {
+      "report": "2026-09-24-lineup.md",
+      "week": 3,
+      "verdict": "Hold the lineup as set. Jaylen Warren (Questionable, shoulder) is the one name to watch before Sunday, but nothing changes it yet.",
+      "next_check": "Inactives, Sun 10am",
+      "stale": false,
+      "written_at": "2026-09-24T12:27:51.494Z"
+    },
+    "trades": {
+      "report": "2026-09-24-trades.md",
+      "week": 3,
+      "verdict": "Still send Bryce Young to amandaberry for Brian Robinson — the offer from Monday is unanswered and nothing has changed about it.",
+      "next_check": "Waivers, Tue 7am",
+      "stale": false,
+      "written_at": "2026-09-24T12:28:12.662Z"
     },
     "inactives": {
-      "report": "2026-09-20-inactives.md",
-      "week": 2,
-      "verdict": "Hold — every starter is a confirmed go for today's early games; no pivot needed.",
+      "report": "2026-09-24-inactives.md",
+      "week": 3,
+      "verdict": "Not actionable yet — none of your players are in tonight's game, and the rest of your Week 3 slate doesn't kick off until Sunday.",
       "next_check": "Trades, Mon 7am",
-      "stale": true,
-      "written_at": "2026-09-20T15:09:37.000Z"
+      "stale": false,
+      "written_at": "2026-09-24T12:28:16.650Z"
     }
   },
   "actions": [
     {
-      "id": "nyg",
-      "source": "waivers",
-      "report": "2026-09-23-waivers.md",
-      "kind": "add",
-      "week": 3,
-      "player": "NYG",
-      "name": "New York Giants",
-      "pos": "DEF",
-      "team": "NYG",
-      "drop": "CHI",
-      "drop_name": "Chicago Bears",
-      "mode": "fcfs",
-      "displaces": "CHI",
-      "displaces_name": "Chicago Bears",
-      "evidence": {
-        "note": "Giants host Cam Ward, already sacked five times in two games; Chicago is down to Case Keenum with Bagent in concussion protocol.",
-        "url": "https://www.fantasypros.com/2026/09/lets-stream-defenses-week-3-2026-fantasy-football/",
-        "as_of": "2026-09-23"
-      },
-      "consumes": [
-        "CHI"
-      ],
-      "urgency": "now",
-      "deadline_label": "free today — first come, first served",
-      "why": "Home against a rookie quarterback getting sacked twice a game, and it costs nothing but the Bears, who are starting their third-string QB.",
-      "case": {
-        "starts": "Starts over Chicago Bears at DEF",
-        "tradeoff": {
-          "net": "mixed",
-          "fixes": [
-            {
-              "week": 10,
-              "slot": "DEF",
-              "kind": "hole"
-            }
-          ],
-          "opens": [
-            {
-              "week": 8,
-              "slot": "DEF",
-              "kind": "hole"
-            }
-          ]
-        },
-        "need": "DEF: you have 1 — your thinnest spot · fixes W10",
-        "cost": "$0, first come first served · drops Chicago Bears (DEF, starter)",
-        "later": "opens a W8 DEF hole · drops your only DEF"
-      }
-    },
-    {
-      "id": "car",
-      "source": "waivers",
-      "report": "2026-09-23-waivers.md",
-      "kind": "add",
-      "week": 3,
-      "if_not": "nyg",
-      "player": "CAR",
-      "name": "Carolina Panthers",
-      "pos": "DEF",
-      "team": "CAR",
-      "drop": "CHI",
-      "drop_name": "Chicago Bears",
-      "mode": "fcfs",
-      "displaces": "CHI",
-      "displaces_name": "Chicago Bears",
-      "evidence": {
-        "note": "Cleveland is 28th in yards per game and has given up seven sacks in two games with Watson at quarterback.",
-        "url": "https://www.si.com/onsi/fantasy/nfl/fantasy-football-week-3-defense-special-teams-streamers-top-5-d-st-waiver-wire-pickups",
-        "as_of": "2026-09-23"
-      },
-      "consumes": [
-        "CHI"
-      ],
-      "urgency": "now",
-      "deadline_label": "free today — first come, first served",
-      "why": "Same idea one seat over if the Giants get taken first: Cleveland's offense is bottom-five and leaking pressure.",
-      "case": {
-        "starts": "Starts over Chicago Bears at DEF",
-        "tradeoff": {
-          "net": "mixed",
-          "fixes": [
-            {
-              "week": 10,
-              "slot": "DEF",
-              "kind": "hole"
-            }
-          ],
-          "opens": [
-            {
-              "week": 5,
-              "slot": "DEF",
-              "kind": "hole"
-            }
-          ]
-        },
-        "need": "DEF: you have 1 — your thinnest spot · fixes W10",
-        "cost": "$0, first come first served · drops Chicago Bears (DEF, starter)",
-        "later": "opens a W5 DEF hole · drops your only DEF"
-      }
-    },
-    {
       "id": "robinson",
       "source": "trades",
-      "report": "2026-09-22-trades.md",
+      "report": "2026-09-24-trades.md",
       "kind": "trade",
       "week": 3,
       "with": 9,
@@ -187,7 +86,7 @@
       "displaces": null,
       "displaces_name": null,
       "evidence": {
-        "note": "Brian Robinson has 22 touches for 98 yards in a backup role behind Bijan, and was limited Monday with an ankle.",
+        "note": "Brian Robinson is a backup behind Bijan Robinson with 22 touches for 98 yards through two games, and was limited with an ankle issue Monday of Week 3.",
         "url": "https://www.rotowire.com/football/headlines/brian-robinson-injury-dealing-with-ankle-injury-638473",
         "as_of": "2026-09-22"
       },
@@ -195,12 +94,12 @@
         "9228"
       ],
       "urgency": "this_week",
-      "why": "Spends the cheapest of four quarterbacks on a real back, and Young covers both of amandaberry's quarterback byes — a pitch the earlier version never made.",
+      "why": "Spends the cheapest of four quarterbacks on a real handcuff back; still unanswered from Monday, so it's still the offer on the table.",
       "case": {
         "starts": "Brian Robinson is depth (RB4)",
         "need": "RB: you have 3 — not thin · gives QB depth (you have 4, start 2)",
         "cost": "gives Bryce Young — 0 starters, 1 bench · no FAAB",
-        "asks": "amandaberry benches Brian Robinson, Questionable — one of 5 RBs they carry",
+        "asks": "amandaberry benches Brian Robinson — one of 5 RBs they carry",
         "tradeoff": {
           "net": "costs_only",
           "fixes": [],
