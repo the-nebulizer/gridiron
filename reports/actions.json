@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-09-27T15:10:58.989Z",
+  "compiled_at": "2026-09-28T12:23:14.298Z",
   "season": "2026",
   "week": 3,
   "games_have_started": true,
@@ -45,12 +45,12 @@
       "written_at": "2026-09-24T12:28:33.000Z"
     },
     "trades": {
-      "report": "2026-09-24-trades.md",
+      "report": "2026-09-28-trades.md",
       "week": 3,
-      "verdict": "Still send Bryce Young to amandaberry for Brian Robinson — the offer from Monday is unanswered and nothing has changed about it.",
+      "verdict": "Send Kirk Cousins to ObiWanless (roster 6) for RJ Harvey first — their SUPER_FLEX has been sitting empty. Keep last week's Bryce Young-for-Brian Robinson offer to amandaberry alive, but only follow through on it if the Harvey deal falls through.",
       "next_check": "Waivers, Tue 7am",
       "stale": false,
-      "written_at": "2026-09-24T12:28:33.000Z"
+      "written_at": "2026-09-28T12:23:08.535Z"
     },
     "inactives": {
       "report": "2026-09-27-inactives.md",
@@ -58,16 +58,63 @@
       "verdict": "Hold your lineup — nobody is ruled out. Jaylen Warren's questionable tag isn't costing him the start.",
       "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-09-27T15:10:52.191Z"
+      "written_at": "2026-09-27T15:11:02.000Z"
     }
   },
   "actions": [
     {
-      "id": "robinson",
+      "id": "harvey_obiwanless",
       "source": "trades",
-      "report": "2026-09-24-trades.md",
+      "report": "2026-09-28-trades.md",
       "kind": "trade",
       "week": 3,
+      "with": 6,
+      "with_owner": "ObiWanless",
+      "give": [
+        "1166"
+      ],
+      "give_names": [
+        "Kirk Cousins"
+      ],
+      "get": [
+        "12489"
+      ],
+      "get_names": [
+        "RJ Harvey"
+      ],
+      "message": "Your SUPER_FLEX has been empty behind Burrow — Cousins is a plug-and-play veteran starter there. I'll take RJ Harvey off your bench in return; you're set at RB with Barkley and Walker anyway.",
+      "displaces": null,
+      "displaces_name": null,
+      "evidence": {
+        "note": "Harvey played 51% of Denver's snaps in the opener as the pass-catching back in a crowded room (Dobbins, Coleman); real role, just not the lead ball-carrier.",
+        "url": "https://sports.yahoo.com/articles/rj-harvey-fantasy-outlook-2026-121818146.html",
+        "as_of": "2026-09-28"
+      },
+      "consumes": [
+        "1166"
+      ],
+      "urgency": "this_week",
+      "why": "They've punted a scoring slot every week; Cousins fills it outright. Harvey adds a real body to my 3-deep RB room, which has zero spare right now.",
+      "case": {
+        "starts": "RJ Harvey is depth (RB4)",
+        "need": "RB: you have 3 — not thin · gives QB depth (you have 4, start 2)",
+        "cost": "gives Kirk Cousins — 0 starters, 1 bench · no FAAB",
+        "asks": "ObiWanless benches RJ Harvey, Questionable — one of 5 RBs they carry",
+        "tradeoff": {
+          "net": "neutral",
+          "fixes": [],
+          "opens": []
+        },
+        "later": "opens no holes"
+      }
+    },
+    {
+      "id": "robinson",
+      "source": "trades",
+      "report": "2026-09-28-trades.md",
+      "kind": "trade",
+      "week": 3,
+      "if_not": "harvey_obiwanless",
       "with": 9,
       "with_owner": "amandaberry",
       "give": [
@@ -93,8 +140,8 @@
       "consumes": [
         "9228"
       ],
-      "urgency": "this_week",
-      "why": "Spends the cheapest of four quarterbacks on a real handcuff back; still unanswered from Monday, so it's still the offer on the table.",
+      "urgency": "optional",
+      "why": "Still unanswered from last Monday. Only complete this if the Harvey deal falls through — doing both leaves just Lamar and Goff at QB, zero backup.",
       "case": {
         "starts": "Brian Robinson is depth (RB4)",
         "need": "RB: you have 3 — not thin · gives QB depth (you have 4, start 2)",
