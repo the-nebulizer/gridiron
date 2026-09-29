@@ -47,9 +47,9 @@
   .dcount{font:12px var(--mono);color:var(--text-2)}
   .dcount b{color:var(--accent);font-weight:500}
   .dlinks{display:flex;gap:12px;font:12px var(--mono);white-space:nowrap}
-  .dlinks a{color:var(--text);text-decoration:underline;text-decoration-color:var(--line)}
+  .dlinks a{display:inline-flex;align-items:center;min-height:44px;margin:-14px -6px;padding:0 6px;color:var(--text);text-decoration:underline;text-decoration-color:var(--line)}
   .dlinks a:hover{text-decoration-color:var(--accent)}
-  .runlink{font:12px var(--mono);color:var(--text);text-decoration:underline;text-decoration-color:var(--line);white-space:nowrap}
+  .runlink{display:inline-flex;align-items:center;min-height:44px;margin:-15px -6px;padding:0 6px;font:12px var(--mono);color:var(--text);text-decoration:underline;text-decoration-color:var(--line);white-space:nowrap}
   .plan{border-left:2px solid var(--accent-bg);margin:0 0 12px}
   .act{border-bottom:1px solid var(--line-soft)}
   .act:last-child{border-bottom:0}
@@ -68,6 +68,7 @@
   .act .lead{font:12px var(--mono);font-weight:400;color:var(--text-3);margin-right:8px}
   .act .flag{font:600 11px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--danger);border:1px solid var(--danger);border-radius:3px;padding:0 6px;margin-left:8px;white-space:nowrap;vertical-align:middle}
   .act .why{grid-column:2/-1;font-size:14px;line-height:1.4;color:var(--text-2)}
+  div.act>.src{grid-column:2/-1}
   details.act>summary .why{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
   details.act[open]>summary .why{display:block;-webkit-line-clamp:unset;overflow:visible}
   .act.waiting .glyph,.act.superseded .glyph,.act.stale .glyph,.act.gone .glyph{color:var(--text-3)}
@@ -84,7 +85,7 @@
   .act.waiting .fact{color:var(--text-2)}
   .fact[data-net="fixes_only"]::before{content:'✓ ';color:var(--ok)}
   .fact[data-net="mixed"]{color:var(--accent)}
-  .fact[data-net="costs_only"]{color:var(--danger)}
+  .fact[data-net="costs_only"]{color:color-mix(in srgb,var(--danger) 80%,var(--text))}
   .evidence{display:flex;align-items:baseline;gap:4px 10px;flex-wrap:wrap;font-size:13px;line-height:1.4}
   .evidence .note{color:var(--text-2);min-width:0}
   .evidence a{color:var(--text);text-decoration:underline;text-decoration-color:var(--line);font:12px var(--mono)}
@@ -130,8 +131,13 @@
     .strip table{font-size:11px}
     .strip td{padding-right:8px}
     body:has(#rail) .dlinks .sleeper{display:none}
+    .strip td:nth-child(4),.strip td:nth-child(5){white-space:normal}
     .fold>summary{min-height:44px}
-    .heads .item .why{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+    .fold .sum{white-space:normal;padding:4px 0;line-height:1.35}
+  }
+  @media (max-width:399.98px){
+    details.act>summary,div.act{grid-template-columns:28px minmax(0,1fr)}
+    .act .chip{grid-column:2;justify-self:start;padding-top:0}
   }
   @media (min-width:720px){
     .detail{padding-left:46px}
@@ -870,6 +876,17 @@ function renderCard(){
     s.textContent = s.textContent.replace(/(?:verified live|checked)\s/, 'state as of ');
   });
 }
+// The trade message under a row is the one thing on this card worth lifting straight into Sleeper,
+// so its Copy button works here as it does on the dashboard (one delegated listener; the card is
+// redrawn wholesale, so it must not be bound to the button itself).
+document.addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('[data-copy]'); if(!b) return;
+  const box = b.closest('.offer'), pre = box && box.querySelector('pre'); if(!pre) return;
+  const done = () => { b.textContent = 'Copied'; setTimeout(() => { b.textContent = 'Copy'; }, 2000); };
+  const fallback = () => { getSelection().selectAllChildren(pre); };
+  if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(pre.textContent).then(done, fallback);
+  else fallback();
+});
 const clockOf = (iso) => {
   const d = new Date(iso);
   return isNaN(d) ? '' : d.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});

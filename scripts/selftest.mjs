@@ -1728,6 +1728,27 @@ console.log('\ndashboard — dependency resolution');
     R([{id:'t', kind:'trade', state:'open'}, {id:'w', kind:'add', state:'gone', if_not:'t'}]).w === 'gone');
   check('a fallback already done stays done even under a still-open parent',
     R([{id:'t', kind:'trade', state:'open'}, {id:'w', kind:'add', state:'done', if_not:'t'}]).w === 'done');
+
+  // A <- B (if_not A) <- C (if_not B): when A lands, B is superseded, and C — the fallback for the
+  // fallback — covered a need A already met. It used to be promoted to open and numbered 1.
+  const chain = (a) => R([{id:'a', kind:'trade', state:a}, {id:'b', kind:'trade', state:'open', if_not:'a'},
+                          {id:'c', kind:'add', state:'open', if_not:'b'}]);
+  check('a fallback of a superseded fallback is itself superseded, not promoted',
+    chain('done').b === 'superseded' && chain('done').c === 'superseded', JSON.stringify(chain('done')));
+  check('...while the same chain still nests when nothing has happened, and promotes each rung as the one above fails',
+    chain('open').b === 'waiting' && chain('open').c === 'waiting' &&
+    chain('gone').b === 'open' && chain('gone').c === 'waiting', JSON.stringify([chain('open'), chain('gone')]));
+  check('an "after" child of a superseded parent is still gone, never promoted',
+    R([{id:'a', kind:'trade', state:'done'}, {id:'b', kind:'trade', state:'open', if_not:'a'},
+       {id:'c', kind:'drop', state:'open', after:'b'}]).c === 'gone');
+
+  // Why an "after" child is gone: it was the parent's fate, not the player's.
+  const via = (ps) => ctx.resolveDependencies([{id:'p', kind:'trade', state:ps}, {id:'k', kind:'add', state:'open', after:'p'}]).find(i => i.id === 'k');
+  check('an "after" child of a dismissed parent records that the move it followed was dismissed',
+    via('dismissed').state === 'gone' && via('dismissed').gone_via === 'dismissed');
+  check('...and an open child, or one that is gone on its own account, records nothing',
+    via('open').gone_via == null &&
+    ctx.resolveDependencies([{id:'p', kind:'trade', state:'gone'}, {id:'k', kind:'add', state:'gone', owner:'X', after:'p'}]).find(i => i.id === 'k').gone_via == null);
 }
 
 console.log('\ndashboard — pickNextCheck orders sources by when they were actually written');
@@ -2379,7 +2400,7 @@ console.log('\n  the dashboard: caseGrid, kindTag — extending the do-now pure 
   const escSrc = "const esc=(s)=>String(s??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[c]));\n";
   const ctx = {};
   vm.createContext(ctx);
-  new vm.Script(escSrc + slice + ';this.actionRow=actionRow;this.caseGrid=caseGrid;this.kindTag=kindTag;this.renderDoNow=renderDoNow;this.weekFocus=weekFocus;').runInContext(ctx);
+  new vm.Script(escSrc + slice + ';this.actionRow=actionRow;this.caseGrid=caseGrid;this.kindTag=kindTag;this.renderDoNow=renderDoNow;this.weekFocus=weekFocus;this.actionHeadline=actionHeadline;this.compareStrip=compareStrip;this.resolveDependencies=resolveDependencies;').runInContext(ctx);
 
   const openAdd = {
     id: 'w1', kind: 'add', mode: 'waiver', state: 'open', urgency: 'by_tuesday',
@@ -2499,6 +2520,91 @@ console.log('\n  the dashboard: caseGrid, kindTag — extending the do-now pure 
   check('on a lineup day the start leads the card', firstOf('lineup').join() === 'Start Guy,Claim Guy,Trade Guy', String(firstOf('lineup')));
   check('on trades day a Monday-night start still leads, then the trade', firstOf('trades').join() === 'Start Guy,Trade Guy,Claim Guy', String(firstOf('trades')));
   check('no focus given (the Ask page) keeps the lineup order', firstOf(undefined).join() === 'Start Guy,Claim Guy,Trade Guy', String(firstOf(undefined)));
+
+  // ---- the compare strip: what each kind of fallback really gets and gives ----
+  const stripRows = (html) => [...html.matchAll(/<tr><td>([^<]*)<\/td><td>([^<]*)<\/td><td>([^<]*)<\/td><td>([^<]*)<\/td><td>([^<]*)<\/td><\/tr>/g)].map(m => m.slice(1, 6));
+  const primary = { id: 'w:add:701', kind: 'add', mode: 'waiver', state: 'open', urgency: 'by_tuesday', faab: 9, name: 'Free Back', drop_name: 'Wide Five', report: '2026-09-29-waivers.md', source: 'waivers' };
+  const rungOf = (extra) => ({ item: { link: 'if_not', urgency: 'this_week', ...extra }, parent: primary });
+  const strip = ctx.compareStrip(primary, [
+    rungOf({ kind: 'start', name: 'Rusty Five', slot: 'FLEX', for_name: 'Wide Three' }),
+    rungOf({ kind: 'drop', name: 'Quinn Three' }),
+    rungOf({ kind: 'ir', name: 'Rusty Three' }),
+    rungOf({ kind: 'activate', name: 'Rusty Four' }),
+    rungOf({ kind: 'trade', name: 'x', give_names: ['Kirk Cousins'], get_names: ['Tony Pollard'] }),
+  ]);
+  const sr = stripRows(strip);
+  check('the strip lists the primary and every rung', sr.length === 6, strip);
+  check('a claim gets the player and gives the drop', sr[0][1] === 'Free Back' && sr[0][2] === 'Wide Five', JSON.stringify(sr[0]));
+  check('a start gets the player and gives the man it benches, not himself', sr[1][1] === 'Rusty Five' && sr[1][2] === 'Wide Three', JSON.stringify(sr[1]));
+  check('a drop gets nothing and gives the player away', sr[2][1] === '—' && sr[2][2] === 'Quinn Three', JSON.stringify(sr[2]));
+  check('an IR move gets nothing; an activation gives nothing',
+    sr[3][1] === '—' && /Rusty Three/.test(sr[3][2]) && /Rusty Four/.test(sr[4][1]) && sr[4][2] === '—', JSON.stringify([sr[3], sr[4]]));
+  check('a trade gets and gives its named players', sr[5][1] === 'Tony Pollard' && sr[5][2] === 'Kirk Cousins', JSON.stringify(sr[5]));
+  check('no row prints one player in both columns', sr.every(r => r[1] === '—' || r[1] !== r[2]), JSON.stringify(sr));
+
+  // "then" is a step that runs as well as its parent, not an alternative: it never joins the strip.
+  const chained = ctx.renderDoNow({ week: 3, league: '123', now: '14:02', items: ctx.resolveDependencies([
+    { ...primary, id: 'p1', kind: 'trade', name: undefined, give_names: ['Kirk Cousins'], get_names: ['Tony Pollard'], with_owner: 'rival' },
+    { id: 'th1', kind: 'add', mode: 'waiver', state: 'open', urgency: 'by_tuesday', name: 'Then Guy', after: 'p1', report: '2026-09-29-waivers.md', source: 'waivers' },
+  ]) });
+  check('a plan with only a "then" step draws no options strip', /class="lead">then</.test(chained) && !chained.includes('class="strip"'), chained);
+  const both = ctx.renderDoNow({ week: 3, league: '123', now: '14:02', items: ctx.resolveDependencies([
+    { ...primary, id: 'p1', kind: 'trade', name: undefined, give_names: ['Kirk Cousins'], get_names: ['Tony Pollard'], with_owner: 'rival' },
+    { id: 'th1', kind: 'add', mode: 'waiver', state: 'open', urgency: 'by_tuesday', name: 'Then Guy', after: 'p1', report: '2026-09-29-waivers.md', source: 'waivers' },
+    { id: 'fb1', kind: 'add', mode: 'waiver', state: 'open', urgency: 'by_tuesday', name: 'Fallback Guy', if_not: 'p1', report: '2026-09-29-waivers.md', source: 'waivers' },
+  ]) });
+  const bothRows = stripRows(both);
+  check('with a real fallback the strip lists it and leaves the "then" step out',
+    bothRows.length === 2 && bothRows[1][0] === 'if declined' && !/Then Guy/.test(both.slice(both.indexOf('class="strip"'))), JSON.stringify(bothRows));
+
+  // ---- shelved rows keep their who-and-when ----
+  const shelvedRow = ctx.actionRow({ ...openAdd, state: 'done' }, { now: '14:02' });
+  check('a shelved row carries its source and report date', /class="src"><span>Waivers · 2026-09-15<\/span>/.test(shelvedRow), shelvedRow);
+  check('...and no "checked" time, because it was not checked just now', !/checked/.test(shelvedRow), shelvedRow);
+
+  // ---- an "after" child whose parent went away says so, instead of claiming a roster fact ----
+  const orphaned = ctx.resolveDependencies([{ id: 'p', kind: 'trade', state: 'dismissed' }, { ...openAdd, id: 'k', state: 'open', after: 'p' }]).find(i => i.id === 'k');
+  const orphanHead = ctx.actionHeadline(orphaned);
+  check('an "after" child of a dismissed move reads as such, not as "no longer on your roster"',
+    /the move it followed was dismissed/.test(orphanHead) && !/roster/.test(orphanHead), orphanHead);
+  check('a real drop off the roster still says so', /no longer on your roster/.test(ctx.actionHeadline({ ...openAdd, state: 'gone' })));
+
+  // ---- Heads up: what needs Ben before kickoff is never folded behind a count ----
+  const alert = (what, urgency, more) => ({ what, urgency, why: 'because', ...more });
+  const headsOf = (alerts) => {
+    const h = ctx.renderDoNow({ items: [], alerts, week: 3, league: '123', now: '14:02' });
+    const foldAt = h.indexOf('data-key="heads-quiet"');
+    return { h, loud: foldAt < 0 ? h : h.slice(0, foldAt), quiet: foldAt < 0 ? '' : h.slice(foldAt) };
+  };
+  const five = headsOf([alert('Slot one empty', 'now'), alert('Out One', 'now', { keep: true }), alert('Doubtful Two', 'now', { keep: true }),
+    alert('Free Guy A', 'soon'), alert('Free Guy B', 'soon')]);
+  check('three urgent alerts all stay in view', ['Slot one empty', 'Out One', 'Doubtful Two'].every(n => five.loud.includes(n)), five.h);
+  check('...and the free-agent chatter is what folds', five.quiet.includes('Free Guy A') && five.quiet.includes('Free Guy B'), five.h);
+  const soon = headsOf([alert('Free Guy A', 'soon'), alert('Free Guy B', 'soon'), alert('Questioned Starter', 'soon', { keep: true }),
+    alert('Week 7: nobody covers K', 'soon', { covered: false })]);
+  check('an injured starter and an uncoverable bye are not folded behind free-agent items',
+    soon.loud.includes('Questioned Starter') && soon.loud.includes('Week 7: nobody covers K') && !soon.quiet.includes('Questioned Starter') && !soon.quiet.includes('Week 7'), soon.h);
+  const idle = headsOf([alert('Free Guy A', 'soon'), alert('Free Guy B', 'soon'), alert('Free Guy C', 'soon'), alert('Watch Guy', 'watch')]);
+  check('with nothing urgent the first two show and the rest fold, as before',
+    idle.loud.includes('Free Guy A') && idle.loud.includes('Free Guy B') && idle.quiet.includes('Free Guy C') && idle.quiet.includes('Watch Guy') && /2 more notes/.test(idle.quiet), idle.h);
+}
+
+console.log('\n  the dashboard and the Ask page: one copy of the card stylesheet');
+
+{
+  // The Ask page draws the dashboard's own card, so the two stylesheets must agree exactly.
+  const cardCss = (file) => {
+    const t = readFileSync(path.join(root, file), 'utf8');
+    const a = t.indexOf('/* card-css:start */'), b = t.indexOf('/* card-css:end */');
+    return a === -1 || b < a ? '' : t.slice(a, b);
+  };
+  const dash = cardCss('docs/index.html'), ask = cardCss('ask/template.html');
+  check('both files carry the card-css block', dash.length > 500 && ask.length > 500);
+  check('the two copies are identical', dash === ask);
+  // The shared renderer draws a Copy button on every open trade; the click handler lives outside the
+  // slice the Ask page borrows, so the Ask page has to carry its own or the button is dead there.
+  const askTemplate = readFileSync(path.join(root, 'ask', 'template.html'), 'utf8');
+  check('the Ask page wires the Copy button the shared card draws', /closest\('\[data-copy\]'\)/.test(askTemplate));
 }
 
 // ---- the modules must be importable without doing anything ------------

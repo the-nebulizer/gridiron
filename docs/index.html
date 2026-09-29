@@ -15,7 +15,7 @@
     --line:#24422F; --line-soft:#1C3323;
     --text:#F2F5EB; --text-2:#A8BCA9; --text-3:#6F8873;
     --accent:#FFB41F; --accent-ink:#1A1200; --accent-bg:rgba(255,180,31,.12);
-    --danger:#F0503A; --ok:#5EC4A0;
+    --danger:#F0503A; --ok:#5EC4A0; --ok-text:#5EC4A0;
     --qb:#E8615A; --rb:#5EC4A0; --wr:#5AA9E6; --te:#E8A33D; --k:#B48CE8; --def:#8B9AA8;
     --turf:var(--bg); --pitch:var(--surface-1); --pitch-2:var(--surface-2); --chalk:var(--text); --chalk-dim:var(--text-2); --amber:var(--accent); --flag:var(--danger);
     --display:'Graduate',serif; --body:'Barlow Semi Condensed',system-ui,sans-serif; --mono:'Spline Sans Mono',ui-monospace,monospace;
@@ -28,7 +28,7 @@
       --line:#CFD9CC; --line-soft:#E2E8DE;
       --text:#10201A; --text-2:#4C6152; --text-3:#5F7468;
       --accent:#9A6608; --accent-ink:#FFFFFF; --accent-bg:#FFF3D6;
-      --danger:#C93A28; --ok:#1F8F6A;
+      --danger:#C93A28; --ok:#1F8F6A; --ok-text:#1A7A5A;
       --qb:#C4413B; --rb:#1F8F6A; --wr:#2B7EC2; --te:#B7780A; --k:#7B58C9; --def:#5E6D7B;
       color-scheme:light;
     }
@@ -38,12 +38,13 @@
     --line:#CFD9CC; --line-soft:#E2E8DE;
     --text:#10201A; --text-2:#4C6152; --text-3:#5F7468;
     --accent:#9A6608; --accent-ink:#FFFFFF; --accent-bg:#FFF3D6;
-    --danger:#C93A28; --ok:#1F8F6A;
+    --danger:#C93A28; --ok:#1F8F6A; --ok-text:#1A7A5A;
     --qb:#C4413B; --rb:#1F8F6A; --wr:#2B7EC2; --te:#B7780A; --k:#7B58C9; --def:#5E6D7B;
     color-scheme:light;
   }
   *{box-sizing:border-box}
   html,body{margin:0}
+  html{scroll-padding-top:var(--top-h,48px);scroll-padding-bottom:var(--rail-h,0px)}
   body{background:var(--bg);color:var(--text);font:15px/1.45 var(--body);overflow-x:hidden}
   a{color:var(--text);text-decoration-color:var(--line)}
   a:hover,a:focus-visible{text-decoration-color:var(--accent)}
@@ -71,7 +72,7 @@
   main#app{max-width:1280px;margin:0 auto;padding:0 24px}
   .views{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(380px,1fr);grid-template-areas:"do week" "brief league";gap:1px;background:var(--line-soft);align-items:stretch}
   #do{grid-area:do} #week{grid-area:week} #league{grid-area:league} #brief{grid-area:brief}
-  .view{scroll-margin-top:48px;background:var(--bg);padding:8px var(--pad) 24px;min-width:0}
+  .view{background:var(--bg);padding:8px var(--pad) 24px;min-width:0}
   .notice{font:12px var(--mono);color:var(--text-2);border:1px solid var(--line);border-radius:3px;padding:8px 14px;margin:12px 24px 0}
   .loading,.error{padding:70px 0;text-align:center;color:var(--text-2);font:15px var(--mono)}
   .error b{color:var(--danger)}
@@ -88,9 +89,9 @@
   .side.opp{flex-direction:row-reverse;text-align:right}
   .side .who{min-width:0}
   .side .team{font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .side .rec{font:11px var(--mono);color:var(--text-3)}
+  .side .rec{font:11px var(--mono);color:var(--text-2)}
   .side .pts{font:28px/1 var(--mono);font-variant-numeric:tabular-nums}
-  .vs{font:11px var(--display);color:var(--text-3);padding:0 8px}
+  .vs{font:11px var(--display);color:var(--text-2);padding:0 8px}
   .lineup{margin-top:10px}
   .lhead,.lrow{display:grid;grid-template-columns:44px minmax(0,1fr) 48px 48px minmax(0,1fr);align-items:center}
   .lhead{font:600 11px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);padding:4px 0}
@@ -127,12 +128,13 @@
   .tx .did{color:var(--text-2);flex:1;min-width:180px}
   .tx .did .in{color:var(--text)}
   .tx .when{font:12px var(--mono);color:var(--text-3);margin-left:auto}
-  .free{font:600 10px var(--body);letter-spacing:.1em;color:var(--ok);border:1px solid var(--ok);border-radius:3px;padding:0 6px;margin-left:6px}
+  .free{font:600 11px var(--body);letter-spacing:.1em;color:var(--ok-text);border:1px solid var(--ok);border-radius:3px;padding:0 6px;margin-left:6px}
 
   /* brief */
   .tabs{display:flex;gap:0;overflow-x:auto;border-bottom:1px solid var(--line-soft);margin-top:4px}
   .tab{font:600 13px var(--body);letter-spacing:.08em;text-transform:uppercase;min-height:44px;padding:0 14px;background:none;border:0;color:var(--text-2);white-space:nowrap;cursor:pointer}
   .tab:hover{color:var(--text)}
+  .tab:focus-visible{outline-offset:-3px}
   .tab[aria-selected="true"]{color:var(--text);box-shadow:inset 0 -2px 0 var(--accent)}
   .verdict{font:600 15px/1.35 var(--body);margin:12px 0 4px}
   .verdict .stale{font:11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);border:1px solid var(--line);border-radius:3px;padding:0 6px;margin-left:8px;vertical-align:middle}
@@ -157,7 +159,8 @@
   /* phone rail */
   .rail{display:none;position:sticky;bottom:0;z-index:25;background:var(--surface-1);border-top:1px solid var(--line);min-height:56px;padding:6px 16px calc(6px + env(safe-area-inset-bottom));align-items:center;gap:12px}
   .rail .rtxt{min-width:0;flex:1}
-  .rail .eyebrow{display:block}
+  .rail .eyebrow{display:flex;flex-wrap:wrap;align-items:center;gap:2px 8px;color:var(--text-2)}
+  .rail .eyebrow .flag{font:600 10px var(--body);letter-spacing:.08em;color:var(--danger);border:1px solid var(--danger);border-radius:3px;padding:0 5px;white-space:nowrap}
   .rail .rhead{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;font-size:14px}
   .rail .rhead .meta{display:none}
   .rail a.go{background:var(--accent);color:var(--accent-ink);min-height:44px;padding:0 14px;display:inline-flex;align-items:center;font:600 13px var(--body);letter-spacing:.06em;text-transform:uppercase;border-radius:3px;text-decoration:none;white-space:nowrap}
@@ -187,8 +190,18 @@
     main#app{min-height:calc(100vh - 96px);display:flex;flex-direction:column}
     .views{flex:1}
     .lrow{min-height:44px}
-    .lrow .sd,.lrow .tv,.pc.opp .sub{display:none}
+    .lrow .sd,.lrow .tv{display:none}
     .side .pts{font-size:24px}
+    .tab{padding:0 10px;letter-spacing:.04em}
+  }
+  @media (max-width:399.98px){
+    .top{gap:0 8px}
+    #stamp{display:none}
+    button.refresh{min-width:44px;padding:0 8px}
+    .tab{padding:0 8px;font-size:12px}
+  }
+  @media (max-width:339.98px){
+    .tab{padding:0 6px;font-size:11px;letter-spacing:.02em}
   }
 
   /* ——— the card: rendered by renderDoNow. ask/template.html carries an identical copy of this
@@ -199,9 +212,9 @@
   .dcount{font:12px var(--mono);color:var(--text-2)}
   .dcount b{color:var(--accent);font-weight:500}
   .dlinks{display:flex;gap:12px;font:12px var(--mono);white-space:nowrap}
-  .dlinks a{color:var(--text);text-decoration:underline;text-decoration-color:var(--line)}
+  .dlinks a{display:inline-flex;align-items:center;min-height:44px;margin:-14px -6px;padding:0 6px;color:var(--text);text-decoration:underline;text-decoration-color:var(--line)}
   .dlinks a:hover{text-decoration-color:var(--accent)}
-  .runlink{font:12px var(--mono);color:var(--text);text-decoration:underline;text-decoration-color:var(--line);white-space:nowrap}
+  .runlink{display:inline-flex;align-items:center;min-height:44px;margin:-15px -6px;padding:0 6px;font:12px var(--mono);color:var(--text);text-decoration:underline;text-decoration-color:var(--line);white-space:nowrap}
   .plan{border-left:2px solid var(--accent-bg);margin:0 0 12px}
   .act{border-bottom:1px solid var(--line-soft)}
   .act:last-child{border-bottom:0}
@@ -220,6 +233,7 @@
   .act .lead{font:12px var(--mono);font-weight:400;color:var(--text-3);margin-right:8px}
   .act .flag{font:600 11px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--danger);border:1px solid var(--danger);border-radius:3px;padding:0 6px;margin-left:8px;white-space:nowrap;vertical-align:middle}
   .act .why{grid-column:2/-1;font-size:14px;line-height:1.4;color:var(--text-2)}
+  div.act>.src{grid-column:2/-1}
   details.act>summary .why{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
   details.act[open]>summary .why{display:block;-webkit-line-clamp:unset;overflow:visible}
   .act.waiting .glyph,.act.superseded .glyph,.act.stale .glyph,.act.gone .glyph{color:var(--text-3)}
@@ -236,7 +250,7 @@
   .act.waiting .fact{color:var(--text-2)}
   .fact[data-net="fixes_only"]::before{content:'✓ ';color:var(--ok)}
   .fact[data-net="mixed"]{color:var(--accent)}
-  .fact[data-net="costs_only"]{color:var(--danger)}
+  .fact[data-net="costs_only"]{color:color-mix(in srgb,var(--danger) 80%,var(--text))}
   .evidence{display:flex;align-items:baseline;gap:4px 10px;flex-wrap:wrap;font-size:13px;line-height:1.4}
   .evidence .note{color:var(--text-2);min-width:0}
   .evidence a{color:var(--text);text-decoration:underline;text-decoration-color:var(--line);font:12px var(--mono)}
@@ -282,8 +296,13 @@
     .strip table{font-size:11px}
     .strip td{padding-right:8px}
     body:has(#rail) .dlinks .sleeper{display:none}
+    .strip td:nth-child(4),.strip td:nth-child(5){white-space:normal}
     .fold>summary{min-height:44px}
-    .heads .item .why{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+    .fold .sum{white-space:normal;padding:4px 0;line-height:1.35}
+  }
+  @media (max-width:399.98px){
+    details.act>summary,div.act{grid-template-columns:28px minmax(0,1fr)}
+    .act .chip{grid-column:2;justify-self:start;padding-top:0}
   }
   @media (min-width:720px){
     .detail{padding-left:46px}
@@ -300,7 +319,7 @@
     <a href="#week">Week</a><a href="#league">League</a><a href="#brief">Brief</a>
   </nav>
   <button class="theme" id="theme" title="Colour theme">Auto</button>
-  <button class="refresh" id="refresh" title="Refresh now">↻ <span id="stamp"></span></button>
+  <button class="refresh" id="refresh" title="Refresh now" aria-label="Refresh now">↻ <span id="stamp"></span></button>
 </header>
 <p class="notice" id="notice" hidden></p>
 <main id="app"><div class="loading">Reading the field…</div></main>
@@ -609,8 +628,11 @@ function resolveDependencies(items){
       const p = edges[n][f];
       if(p==null) continue;
       const par = res(p), ps = par.state;
+      // An if_not child of a parent that was itself shelved as superseded covered a need the
+      // grandparent already met (A done -> B superseded -> C superseded), so it is not promoted.
+      // An `after` child of a superseded parent can never run, and stays gone.
       const s = BLOCKING[ps] ? (base==='open' ? 'waiting' : base)
-              : ps==='done'  ? (f==='after' ? base : 'superseded')
+              : (ps==='done' || (ps==='superseded' && f==='if_not')) ? (f==='after' ? base : 'superseded')
               : (f==='after' ? 'gone' : base);   // gone · dismissed · stale · superseded
       const r = RANK[s] || 0;
       if(r > rank){ rank = r; state = s; parent = par; link = f; }
@@ -618,7 +640,10 @@ function resolveDependencies(items){
     // Only a waiting dependent is drawn under its parent; promoted, gone and superseded ones
     // stand (or are shelved) on their own.
     const nested = state==='waiting' && !!parent;
-    const out = {...i, base_state:base, state,
+    // Why an `after` child is gone when it was the parent's fate, not its own: the card says so
+    // instead of claiming a player who was never on the roster has left it.
+    const goneVia = (state==='gone' && link==='after' && base!=='gone' && parent) ? parent.state : null;
+    const out = {...i, base_state:base, state, gone_via:goneVia,
       parent_id: nested ? (parent.id==null ? null : String(parent.id)) : null,
       link: nested ? link : null,
       depth: nested ? (parent.depth||0) + 1 : 0};
@@ -700,8 +725,10 @@ function actionHeadline(i){
   const nm = (n,pos,team)=> `${esc(n||'?')}${pos?` <span class="meta">(${esc(pos)} · ${esc(team||'—')})</span>`:''}`;
   const list = (v)=> (Array.isArray(v)?v:[]).map(esc).join(', ');
   // Gone is a statement of fact, never an instruction: say who has him, or that he's off the roster.
-  if(i.state==='gone' && i.kind!=='trade')
-    return `${nm(i.name,i.pos,i.team)} — ${i.owner ? `taken by ${esc(i.owner)}` : 'no longer on your roster'}`;
+  if(i.state==='gone' && i.kind!=='trade'){
+    const via = i.gone_via ? ({dismissed:'was dismissed', stale:'went stale', superseded:'is no longer needed'}[i.gone_via] || 'is no longer possible') : '';
+    return `${nm(i.name,i.pos,i.team)} — ${i.owner ? `taken by ${esc(i.owner)}` : via ? `the move it followed ${via}` : 'no longer on your roster'}`;
+  }
   switch(i.kind){
     case 'add': {
       const bid = (i.mode==='waiver' && i.faab!=null) ? `, bid $${esc(i.faab)}` : '';
@@ -770,6 +797,9 @@ function actionRow(i, m, o){
   const date = (String(i.report||'').match(/^\d{4}-\d{2}-\d{2}/)||[String(i.report||'').replace(/\.md$/,'')])[0];
   const kind = kindTag(i);
   const live = i.state==='open' || i.state==='waiting';
+  // Drop the parts that aren't there rather than printing " · · ". A shelved row was not checked
+  // just now, so it carries who wrote it and when, and no "checked" time.
+  const src = [titleCase(i.source), date, live && m.now ? `checked ${m.now}` : ''].filter(Boolean).map(esc).join(' · ');
   // A move the compiler has already worked out costs more than it fixes must not be drawn like
   // one that helps. On 2026-09-22 the top row of this card opened a Week 11 tight-end hole and
   // closed nothing — both facts were sitting in the case grid below it, in the same weight and
@@ -787,13 +817,11 @@ function actionRow(i, m, o){
     const whyLine = i.state==='stale'
       ? (i.state_reason ? `<div class="why">${esc(i.state_reason)}</div>` : '')
       : (i.why ? `<div class="why">${esc(i.why)}</div>` : '');
-    return `<div class="act ${esc(i.state)}">${head}${move}<div class="chip">${esc(chip)}</div>${whyLine}</div>`;
+    return `<div class="act ${esc(i.state)}">${head}${move}<div class="chip">${esc(chip)}</div>${whyLine}${src ? `<div class="src"><span>${src}</span></div>` : ''}</div>`;
   }
 
   const dism = (i.kind==='trade' && i.state==='open')
     ? `<button class="dismiss" data-dismiss="${esc(dismissKey(i))}">Dismiss</button>` : '';
-  // Drop the parts that aren't there rather than printing " · · ".
-  const src = [titleCase(i.source), date, m.now ? `checked ${m.now}` : ''].filter(Boolean).map(esc).join(' · ');
   const write = (m.repo && i.report)
     ? `<a href="https://github.com/${esc(m.repo)}/blob/main/reports/${esc(i.report)}" target="_blank" rel="noopener">Read the write-up ↗</a>` : '';
   // The message the routine wrote for Ben to paste into Sleeper, only while the trade is still his to send.
@@ -822,8 +850,23 @@ function compareStrip(primary, rungs){
   const inj = (i)=>{ const a = String((i.case && i.case.asks) || '');
     return /Questionable/.test(a) ? ' Q' : /Doubtful/.test(a) ? ' D' : /\bOut\b/.test(a) ? ' O' : ''; };
   const names = (v)=> (Array.isArray(v) ? v : []).filter(Boolean).join(', ');
-  const get = (i)=> (names(i.get_names) || i.name || '—') + inj(i);
-  const give = (i)=> names(i.give_names) || i.drop_name || (i.kind && !/^(add|trade|claim|waiver)/.test(String(i.kind)) ? (i.name||'—') : '—');
+  // What each kind of move brings in and sends out. Only a trade or a claim names both sides;
+  // a start benches someone, a drop and an IR move only send a player away, an activation only
+  // brings one back — printing the mover in both columns would say he is swapped for himself.
+  const NONE = '—';
+  const sides = (i)=>{
+    const nm = i.name || NONE;
+    switch(i.kind){
+      case 'trade':    return [names(i.get_names) || NONE, names(i.give_names) || NONE];
+      case 'start':    return [nm, i.for_name || NONE];
+      case 'drop':     return [NONE, nm];
+      case 'ir':       return [NONE, nm + ' (to IR)'];
+      case 'activate': return [nm + ' (from IR)', NONE];
+      default:         return [names(i.get_names) || nm, names(i.give_names) || i.drop_name || NONE];   // add / claim
+    }
+  };
+  const get = (i)=>{ const g = sides(i)[0]; return g===NONE ? g : g + inj(i); };
+  const give = (i)=> sides(i)[1];
   const cost = (i)=>{
     if(i.faab==null) return 'no FAAB';
     const of = String((i.case && i.case.cost) || '').match(/^\$\d+ of (\$\d+)/);
@@ -873,7 +916,9 @@ function renderDoNow(m){
     drawn.add(i);
     const rungs = [];
     const kids = branch(i, 1, rungs);
-    return `<div class="plan">${actionRow(i, m, {num:n+1})}${kids}${rungs.length ? compareStrip(i, rungs) : ''}</div>`;
+    // The strip compares alternatives. A "then" step runs as well as its parent, not instead of it.
+    const options = rungs.filter(r=>r.item.link==='if_not');
+    return `<div class="plan">${actionRow(i, m, {num:n+1})}${kids}${options.length ? compareStrip(i, options) : ''}</div>`;
   }).join('');
   // A dependent whose parent isn't on the card at all (a malformed file) is still shown, flat,
   // rather than silently dropped.
@@ -889,8 +934,14 @@ function renderDoNow(m){
   // stale. The quiet ones fold away behind a count.
   const item = (a)=> `<div class="item"><span class="tag ${esc(a.urgency)}">${esc(a.urgency)}</span>
       <span class="what"><b>${esc(a.what)}</b><span class="why">${esc(a.why)}</span></span></div>`;
+  // Two slots stay open for whatever else there is, but an alert that needs Ben before kickoff is
+  // never folded away behind a count: anything urgent ('now'), an injured starter (keep) and a bye
+  // no one on the roster can cover always show, however many there are.
   const allLoud = alerts.filter(a=>a.urgency!=='watch');
-  const loud = allLoud.slice(0,2), quiet = allLoud.slice(2).concat(alerts.filter(a=>a.urgency==='watch'));
+  const pinned = (a)=> a.urgency==='now' || a.keep===true || a.covered===false;
+  let room = Math.max(0, 2 - allLoud.filter(pinned).length);
+  const loud = allLoud.filter(a=> pinned(a) || room-- > 0);
+  const quiet = allLoud.filter(a=>!loud.includes(a)).concat(alerts.filter(a=>a.urgency==='watch'));
   if(loud.length || quiet.length){
     body += `<div class="heads">${loud.length ? `<div class="eyebrow">Heads up</div>${loud.map(item).join('')}` : ''}${
       quiet.length ? fold('heads-quiet', `${quiet.length} more note${quiet.length===1?'':'s'}`, '', quiet.map(item).join(''), false) : ''}</div>`;
@@ -992,54 +1043,116 @@ function wireDismiss(m){
 function paintChrome(m){
   const b = $('badge-do');
   if(b){ b.textContent = m.openCount || ''; b.hidden = !m.openCount; }
+  // The badge is just a number to a screen reader, so the link says what it counts.
+  const doLink = document.querySelector('.nav a[href="#do"]');
+  if(doLink){ if(m.openCount) doLink.setAttribute('aria-label', `Do, ${m.openCount} open`); else doLink.removeAttribute('aria-label'); }
   const r = $('rail');
-  if(!r) return;
+  if(!r){ syncChrome(); return; }
   const p = m.primary;
+  // The rail is the one move on a phone, so a move the compiler worked out costs more than it fixes
+  // carries the same warning here that its row carries in the card.
+  const net = p && p.case && p.case.tradeoff && p.case.tradeoff.net;
+  const flag = net==='costs_only' ? '<span class="flag">costs more than it fixes</span>' : '';
   r.className = 'rail' + (p ? '' : ' idle');
-  r.innerHTML = `<div class="rtxt"><span class="eyebrow">${p ? 'Do now' : m.ok===false ? 'No moves compiled yet' : 'Nothing to do'}</span>
+  r.innerHTML = `<div class="rtxt"><span class="eyebrow">${p ? 'Do now' : m.ok===false ? 'No moves compiled yet' : 'Nothing to do'}${flag}</span>
       <div class="rhead">${p ? actionHeadline(p) : 'Next: '+esc(m.nextCheck||'Waivers run Tue 7am')}</div></div>
     <a class="go" href="https://sleeper.com/leagues/${esc(m.league)}" target="_blank" rel="noopener">Sleeper ↗</a>`;
+  syncChrome();
 }
+// The header and the phone rail are sticky, so a row that takes keyboard focus (or a scrolled-to
+// anchor) has to stop short of them. Their heights change with the width and the content, so
+// they are measured rather than guessed; the root's scroll padding reads these two numbers.
+function syncChrome(){
+  const top = document.querySelector('.top'), rail = $('rail');
+  const st = document.documentElement.style;
+  st.setProperty('--top-h', (top ? top.offsetHeight : 48) + 'px');
+  st.setProperty('--rail-h', (rail ? rail.offsetHeight : 0) + 'px');
+}
+addEventListener('resize', syncChrome);
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(syncChrome);
+if('ResizeObserver' in window){ const ro = new ResizeObserver(syncChrome); ro.observe(document.querySelector('.top')); }
 
 // Which <details> are open survives the two-minute rebuild, and a reload. Until the reader has
 // touched anything the markup's own `open` attributes are the defaults.
 const OPEN_KEY = 'gridiron.open';
 let openKeys = null;
-function captureOpen(){ openKeys = new Set([...document.querySelectorAll('#app details[data-key][open]')].map(d=>d.dataset.key)); }
+function loadOpen(){
+  if(openKeys) return;
+  try{ const s = localStorage.getItem(OPEN_KEY); if(s) openKeys = new Set(JSON.parse(s)); }catch{}
+}
 function restoreOpen(){
-  if(!openKeys){ try{ const s = localStorage.getItem(OPEN_KEY); if(s) openKeys = new Set(JSON.parse(s)); }catch{} }
+  loadOpen();
   if(!openKeys) return;
   document.querySelectorAll('#app details[data-key]').forEach(d=>{ d.open = openKeys.has(d.dataset.key); });
 }
+// One row at a time, never "whatever is in the page right now": the write-up's sections arrive
+// after the first paint, and a toggle fired while they were still loading used to forget them.
 document.addEventListener('toggle', e=>{
-  if(e.target.matches && e.target.matches('#app details[data-key]')){
-    captureOpen();
-    try{ localStorage.setItem(OPEN_KEY, JSON.stringify([...openKeys])); }catch{}
-  }
+  const d = e.target;
+  if(!(d.matches && d.matches('#app details[data-key]'))) return;
+  loadOpen();
+  if(!openKeys) openKeys = new Set([...document.querySelectorAll('#app details[data-key][open]')].map(x=>x.dataset.key));
+  if(d.open) openKeys.add(d.dataset.key); else openKeys.delete(d.dataset.key);
+  try{ localStorage.setItem(OPEN_KEY, JSON.stringify([...openKeys])); }catch{}
 }, true);
 
 // The hash is the view: #do (default), #week, #league, #brief, #brief/<routine|settings>.
 const VIEWS = ['do','week','league','brief'];
+const isWide = ()=> matchMedia('(min-width:1100px)').matches;
+// The nav says which view is current: a real token (an empty aria-current means "false"), on one link only.
+function paintNav(view){
+  document.querySelectorAll('.nav a').forEach(a=>{
+    if(a.getAttribute('href')==='#'+view) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current');
+  });
+}
+let navView = 'do';
 function route(scrollToTop){
   const [v, sub] = location.hash.slice(1).split('/');
   const view = VIEWS.includes(v) ? v : 'do';
   document.body.dataset.view = view;
-  document.querySelectorAll('.nav a').forEach(a=>a.toggleAttribute('aria-current', a.getAttribute('href')==='#'+view));
+  navView = view; paintNav(view);
   if(view==='brief' && sub && ((ROUTINES[sub] && sub!=='activity') || sub==='settings') && rendered && sub!==currentBrief) showBrief(sub);
-  if(scrollToTop && matchMedia('(min-width:1100px)').matches) document.getElementById(view)?.scrollIntoView({block:'start'});
+  if(scrollToTop && isWide()) document.getElementById(view)?.scrollIntoView({block:'start'});
   else if(scrollToTop) window.scrollTo(0,0);
 }
 addEventListener('hashchange', ()=>route(true));
-// Wide screens show all four at once, so the tabs follow the scroll instead of the hash.
-if('IntersectionObserver' in window){
-  const spy = new IntersectionObserver(es=>{
-    if(!matchMedia('(min-width:1100px)').matches) return;
-    es.filter(e=>e.isIntersecting).slice(0,1).forEach(e=>{
-      document.querySelectorAll('.nav a').forEach(a=>a.toggleAttribute('aria-current', a.getAttribute('href')==='#'+e.target.id));
-    });
-  }, {rootMargin:'-20% 0px -70% 0px'});
-  window.watchViews = ()=>document.querySelectorAll('.view').forEach(v=>spy.observe(v));
+// A link that arrives on a view (#league, #brief/lineup) has to land on it, but the write-up fills in a
+// moment after the first paint and the page grows under the reader, so the landing is repeated once
+// when it does — unless the reader has already taken hold of the scroll themselves.
+let deepLink = false;
+function armDeepLink(){ deepLink = true; setTimeout(()=>{ deepLink = false; }, 10000); }
+function settleDeepLink(){
+  if(!deepLink) return;
+  deepLink = false;
+  if(isWide() && location.hash.length > 1) route(true);
 }
+['wheel','touchstart','keydown','mousedown'].forEach(t=>addEventListener(t, ()=>{ deepLink = false; }, {passive:true, capture:true}));
+// Wide screens show all four at once, in a two-by-two grid, so the nav follows the scroll instead of
+// the hash. Two views share every row and scroll together, so scrolling can only tell the rows
+// apart: within the row that is under the reading line the current view stays put if it is one of
+// the two (a click on Brief must not light League), otherwise the row's left-hand view takes it.
+// It works from where things are right now, on a scroll and after every refresh, so a refresh
+// that rebuilds the page can never reset it to something the reader has scrolled away from.
+function spyNow(){
+  if(!isWide()) return;
+  const top = document.querySelector('.top'), topH = top ? top.offsetHeight : 48;
+  const doc = document.documentElement;
+  // At the very bottom the last row may never reach the reading line on a short page; read from just above the footer.
+  const atEnd = doc.scrollHeight > innerHeight + 2 && scrollY + innerHeight >= doc.scrollHeight - 2;
+  const line = atEnd ? innerHeight - 100 : topH + (innerHeight - topH) * .25;
+  const under = VIEWS.map(id=>{ const el = document.getElementById(id); return el && {id, r:el.getBoundingClientRect()}; })
+    .filter(x=>x && x.r.top <= line && x.r.bottom > line);
+  if(!under.length) return;
+  const next = under.some(x=>x.id===navView) ? navView : under.sort((a,b)=>a.r.left-b.r.left)[0].id;
+  if(next !== navView){ navView = next; paintNav(next); }
+}
+let spyQueued = false;
+addEventListener('scroll', ()=>{
+  if(spyQueued) return;
+  spyQueued = true;
+  requestAnimationFrame(()=>{ spyQueued = false; spyNow(); });
+}, {passive:true});
+addEventListener('resize', spyNow);
 
 const THEMES = ['auto','light','dark'];
 let theme = 'auto';
@@ -1160,6 +1273,9 @@ let currentBrief = null;                 // the tab the reader has open; survive
 let briefSources = null;                 // the compiled per-routine verdicts, from the last render
 let articleCache = {key:null, md:''};    // the write-up's markdown, refetched only when GitHub says it changed
 async function showBrief(type){
+  try{ await showBriefInner(type); } finally{ settleDeepLink(); }
+}
+async function showBriefInner(type){
   currentBrief = type;
   document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected', t.dataset.type===type));
   // Switching routine is shareable but doesn't stack up history entries.
@@ -1167,9 +1283,7 @@ async function showBrief(type){
   const box = $('briefpanel');
   if(!box) return;
   if(type==='settings'){
-    const n = Object.values(ROUTINES).filter(r=>r.id).length + 1;
-    box.innerHTML = fold('routines','Routines',`${n} scheduled`, settingsPanel(), false);
-    restoreOpen();
+    box.innerHTML = settingsPanel();
     return;
   }
   const r = ROUTINES[type], f = newestOf(type), missed = missedRun(type, f);
@@ -1244,6 +1358,7 @@ async function fetchAll(state){
 }
 
 function render(state, got, failed){
+  const firstRender = !rendered;
   const wk = state.week || 1;
   const {league, rosters, users, players} = got;
   const owner = Object.fromEntries(users.map(u=>[u.user_id,u.display_name]));
@@ -1392,13 +1507,12 @@ function render(state, got, failed){
     const who = (t.roster_ids||[]).map(name).join(', ');
     const adds = Object.keys(t.adds||{}).map(id=>resolve(players,id)).filter(Boolean);
     const drops = Object.keys(t.drops||{}).map(id=>resolve(players,id)).filter(Boolean);
-    const free = drops.filter(p=>!rostered.has(p.id));
-    freeCount += free.length;
+    const isFree = (p)=> !rostered.has(p.id);
+    freeCount += drops.filter(isFree).length;
     const bid = t.settings&&t.settings.waiver_bid!=null ? ` for $${t.settings.waiver_bid}` : '';
     return `<div class="tx"><span class="who">${esc(who)}</span>
       <span class="did">${adds.length?`took <span class="in">${adds.map(p=>esc(p.name)).join(', ')}</span>${esc(bid)}`:''}${
-        drops.length?`${adds.length?', let go of ':'let go of '}${drops.map(p=>esc(p.name)).join(', ')}`:''}${
-        free.length?` <span class="free" title="${esc(free.map(p=>p.name).join(', '))}">FREE</span>`:''}</span>
+        drops.length?`${adds.length?', let go of ':'let go of '}${drops.map(p=>esc(p.name)+(isFree(p)?' <span class="free">FREE</span>':'')).join(', ')}`:''}</span>
       <span class="when">${t.status_updated?new Date(t.status_updated).toLocaleDateString(undefined,{month:'short',day:'numeric'}):''}</span></div>`;
   }).join('');
   const standings = rosters.slice().sort((x,y)=>(y.settings?.wins||0)-(x.settings?.wins||0) || pf(y)-pf(x));
@@ -1436,8 +1550,11 @@ function render(state, got, failed){
   showBrief((ROUTINES[hashSub] && hashSub!=='activity' || hashSub==='settings' ? hashSub : '') || currentBrief
     || (newest ? (Object.keys(ROUTINES).find(t=>t!=='activity' && newest.name.includes('-'+t)) || 'waivers') : 'waivers'));
   route(false);
-  if(window.watchViews) window.watchViews();
   scrollTo(0, y0);
+  // A shared or bookmarked link to a view lands on it (wide screens show all four at once, so the
+  // hash alone would leave the top of the page in front of the reader). Later refreshes keep the scroll.
+  if(firstRender && location.hash.length > 1){ route(true); armDeepLink(); }
+  spyNow();
 
   // One plain line for whatever didn't come through; the exception text stays in the tooltip.
   const missing = [...new Set(Object.keys(failed).map(k=>FEED_NAMES[k]||k))];
