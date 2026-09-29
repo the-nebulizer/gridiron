@@ -7,229 +7,301 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Graduate&family=Barlow+Semi+Condensed:wght@400;500;600&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script type="text/javascript">try{const t=localStorage.getItem('gridiron.theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;}catch{}</script>
 <script src="marked.min.js"></script>
 <style>
   :root{
-    --turf:#0C1D12; --pitch:#15291C; --pitch-2:#182F20; --line:#24422F;
-    --chalk:#F2F5EB; --chalk-dim:#A8BCA9; --amber:#FFB41F; --flag:#F0503A;
-    --display:'Graduate',serif; --body:'Barlow Semi Condensed',system-ui,sans-serif;
-    --mono:'Spline Sans Mono',ui-monospace,monospace;
+    --bg:#0C1D12; --surface-1:#15291C; --surface-2:#182F20; --surface-3:#1F3A28;
+    --line:#24422F; --line-soft:#1C3323;
+    --text:#F2F5EB; --text-2:#A8BCA9; --text-3:#6F8873;
+    --accent:#FFB41F; --accent-ink:#1A1200; --accent-bg:rgba(255,180,31,.12);
+    --danger:#F0503A; --ok:#5EC4A0;
+    --qb:#E8615A; --rb:#5EC4A0; --wr:#5AA9E6; --te:#E8A33D; --k:#B48CE8; --def:#8B9AA8;
+    --turf:var(--bg); --pitch:var(--surface-1); --pitch-2:var(--surface-2); --chalk:var(--text); --chalk-dim:var(--text-2); --amber:var(--accent); --flag:var(--danger);
+    --display:'Graduate',serif; --body:'Barlow Semi Condensed',system-ui,sans-serif; --mono:'Spline Sans Mono',ui-monospace,monospace;
+    --pad:16px; --r:3px; --row:44px; --fold:52px;
+    color-scheme:dark;
+  }
+  @media (prefers-color-scheme:light){
+    :root:not([data-theme="dark"]){
+      --bg:#F4F6F1; --surface-1:#FFFFFF; --surface-2:#EEF2EA; --surface-3:#E3E9DF;
+      --line:#CFD9CC; --line-soft:#E2E8DE;
+      --text:#10201A; --text-2:#4C6152; --text-3:#6F8477;
+      --accent:#9A6608; --accent-ink:#FFFFFF; --accent-bg:#FFF3D6;
+      --danger:#C93A28; --ok:#1F8F6A;
+      --qb:#C4413B; --rb:#1F8F6A; --wr:#2B7EC2; --te:#B7780A; --k:#7B58C9; --def:#5E6D7B;
+      color-scheme:light;
+    }
+  }
+  :root[data-theme="light"]{
+    --bg:#F4F6F1; --surface-1:#FFFFFF; --surface-2:#EEF2EA; --surface-3:#E3E9DF;
+    --line:#CFD9CC; --line-soft:#E2E8DE;
+    --text:#10201A; --text-2:#4C6152; --text-3:#6F8477;
+    --accent:#9A6608; --accent-ink:#FFFFFF; --accent-bg:#FFF3D6;
+    --danger:#C93A28; --ok:#1F8F6A;
+    --qb:#C4413B; --rb:#1F8F6A; --wr:#2B7EC2; --te:#B7780A; --k:#7B58C9; --def:#5E6D7B;
+    color-scheme:light;
   }
   *{box-sizing:border-box}
   html,body{margin:0}
-  body{background:var(--turf);color:var(--chalk);font-family:var(--body);font-size:17px;line-height:1.55}
-  a{color:var(--amber);text-decoration:none}
-  a:hover,a:focus-visible{text-decoration:underline}
-  :focus-visible{outline:2px solid var(--amber);outline-offset:2px}
-  .wrap{max-width:960px;margin:0 auto;padding:0 20px 90px}
+  body{background:var(--bg);color:var(--text);font:15px/1.45 var(--body);overflow-x:hidden}
+  a{color:var(--text);text-decoration-color:var(--line)}
+  a:hover,a:focus-visible{text-decoration-color:var(--accent)}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  button{font-family:inherit}
+  [data-pos="QB"]{--pos:var(--qb)} [data-pos="RB"]{--pos:var(--rb)} [data-pos="WR"]{--pos:var(--wr)}
+  [data-pos="TE"]{--pos:var(--te)} [data-pos="K"]{--pos:var(--k)} [data-pos="DEF"]{--pos:var(--def)}
+  .pos-tag{background:color-mix(in srgb,var(--pos,var(--text-3)) 16%,transparent);color:var(--pos,var(--text-3))}
 
-  .field{background-image:repeating-linear-gradient(90deg,transparent 0 95px,rgba(242,245,235,.06) 95px 96px);border-bottom:1px solid var(--line)}
-  header.masthead{max-width:960px;margin:0 auto;padding:30px 20px 22px;display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap}
-  .wordmark{font-family:var(--display);font-size:clamp(24px,4vw,34px);letter-spacing:.04em}
-  .wordmark .throne{color:var(--amber)}
-  .weekchip{font-family:var(--mono);font-size:14px;color:var(--chalk-dim)}
-  .weekchip b{color:var(--amber);font-weight:500}
+  /* masthead + nav */
+  .top{position:sticky;top:0;z-index:30;background:var(--bg);border-bottom:1px solid var(--line-soft);display:flex;align-items:center;gap:16px;min-height:48px;padding:0 24px}
+  .wordmark{font:18px var(--display);letter-spacing:.04em;white-space:nowrap}
+  .wordmark .throne{color:var(--accent)}
+  .weekchip{font:12px var(--mono);color:var(--text-2);white-space:nowrap}
+  .weekchip .short{display:none}
+  .nav{display:flex;gap:2px;margin-left:auto}
+  .nav a{display:flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 14px;font:600 13px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--text-2);text-decoration:none}
+  .nav a:hover{color:var(--text)}
+  .nav a[aria-current]{color:var(--text);box-shadow:inset 0 -2px 0 var(--accent)}
+  .nbadge{background:var(--accent);color:var(--accent-ink);border-radius:9px;min-width:18px;padding:0 5px;font:600 11px/18px var(--mono);text-align:center}
+  .nbadge[hidden]{display:none}
+  button.theme,button.refresh{font:12px var(--mono);background:none;border:1px solid var(--line);border-radius:3px;color:var(--text-2);padding:0 10px;min-height:32px;cursor:pointer;white-space:nowrap}
+  button.theme:hover,button.refresh:hover{border-color:var(--accent);color:var(--text)}
 
-  section{margin-top:52px}
-  h2{font-family:var(--display);font-size:16px;font-weight:400;letter-spacing:.12em;color:var(--chalk);margin:0 0 6px;text-transform:uppercase}
-  .sub{font-size:15px;color:var(--chalk-dim);margin:0 0 18px}
+  main#app{max-width:1280px;margin:0 auto;padding:0 24px}
+  .views{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(380px,1fr);grid-template-areas:"do week" "brief league";gap:1px;background:var(--line-soft);align-items:stretch}
+  #do{grid-area:do} #week{grid-area:week} #league{grid-area:league} #brief{grid-area:brief}
+  .view{background:var(--bg);padding:8px var(--pad) 24px;min-width:0}
+  .notice{font:12px var(--mono);color:var(--text-2);border:1px solid var(--line);border-radius:3px;padding:8px 14px;margin:12px 24px 0}
+  .loading,.error{padding:70px 0;text-align:center;color:var(--text-2);font:15px var(--mono)}
+  .error b{color:var(--danger)}
+  .dim{color:var(--text-3)}
+  .missed{color:var(--danger)}
+  .sub{font-size:13px;color:var(--text-2);margin:0 0 12px}
+  .allclear{padding:16px 0;color:var(--text-2)}
 
-  /* alert rows: the card's heads-up list, and the "nothing here" lines in the feeds */
-  .item{padding:15px 20px;border-bottom:1px solid var(--line);display:flex;gap:14px;align-items:baseline}
-  .item:last-child{border-bottom:0}
-  .tag{font-family:var(--mono);font-size:11px;letter-spacing:.08em;padding:2px 7px;border:1px solid;flex-shrink:0;text-transform:uppercase}
-  .tag.now{color:var(--flag);border-color:var(--flag)}
-  .tag.soon{color:var(--amber);border-color:var(--amber)}
-  .tag.watch{color:var(--chalk-dim);border-color:var(--line)}
-  .item .what{min-width:0}
-  .item .what b{color:var(--chalk);font-weight:600}
-  .item .why{color:var(--chalk-dim);font-size:15px;display:block;margin-top:2px}
-  .allclear{padding:22px 20px;color:var(--chalk-dim)}
-
-  /* do now — the headline card: the routines' moves first, then what the page works out itself */
-  .donow{margin-top:32px;border:1px solid var(--line);border-top:3px solid var(--amber);background:var(--pitch)}
-  .donow .dhead{display:flex;align-items:baseline;justify-content:space-between;gap:12px 18px;flex-wrap:wrap;padding:16px 22px 14px;border-bottom:1px solid var(--line)}
-  .donow .dlinks{display:flex;gap:8px;flex-wrap:wrap}
-  .donow .dtitle{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
-  .donow .dhead h2{margin:0}
-  .dcount{font-family:var(--mono);font-size:13px;color:var(--chalk-dim)}
-  .dcount b{color:var(--amber);font-weight:500}
-  .act{display:grid;grid-template-columns:18px 1fr auto;gap:3px 12px;padding:14px 22px;border-bottom:1px solid var(--line)}
-  .act:last-child{border-bottom:0}
-  .act .glyph{font-family:var(--mono);font-size:14px;line-height:1.6;color:var(--amber)}
-  .act.done .glyph{color:var(--chalk-dim)}
-  .act.gone .glyph{color:var(--flag)}
-  .act .move{font-weight:600;font-size:18px;min-width:0}
-  .act.done .move{color:var(--chalk-dim);font-weight:500}
-  .act .move .meta{font-family:var(--mono);font-size:13px;font-weight:400;color:var(--chalk-dim)}
-  .act .chip{font-family:var(--mono);font-size:12px;color:var(--amber);border:1px solid var(--line);padding:2px 9px;white-space:nowrap;align-self:start;justify-self:end}
-  .act.done .chip,.act.gone .chip,.act.stale .chip{color:var(--chalk-dim)}
-  .act .kind{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--amber);margin-right:10px;vertical-align:middle}
-  .act .flag{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--flag);border:1px solid var(--flag);padding:1px 7px;margin-left:10px;white-space:nowrap;vertical-align:middle}
-  /* the case: the compiler's evidence for the move, a small two-column grid spanning the same
-     columns as .why — label left, answer right, only the lines the action actually carries */
-  .act .case{grid-column:2/-1;display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;margin:8px 0 2px;font-size:13px;line-height:1.35}
-  .act .case .k{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--chalk-dim);padding-top:2px}
-  .act .case .v{color:var(--chalk)}
-  .act .why{grid-column:2/-1;font-size:16px;color:var(--chalk-dim)}
-  .act .evidence{grid-column:2/-1;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:5px;font-size:13px}
-  .act .evidence .k{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--chalk-dim)}
-  .act .evidence .asof{font-family:var(--mono);font-size:11px;color:var(--chalk-dim)}
-  /* dependents: drawn under the action they wait on, indented with padding — no extra columns */
-  /* stale shares the same muted treatment: shelved news, not a live instruction */
-  .act.waiting .glyph,.act.superseded .glyph,.act.stale .glyph{color:var(--chalk-dim)}
-  .act.waiting .move,.act.superseded .move,.act.stale .move{color:var(--chalk-dim);font-weight:500}
-  .act.waiting .kind,.act.superseded .kind,.act.stale .kind{color:var(--chalk-dim)}
-  .act.waiting .case .v{color:var(--chalk-dim)}
-  .act .lead{font-family:var(--mono);font-size:12px;font-weight:400;letter-spacing:.04em;color:var(--chalk-dim)}
-  .act.nest{border-bottom-style:dotted}
-  .act.nest-1{padding-left:46px}
-  .act.nest-2{padding-left:70px}
-  .act.nest-3{padding-left:94px}
-  /* the sendable offer text, folded away until Ben wants to copy it */
-  .act .offer{grid-column:2/-1;margin-top:5px}
-  .act .offer summary{font-family:var(--mono);font-size:12px;color:var(--chalk-dim);cursor:pointer;list-style:none}
-  .act .offer summary::-webkit-details-marker{display:none}
-  .act .offer summary::before{content:'▸ '}
-  .act .offer[open] summary::before{content:'▾ '}
-  .act .offer summary:hover{color:var(--amber)}
-  .act .offer pre{font-family:var(--mono);font-size:13px;line-height:1.55;color:var(--chalk);
-    background:var(--pitch-2);border:1px solid var(--line);padding:11px 13px;margin:7px 0 0;
-    white-space:pre-wrap;overflow-wrap:anywhere}
-  .act .src{grid-column:2/-1;display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-family:var(--mono);font-size:12px;color:var(--chalk-dim);margin-top:2px}
-  .act .dismiss{font-family:var(--mono);font-size:12px;background:none;border:1px solid var(--line);color:var(--chalk-dim);padding:2px 9px;cursor:pointer}
-  .act .dismiss:hover{border-color:var(--amber);color:var(--amber)}
-  .donow .none{padding:18px 22px;color:var(--chalk-dim)}
-  .donow .none b{color:var(--chalk);font-weight:600}
-  .donow .none .next{font-family:var(--mono);font-size:13px}
-  .donedrop{border-top:1px solid var(--line)}
-  .donedrop summary{font-family:var(--mono);font-size:13px;color:var(--chalk-dim);padding:11px 22px;cursor:pointer;list-style:none}
-  .donedrop summary::-webkit-details-marker{display:none}
-  .donedrop summary::before{content:'▸ ';color:var(--chalk-dim)}
-  .donedrop[open] summary::before{content:'▾ '}
-  .donedrop summary:hover{color:var(--amber)}
-  .donedrop .act{border-top:1px solid var(--line);border-bottom:0}
-  .heads{border-top:1px solid var(--line);background:var(--pitch-2)}
-  .heads .htitle{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--chalk-dim);padding:13px 22px 0}
-  .heads .item{padding:11px 22px;border-bottom:0}
-  .heads .item + .item{border-top:1px solid var(--line)}
-  .drift{border-top:1px solid var(--line);padding:11px 22px;font-family:var(--mono);font-size:12px;color:var(--chalk-dim)}
-
-  .scorebug{border:1px solid var(--line);border-top:3px solid var(--amber);background:var(--pitch);display:grid;grid-template-columns:1fr auto 1fr;align-items:center}
-  .side{padding:18px 22px;min-width:0}
-  .side.opp{text-align:right}
-  .side .team{font-size:20px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .side .rec{font-family:var(--mono);font-size:13px;color:var(--chalk-dim);margin-top:2px}
-  .side .pts{font-family:var(--mono);font-size:clamp(30px,6vw,42px);color:var(--amber);line-height:1.15;margin-top:4px}
-  .vs{font-family:var(--display);font-size:13px;color:var(--chalk-dim);padding:0 16px;align-self:stretch;display:flex;align-items:center;border-left:1px solid var(--line);border-right:1px solid var(--line)}
-
-  .lineup{border:1px solid var(--line);background:var(--pitch);margin-top:14px}
-  .lineup .head{display:grid;grid-template-columns:1fr 76px 1fr;font-family:var(--mono);font-size:13px;color:var(--chalk-dim);border-bottom:1px solid var(--line)}
-  .lineup .head div{padding:10px 16px}
-  .lineup .head .r{text-align:right}
-  .slotrow{display:grid;grid-template-columns:1fr 76px 1fr}
-  .slotrow:nth-child(even){background:var(--pitch-2)}
-  .slot{font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--chalk-dim);display:flex;align-items:center;justify-content:center}
-  .pcell{padding:10px 16px;min-width:0}
-  .pcell.opp{text-align:right}
-  .pline{display:flex;align-items:baseline;gap:8px;min-width:0}
-  .pcell.opp .pline{flex-direction:row-reverse}
-  .pname{font-weight:500;font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .ppts{font-family:var(--mono);font-size:14px;color:var(--amber);margin-left:auto;flex-shrink:0}
-  .pcell.opp .ppts{margin-left:0;margin-right:auto}
-  .kick{font-family:var(--mono);font-size:12px;color:var(--chalk-dim);margin-top:2px}
-  .kick.live{color:var(--amber)}
-  .badge{font-family:var(--mono);font-size:11px;padding:1px 6px;border:1px solid;flex-shrink:0}
-  .badge.q{color:var(--amber);border-color:var(--amber)}
-  .badge.out{color:var(--flag);border-color:var(--flag)}
-  .lineup.solo .head,.lineup.solo .slotrow{grid-template-columns:76px 1fr}
-  .nogame{padding:12px 16px;color:var(--chalk-dim);border-bottom:1px solid var(--line)}
-  .benchnote{padding:12px 16px;font-size:16px;color:var(--chalk-dim);border-top:1px solid var(--line);line-height:1.7}
-  .benchnote b{color:var(--chalk);font-weight:500}
+  /* week */
+  .callline{font-size:13px;color:var(--text-2);margin:4px 0 10px;line-height:1.4}
+  .callline b{color:var(--text);font-weight:600}
+  .scorebug{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;background:var(--surface-1);border-radius:3px;height:64px}
+  .side{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 12px;min-width:0}
+  .side.opp{flex-direction:row-reverse;text-align:right}
+  .side .who{min-width:0}
+  .side .team{font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .side .rec{font:11px var(--mono);color:var(--text-3)}
+  .side .pts{font:28px/1 var(--mono);font-variant-numeric:tabular-nums}
+  .vs{font:11px var(--display);color:var(--text-3);padding:0 8px}
+  .lineup{margin-top:10px}
+  .lhead,.lrow{display:grid;grid-template-columns:44px minmax(0,1fr) 48px 48px minmax(0,1fr);align-items:center}
+  .lhead{font:600 11px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);padding:4px 0}
+  .lhead .r{text-align:right;padding-right:6px}
+  .lrow{min-height:40px;border-top:1px solid var(--line-soft);padding:2px 0}
+  .slot{font:11px var(--mono);text-align:center;border-radius:3px;padding:2px 0;margin-right:8px;background:color-mix(in srgb,var(--pos,var(--text-3)) 16%,transparent);color:var(--pos,var(--text-2))}
+  .pc{min-width:0}
+  .pc.opp{padding-left:8px}
+  .pl{display:flex;align-items:baseline;gap:6px;min-width:0}
+  .pname{font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .kick{font-size:11px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .kick.live{color:var(--accent)}
+  .lrow .pts{font:13px var(--mono);font-variant-numeric:tabular-nums;text-align:right;padding-right:6px;color:var(--text-2)}
+  .badge{font:600 10px var(--mono);padding:0 5px;border:1px solid;border-radius:3px;flex-shrink:0}
+  .badge.q{color:var(--accent);border-color:var(--accent)}
+  .badge.out{color:var(--danger);border-color:var(--danger)}
+  .lineup.solo .lhead,.lineup.solo .lrow{grid-template-columns:44px minmax(0,1fr) 48px}
+  .nogame{padding:8px 0;color:var(--text-2);font-size:13px}
+  .benchnote{font-size:14px;color:var(--text-2);line-height:1.7}
+  .benchnote b{color:var(--text);font-weight:600}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th{font:600 11px var(--body);letter-spacing:.08em;color:var(--text-3);text-align:left;padding:6px 8px 6px 0;border-bottom:1px solid var(--line-soft);text-transform:uppercase}
+  th.r{text-align:right}
+  td{padding:0 8px 0 0;height:32px;border-bottom:1px solid var(--line-soft)}
+  td.num{font:12px var(--mono);font-variant-numeric:tabular-nums;text-align:right;color:var(--text-2)}
+  tr.me{background:var(--accent-bg)}
+  tr.me td:first-child{box-shadow:inset 2px 0 var(--accent);padding-left:8px}
+  tr.me td{font-weight:600}
 
   /* league activity */
-  .feed{border:1px solid var(--line);background:var(--pitch)}
-  .move{padding:13px 20px;border-bottom:1px solid var(--line);display:flex;gap:16px;align-items:baseline;flex-wrap:wrap}
-  .move:last-child{border-bottom:0}
-  .move .who{font-weight:600;min-width:150px}
-  .move .did{color:var(--chalk-dim);flex:1;min-width:220px}
-  .move .did .in{color:var(--chalk)}
-  .move .when{font-family:var(--mono);font-size:12px;color:var(--chalk-dim);margin-left:auto}
-  .free{font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--amber);border:1px solid var(--amber);padding:1px 6px}
+  .tx{display:flex;gap:2px 12px;align-items:baseline;flex-wrap:wrap;min-height:40px;padding:6px 0;border-top:1px solid var(--line-soft);font-size:14px}
+  .tx:first-child{border-top:0}
+  .tx .who{font-weight:600}
+  .tx .did{color:var(--text-2);flex:1;min-width:180px}
+  .tx .did .in{color:var(--text)}
+  .tx .when{font:12px var(--mono);color:var(--text-3);margin-left:auto}
+  .free{font:600 10px var(--body);letter-spacing:.1em;color:var(--ok);border:1px solid var(--ok);border-radius:3px;padding:0 6px;margin-left:6px}
 
-  .tabs{display:flex;gap:8px;flex-wrap:wrap}
-  .tab{font-family:var(--mono);font-size:14px;background:none;border:1px solid var(--line);color:var(--chalk-dim);padding:8px 16px;cursor:pointer}
-  .tab[aria-selected="true"]{background:var(--pitch);color:var(--amber);border-color:var(--amber);border-bottom-color:var(--pitch)}
-  .brief{border:1px solid var(--line);background:var(--pitch);padding:8px 28px 24px}
-  .brief-meta{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding:14px 0;font-family:var(--mono);font-size:13px;color:var(--chalk-dim)}
-  .runlink{font-family:var(--mono);font-size:13px;border:1px solid var(--amber);color:var(--amber);padding:6px 14px;white-space:nowrap}
-  .runlink:hover{background:var(--amber);color:var(--turf);text-decoration:none}
-  .missed{color:var(--flag)}
-  .dim{color:var(--chalk-dim)}
+  /* brief */
+  .tabs{display:flex;gap:0;overflow-x:auto;border-bottom:1px solid var(--line-soft);margin-top:4px}
+  .tab{font:600 13px var(--body);letter-spacing:.08em;text-transform:uppercase;min-height:44px;padding:0 14px;background:none;border:0;color:var(--text-2);white-space:nowrap;cursor:pointer}
+  .tab:hover{color:var(--text)}
+  .tab[aria-selected="true"]{color:var(--text);box-shadow:inset 0 -2px 0 var(--accent)}
+  .verdict{font:600 15px/1.35 var(--body);margin:12px 0 4px}
+  .verdict .stale{font:11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);border:1px solid var(--line);border-radius:3px;padding:0 6px;margin-left:8px;vertical-align:middle}
+  .brief-meta{display:flex;justify-content:space-between;align-items:center;gap:8px 12px;flex-wrap:wrap;padding:6px 0 10px;font:12px var(--mono);color:var(--text-3)}
+  .brief-meta .links{display:flex;gap:12px}
+  .empty{padding:16px 0;color:var(--text-2)}
   .report{max-width:70ch}
-  .report h1{font-size:24px;line-height:1.3;margin:22px 0 10px}
-  .report h2,.report h3{font-family:var(--body);font-size:19px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--chalk);margin:26px 0 8px;display:block}
-  .report p,.report li{font-size:17px;color:var(--chalk)}
-  .report em{color:var(--chalk-dim)}
-  .report strong{color:var(--amber);font-weight:600}
-  .report code{font-family:var(--mono);font-size:14px;background:var(--pitch-2);padding:1px 5px}
-  .report blockquote{margin:14px 0;padding:2px 18px;border-left:3px solid var(--line);color:var(--chalk-dim)}
-  .empty{padding:26px 0 14px;color:var(--chalk-dim)}
+  .report h1,.report h2,.report h3{font:600 15px/1.35 var(--body);color:var(--text);margin:14px 0 6px;text-transform:none;letter-spacing:0}
+  .report p,.report li{font-size:14px;color:var(--text)}
+  .report em{color:var(--text-2)}
+  .report strong{font-weight:600}
+  .report code{font:12px var(--mono);background:var(--surface-2);padding:1px 5px;border-radius:3px}
+  .report blockquote{margin:10px 0;padding:2px 14px;border-left:2px solid var(--line);color:var(--text-2)}
+  .report table{font-size:13px;display:block;overflow-x:auto}
+  details.sec{border-top:1px solid var(--line-soft)}
+  details.sec>summary{display:flex;align-items:center;min-height:44px;font:600 15px var(--body);cursor:pointer;list-style:none}
+  details.sec>summary::-webkit-details-marker{display:none}
+  details.sec>summary::after{content:'+';margin-left:auto;font:14px var(--mono);color:var(--text-3)}
+  details.sec[open]>summary::after{content:'−';color:var(--accent)}
+  details.sec>div{padding-bottom:10px}
 
-  table{width:100%;border-collapse:collapse;font-size:17px}
-  th{font-family:var(--mono);font-size:12px;font-weight:400;letter-spacing:.06em;color:var(--chalk-dim);text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);text-transform:uppercase}
-  th.r{text-align:right}
-  td{padding:9px 10px;border-bottom:1px solid var(--line)}
-  tbody tr:nth-child(even){background:var(--pitch)}
-  td.num{font-family:var(--mono);font-size:14px;text-align:right;color:var(--chalk-dim)}
-  tr.me td{color:var(--amber)}
-  tr.me td.num{color:var(--amber)}
-  .cols{display:grid;grid-template-columns:1fr 1fr;gap:56px}
+  /* phone rail */
+  .rail{display:none;position:sticky;bottom:0;z-index:25;background:var(--surface-1);border-top:1px solid var(--line);min-height:56px;padding:6px 16px calc(6px + env(safe-area-inset-bottom));align-items:center;gap:12px}
+  .rail .rtxt{min-width:0;flex:1}
+  .rail .eyebrow{display:block}
+  .rail .rhead{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;font-size:14px}
+  .rail .rhead .meta{display:none}
+  .rail a.go{background:var(--accent);color:var(--accent-ink);min-height:44px;padding:0 14px;display:inline-flex;align-items:center;font:600 13px var(--body);letter-spacing:.06em;text-transform:uppercase;border-radius:3px;text-decoration:none;white-space:nowrap}
+  .rail.idle a.go{background:var(--surface-3);color:var(--text-2)}
 
-  footer{margin-top:70px;padding-top:18px;border-top:1px solid var(--line);font-family:var(--mono);font-size:13px;color:var(--chalk-dim);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
-  button.refresh{font-family:var(--mono);font-size:13px;background:none;border:1px solid var(--line);color:var(--chalk);padding:5px 14px;cursor:pointer}
-  button.refresh:hover{border-color:var(--amber);color:var(--amber)}
-  .callout{border:1px solid var(--line);border-left:3px solid var(--amber);background:var(--pitch);padding:11px 16px;margin:0 0 14px;line-height:1.5}
-  .callout.pending{border-left-color:var(--line);color:var(--chalk-dim)}
-  .thisweek:first-child{margin-top:32px}
-  .notice{font-family:var(--mono);font-size:13px;color:var(--chalk-dim);border:1px solid var(--line);padding:8px 14px;margin:20px 0 -12px}
-  .loading,.error{padding:70px 0;text-align:center;color:var(--chalk-dim);font-family:var(--mono);font-size:15px}
-  .error b{color:var(--flag)}
+  footer{max-width:1280px;margin:0 auto;padding:20px 24px 32px;font:12px var(--mono);color:var(--text-3);border-top:1px solid var(--line-soft)}
+  footer a{color:var(--text-2)}
 
-  @media (max-width:720px){
-    .cols{grid-template-columns:1fr}
-    .slotrow,.lineup .head{grid-template-columns:1fr 52px 1fr}
-    .lineup.solo .head,.lineup.solo .slotrow{grid-template-columns:52px 1fr}
-    .brief{padding:6px 16px 18px}
-    .move .when{margin-left:0}
-    .act{grid-template-columns:18px 1fr;padding:13px 16px}
-    .act .chip{grid-column:2;justify-self:start;margin-top:2px}
-    .act.nest-1{padding-left:34px}
-    .act.nest-2{padding-left:52px}
-    .act.nest-3{padding-left:70px}
-    .donow .dhead,.donow .none,.drift,.donedrop summary,.heads .htitle,.heads .item{padding-left:16px;padding-right:16px}
+  @media (max-width:1099.98px){
+    .views{display:block;background:none}
+    body:not([data-view="do"]) #do,body:not([data-view="week"]) #week,body:not([data-view="league"]) #league,body:not([data-view="brief"]) #brief{display:none}
+    .top{flex-wrap:wrap;gap:0 12px;padding:0 16px}
+    .top>*:not(.nav){min-height:44px;display:flex;align-items:center}
+    .weekchip{margin-left:auto}
+    .nav{order:5;flex:1 0 100%;margin:0;border-top:1px solid var(--line-soft)}
+    .nav a{flex:1;min-height:48px}
+    main#app{padding:0}
+    .notice{margin:12px 16px 0}
+    footer{padding:20px 16px 32px}
   }
-  @media (prefers-reduced-motion:no-preference){
-    .donow{animation:drop .35s ease-out}
-    @keyframes drop{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+  @media (max-width:719.98px){
+    body{font-size:14px}
+    .wordmark .throne,.weekchip .long{display:none}
+    .weekchip .short{display:inline}
+    button.theme,button.refresh{min-height:44px}
+    .rail{display:flex}
+    main#app{min-height:calc(100vh - 96px);display:flex;flex-direction:column}
+    .views{flex:1}
+    .lrow{min-height:44px}
+    .lrow .sd,.lrow .tv,.pc.opp .sub{display:none}
+    .side .pts{font-size:24px}
   }
+
+  /* ——— the card: rendered by renderDoNow. ask/template.html carries an identical copy of this
+     block (between the card-css markers) — keep the two in step. ——— */
+  /* card-css:start */
+  .phead{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:36px;padding:8px 0 4px}
+  .eyebrow{font:600 11px/1.2 var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--text-3)}
+  .dcount{font:12px var(--mono);color:var(--text-2)}
+  .dcount b{color:var(--accent);font-weight:500}
+  .dlinks{display:flex;gap:12px;font:12px var(--mono);white-space:nowrap}
+  .dlinks a{color:var(--text);text-decoration:underline;text-decoration-color:var(--line)}
+  .dlinks a:hover{text-decoration-color:var(--accent)}
+  .runlink{font:12px var(--mono);color:var(--text);text-decoration:underline;text-decoration-color:var(--line);white-space:nowrap}
+  .plan{border-left:2px solid var(--accent-bg);margin:0 0 12px}
+  .act{border-bottom:1px solid var(--line-soft)}
+  .act:last-child{border-bottom:0}
+  details.act>summary,div.act{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:2px 8px;padding:10px 8px 10px 10px;align-items:start}
+  details.act>summary{cursor:pointer;list-style:none}
+  details.act>summary::-webkit-details-marker{display:none}
+  details.act>summary:hover .move{text-decoration:underline;text-decoration-color:var(--line)}
+  .act .glyph{font:14px/1.5 var(--mono);color:var(--accent)}
+  .act .move{font-weight:600;font-size:15px;line-height:1.35;min-width:0;overflow-wrap:anywhere}
+  .plan>.act:first-child .move{font-size:17px}
+  .act .move .meta{font:12px var(--mono);font-weight:400;color:var(--text-3)}
+  .act .chip{font:12px var(--mono);color:var(--accent);white-space:nowrap;align-self:start;padding-top:2px}
+  details.act .chip::after{content:' ▸'}
+  details.act[open] .chip::after{content:' ▾'}
+  .act .kind{font:600 11px var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-right:8px;vertical-align:middle}
+  .act .lead{font:12px var(--mono);font-weight:400;color:var(--text-3);margin-right:8px}
+  .act .flag{font:600 11px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--danger);border:1px solid var(--danger);border-radius:3px;padding:0 6px;margin-left:8px;white-space:nowrap;vertical-align:middle}
+  .act .why{grid-column:2/-1;font-size:14px;line-height:1.4;color:var(--text-2)}
+  details.act>summary .why{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+  details.act[open]>summary .why{display:block;-webkit-line-clamp:unset;overflow:visible}
+  .act.waiting .glyph,.act.superseded .glyph,.act.stale .glyph,.act.gone .glyph{color:var(--text-3)}
+  .act.done .glyph{color:var(--ok)}
+  .act.waiting .move,.act.superseded .move,.act.stale .move,.act.gone .move,.act.done .move{color:var(--text-2);font-weight:500}
+  .act.waiting .kind,.act.superseded .kind,.act.stale .kind,.act.done .kind,.act.gone .kind{color:var(--text-3)}
+  .act.waiting .chip,.act.done .chip,.act.gone .chip,.act.stale .chip,.act.superseded .chip{color:var(--text-3)}
+  .plan>.act.nest>summary{padding-left:24px}
+  .detail{padding:0 10px 14px 10px;display:grid;gap:10px}
+  .case{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:6px 14px;font-size:13px;line-height:1.35}
+  .case .k,.evidence .k,.offer .k{font:600 11px/1.6 var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--text-3)}
+  .case .k{padding-top:3px}
+  .fact{display:inline-block;background:var(--surface-2);border-radius:3px;padding:2px 8px;margin:0 6px 4px 0;font-size:13px;color:var(--text)}
+  .act.waiting .fact{color:var(--text-2)}
+  .fact[data-net="fixes_only"]::before{content:'✓ ';color:var(--ok)}
+  .fact[data-net="mixed"]{color:var(--accent)}
+  .fact[data-net="costs_only"]{color:var(--danger)}
+  .evidence{display:flex;align-items:baseline;gap:4px 10px;flex-wrap:wrap;font-size:13px;line-height:1.4}
+  .evidence .note{color:var(--text-2);min-width:0}
+  .evidence a{color:var(--text);text-decoration:underline;text-decoration-color:var(--line);font:12px var(--mono)}
+  .evidence .asof{font:12px var(--mono);color:var(--text-3)}
+  .offer .ohead{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .offer pre{font:13px/1.5 var(--mono);color:var(--text);background:var(--surface-2);border-left:2px solid var(--line);border-radius:0 3px 3px 0;padding:8px 12px;margin:4px 0 0;white-space:pre-wrap;overflow-wrap:anywhere}
+  button.copy,.act .dismiss{font:600 12px var(--body);letter-spacing:.06em;text-transform:uppercase;background:none;border:1px solid var(--line);border-radius:3px;color:var(--text-2);padding:0 12px;min-height:32px;cursor:pointer}
+  button.copy:hover,.act .dismiss:hover{border-color:var(--accent);color:var(--text)}
+  .src{display:flex;align-items:center;gap:6px 12px;flex-wrap:wrap;font:12px var(--mono);color:var(--text-3)}
+  .src a{color:var(--text-2);text-decoration:underline;text-decoration-color:var(--line)}
+  .strip{overflow-x:auto;padding:6px 8px 8px 12px;border-top:1px solid var(--line-soft)}
+  .strip table{width:100%;min-width:400px;border-collapse:collapse;font:12px var(--mono)}
+  .strip th{font:600 11px var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--text-3);text-align:left;padding:2px 12px 4px 0;border:0}
+  .strip td{padding:3px 12px 3px 0;border:0;white-space:nowrap;color:var(--text);background:none}
+  .strip td:first-child{color:var(--text-3)}
+  .strip tr:nth-child(even){background:none}
+  .none{padding:14px 0;color:var(--text-2)}
+  .none b{color:var(--text);font-weight:600}
+  .none .next{font:12px var(--mono)}
+  .item{padding:8px 0;display:flex;gap:10px;align-items:baseline;font-size:13px;line-height:1.4}
+  .tag{font:11px var(--mono);letter-spacing:.08em;padding:0 6px;border:1px solid;border-radius:3px;flex-shrink:0;text-transform:uppercase}
+  .tag.now{color:var(--danger);border-color:var(--danger)}
+  .tag.soon{color:var(--text);border-color:var(--text-3)}
+  .tag.watch{color:var(--text-3);border-color:var(--line)}
+  .item .what{min-width:0}
+  .item .what b{font-weight:600}
+  .item .why{color:var(--text-2);display:block}
+  .heads{margin-top:8px}
+  .drift{padding:8px 0;font:12px var(--mono);color:var(--text-3)}
+  .fold{border-top:1px solid var(--line-soft)}
+  .fold>summary{display:flex;align-items:center;gap:12px;min-height:52px;list-style:none;cursor:pointer}
+  .fold>summary::-webkit-details-marker{display:none}
+  .fold .ttl{font:600 11px var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--text-3);white-space:nowrap}
+  .fold .sum{flex:1;min-width:0;text-align:right;font:12px var(--mono);color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .fold .caret::before{content:'+';font:14px var(--mono);color:var(--text-3)}
+  .fold[open]>summary .caret::before{content:'−';color:var(--accent)}
+  .fold>summary:hover .ttl{color:var(--text)}
+  .fold .body{padding:0 0 12px}
+  @media (max-width:719.98px){
+    .detail{padding-left:10px}
+    .case{grid-template-columns:minmax(0,1fr)}
+    .dlinks .sleeper{display:none}
+    .fold>summary{min-height:44px}
+    .heads .item .why{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:1;overflow:hidden}
+  }
+  @media (min-width:720px){
+    .detail{padding-left:46px}
+  }
+  /* card-css:end */
 </style>
 </head>
-<body>
-<div class="field">
-  <header class="masthead">
-    <div class="wordmark">GRIDIRON <span class="throne">THRONE</span></div>
-    <div class="weekchip" id="weekchip">loading…</div>
-  </header>
-</div>
-<div class="wrap">
-  <p class="notice" id="notice" hidden></p>
-  <main id="app"><div class="loading">Reading the field…</div></main>
-  <footer>
-    <span>Live from Sleeper · moves happen in the Sleeper app</span>
-    <span><span id="stamp"></span> <button class="refresh" id="refresh">Refresh</button></span>
-  </footer>
-</div>
+<body data-view="do">
+<header class="top">
+  <div class="wordmark">GRIDIRON<span class="throne"> THRONE</span></div>
+  <div class="weekchip" id="weekchip">…</div>
+  <nav class="nav" aria-label="Sections">
+    <a href="#do">Do <b class="nbadge" id="badge-do" hidden></b></a>
+    <a href="#week">Week</a><a href="#league">League</a><a href="#brief">Brief</a>
+  </nav>
+  <button class="theme" id="theme" title="Colour theme">Auto</button>
+  <button class="refresh" id="refresh" title="Refresh now">↻ <span id="stamp"></span></button>
+</header>
+<p class="notice" id="notice" hidden></p>
+<main id="app"><div class="loading">Reading the field…</div></main>
+<footer>Live from Sleeper · moves happen in the Sleeper app · <a href="https://claude.ai/code" target="_blank" rel="noopener">Open a session</a> on the repo for a what-if</footer>
 
 <script>
 const CFG = { league:'1353093442397294592', me:12, repo:'the-nebulizer/gridiron', ask_url:'https://claude.ai/artifact/FMKnrqruo8QqrpG7qednqY' };
@@ -454,7 +526,7 @@ function actionItems({me, players, games, byes, week, txns, rostered, trendAdd, 
       if(!outThisWeek.length) continue;
       const gaps = emptySlots(slots||[], active.filter(p=>byes[p.team]!==w));
       const named = outThisWeek.filter(p=>(me.starters||[]).includes(p.id));
-      items.push({urgency: gaps.length ? (w===week+1?'now':'soon') : (w===week+1?'soon':'watch'),
+      items.push({covered: !gaps.length, urgency: gaps.length ? (w===week+1?'now':'soon') : (w===week+1?'soon':'watch'),
         what:`Week ${w}: ${(named.length?named:outThisWeek).map(p=>p.name).join(', ')} on bye`,
         why: gaps.length
           ? `No one on your roster can fill ${gaps.map(g=>g.replace('SUPER_FLEX','SUPERFLEX')).join(' or ')} that week — plan a claim.`
@@ -647,18 +719,38 @@ function actionHeadline(i){
 const KIND_TAG = {add:'claim', drop:'drop', start:'lineup', ir:'ir', activate:'ir', trade:'trade'};
 const kindTag = (i)=> i.kind==='add' && i.mode==='fcfs' ? 'add' : (KIND_TAG[i.kind] || '');
 
-// The case: up to four short lines, always in this order, always with these labels. Shelved
-// items (done/gone/superseded) don't draw it — it argued for a move that is over.
+// The case: up to five short facts, always in this order, always under these plain-English
+// labels. Shelved items (done/gone/superseded) don't draw it — it argued for a move that is over.
 // 'asks' is the trade-only line: what the deal asks of the other manager, computed from their
-// own roster rather than asserted by the report (see docs/ACTIONS.md "The case").
-const CASE_LINES = [['starts','Starts'], ['need','Need'], ['cost','Cost'], ['asks','Asks'], ['later','Later']];
+// own roster rather than asserted by the report (see docs/ACTIONS.md "The case"). Each line is
+// split on " · " into chips; the last line carries the tradeoff's net so it can be coloured.
+const CASE_LINES = [['starts','Where he fits'], ['need','The need'], ['cost','The cost'], ['asks','What they give up'], ['later','Rest of season']];
 function caseGrid(i){
   if(i.state!=='open' && i.state!=='waiting') return '';
   const c = i.case;
   if(!c || typeof c!=='object' || Array.isArray(c)) return '';
+  const net = c.tradeoff && typeof c.tradeoff.net==='string' ? c.tradeoff.net : '';
+  const chips = (k)=> String(c[k]).split(' · ').map(s=>s.trim()).filter(Boolean)
+    .map(s=> `<span class="fact"${k==='later' && net ? ` data-net="${esc(net)}"` : ''}>${esc(s)}</span>`).join('');
   const lines = CASE_LINES.filter(([k])=> typeof c[k]==='string' && c[k]!=='')
-    .map(([k,label])=> `<span class="k">${esc(label)}</span><span class="v">${esc(c[k])}</span>`).join('');
+    .map(([k,label])=> `<span class="k">${esc(label)}</span><span class="v">${chips(k)}</span>`).join('');
   return lines ? `<div class="case">${lines}</div>` : '';
+}
+
+// The word that says why a fallback is on the card at all: what happens first.
+function leadWord(i, parent, orphan){
+  if(orphan) return 'depends on a move no longer listed';
+  if(i.link==='after') return 'then';
+  const pk = parent && parent.kind;
+  return pk==='trade' ? 'if declined' : pk==='add' ? 'if that misses' : 'if that falls through';
+}
+const hostOf = (u)=> (String(u).match(/^https?:\/\/(?:www\.)?([^\/?#]+)/i)||[])[1] || String(u);
+
+// A disclosure row used all over the page: the closed state names its own answer.
+function fold(key, title, summary, body, open, cls){
+  return `<details class="${cls ? esc(cls)+' ' : ''}fold" data-key="${esc(key)}"${open?' open':''}><summary>
+      <span class="ttl">${esc(title)}</span><span class="sum">${summary}</span><span class="caret" aria-hidden="true"></span>
+    </summary><div class="body">${body}</div></details>`;
 }
 
 /* o = {num} for a numbered primary, or {depth, parent} for a dependent drawn under it. */
@@ -673,64 +765,80 @@ function actionRow(i, m, o){
   // one-word "stale" chip replaces it rather than showing a kickoff window that's already past.
   const chip = i.state==='stale' ? 'stale' : (i.deadline_label || DEADLINE[i.urgency] || 'when you can');
   const date = (String(i.report||'').match(/^\d{4}-\d{2}-\d{2}/)||[String(i.report||'').replace(/\.md$/,'')])[0];
-  const dism = (i.kind==='trade' && i.state==='open')
-    ? `<button class="dismiss" data-dismiss="${esc(dismissKey(i))}">Dismiss</button>` : '';
-  // Drop the parts that aren't there rather than printing " · · ".
-  const src = [titleCase(i.source), date, `verified live ${m.now}`].filter(Boolean).map(esc).join(' · ');
-  // The offer text the routine wrote for Ben to paste into Sleeper. Only worth showing while
-  // the trade is still his to send, so it's folded away on a live open trade and nowhere else.
-  const offer = (i.kind==='trade' && i.state==='open' && typeof i.message==='string' && i.message.trim())
-    ? `<details class="offer"><summary>Offer message</summary><pre>${esc(i.message)}</pre></details>` : '';
-  // The claim the move rests on, and where it came from — the one class of assertion the
-  // compiler cannot check (a player's role, health, return date) and the class that got a $20
-  // bid argued off a return timeline that was two weeks out, not "still weeks off". Shown only
-  // while the action is live, and only as a link when the url really is one: this file is
-  // re-read from the repo at runtime, so a "javascript:" url is treated as no url at all
-  // rather than trusted because the compiler also checks it.
-  const ev = i.evidence;
-  const evUrl = (ev && typeof ev.url==='string' && /^https?:\/\//i.test(ev.url)) ? ev.url : '';
-  const evidence = (ev && typeof ev.note==='string' && ev.note && (i.state==='open' || i.state==='waiting'))
-    ? `<div class="evidence"><span class="k">Source</span>${evUrl
-        ? `<a href="${esc(evUrl)}" target="_blank" rel="noopener noreferrer">${esc(ev.note)}</a>`
-        : `<span>${esc(ev.note)}</span>`}${ev.as_of ? ` <span class="asof">${esc(ev.as_of)}</span>` : ''}</div>`
-    : '';
-  // What the link means, in Ben's words: do this next, or do this instead.
-  const lead = nested
-    ? `<span class="lead">${i.link==='if_not' ? 'If that falls through:' : 'Then:'}</span> ` : '';
   const kind = kindTag(i);
+  const live = i.state==='open' || i.state==='waiting';
   // A move the compiler has already worked out costs more than it fixes must not be drawn like
   // one that helps. On 2026-09-22 the top row of this card opened a Week 11 tight-end hole and
   // closed nothing — both facts were sitting in the case grid below it, in the same weight and
-  // colour as everything else, and the move read as the week's recommendation anyway. The
-  // specifics stay in the Later line; this only says which way they add up.
+  // colour as everything else, and the move read as the week's recommendation anyway.
   const net = i.case && i.case.tradeoff && i.case.tradeoff.net;
-  const flag = ((i.state==='open' || i.state==='waiting') && net==='costs_only')
-    ? '<span class="flag">costs more than it fixes</span>' : '';
-  // A stale action's own `why` argued for the move while it was still open; once kickoff has
-  // taken it off the table that argument is moot, so state_reason (when the compiler could name
-  // one — see docs/ACTIONS.md "stale") replaces it. No reason (a plain week rollover) means the
-  // "stale" chip above is the whole story — outcomes, not reasoning, per CLAUDE.md.
-  const whyLine = i.state==='stale'
-    ? (i.state_reason ? `<div class="why">${esc(i.state_reason)}</div>` : '')
-    : (i.why ? `<div class="why">${esc(i.why)}</div>` : '');
-  return `<div class="act ${esc(i.state)}${depth ? ` nest nest-${depth}` : ''}">
-      <div class="glyph" aria-hidden="true">${esc(glyph)}</div>
-      <div class="move">${kind ? `<span class="kind">${esc(kind)}</span>` : ''}${lead}${actionHeadline(i)}${flag}</div>
-      <div class="chip">${esc(chip)}</div>
-      ${caseGrid(i)}
-      ${whyLine}
-      ${evidence}
-      ${offer}
-      <div class="src"><span>${src}</span>${dism}</div>
-    </div>`;
+  const flag = (live && net==='costs_only') ? '<span class="flag">costs more than it fixes</span>' : '';
+  const lead = nested ? `<span class="lead">${esc(leadWord(i, o.parent, o.orphan))}</span>` : '';
+  const head = `<span class="glyph" aria-hidden="true">${esc(glyph)}</span>`;
+  const move = `<span class="move">${lead}${kind ? `<span class="kind">${esc(kind)}</span>` : ''}${actionHeadline(i)}${flag}</span>`;
+
+  if(!live){
+    // Shelved: an outcome, not an argument. A stale action's own `why` argued for the move while
+    // it was still open; once kickoff has taken it off the table state_reason (when the compiler
+    // could name one) replaces it, and no reason (a plain week rollover) means the chip is the story.
+    const whyLine = i.state==='stale'
+      ? (i.state_reason ? `<div class="why">${esc(i.state_reason)}</div>` : '')
+      : (i.why ? `<div class="why">${esc(i.why)}</div>` : '');
+    return `<div class="act ${esc(i.state)}">${head}${move}<div class="chip">${esc(chip)}</div>${whyLine}</div>`;
+  }
+
+  const dism = (i.kind==='trade' && i.state==='open')
+    ? `<button class="dismiss" data-dismiss="${esc(dismissKey(i))}">Dismiss</button>` : '';
+  // Drop the parts that aren't there rather than printing " · · ".
+  const src = [titleCase(i.source), date, m.now ? `checked ${m.now}` : ''].filter(Boolean).map(esc).join(' · ');
+  const write = (m.repo && i.report)
+    ? `<a href="https://github.com/${esc(m.repo)}/blob/main/reports/${esc(i.report)}" target="_blank" rel="noopener">Read the write-up ↗</a>` : '';
+  // The message the routine wrote for Ben to paste into Sleeper, only while the trade is still his to send.
+  const offer = (i.kind==='trade' && i.state==='open' && typeof i.message==='string' && i.message.trim())
+    ? `<div class="offer"><div class="ohead"><span class="k">Message to send</span><button class="copy" data-copy>Copy</button></div><pre>${esc(i.message)}</pre></div>` : '';
+  // The claim the move rests on, and where it came from — the one class of assertion the
+  // compiler cannot check (a player's role, health, return date). Shown only while the action is
+  // live, and only as a link when the url really is one: this file is re-read from the repo at
+  // runtime, so a "javascript:" url is treated as no url at all rather than trusted.
+  const ev = i.evidence;
+  const evUrl = (ev && typeof ev.url==='string' && /^https?:\/\//i.test(ev.url)) ? ev.url : '';
+  const evidence = (ev && typeof ev.note==='string' && ev.note)
+    ? `<div class="evidence"><span class="k">Because</span><span class="note">${esc(ev.note)}</span>${evUrl
+        ? `<a href="${esc(evUrl)}" target="_blank" rel="noopener noreferrer">${esc(hostOf(evUrl))} ↗</a>` : ''}${
+        ev.as_of ? `<span class="asof">${esc(ev.as_of)}</span>` : ''}</div>`
+    : '';
+  const key = 'act:' + (i.id!=null && i.id!=='' ? i.id : `${i.kind}:${i.player||''}`);
+  return `<details class="act ${esc(i.state)}${depth ? ` nest nest-${depth}` : ''}" data-key="${esc(key)}">
+      <summary>${head}${move}<div class="chip">${esc(chip)}</div>${i.why ? `<span class="why">${esc(i.why)}</span>` : ''}</summary>
+      <div class="detail">${caseGrid(i)}${evidence}${offer}<div class="src"><span>${src}</span>${write}${dism}</div></div>
+    </details>`;
 }
 
-/* m = {ok, week, now, league, items:[action+state, resolved by resolveDependencies],
-        alerts:[actionItems() output], nextCheck, drift} */
+// The options side by side: what each path gets, gives, costs and by when. A string builder only.
+function compareStrip(primary, rungs){
+  const inj = (i)=>{ const a = String((i.case && i.case.asks) || '');
+    return /Questionable/.test(a) ? ' Q' : /Doubtful/.test(a) ? ' D' : /\bOut\b/.test(a) ? ' O' : ''; };
+  const names = (v)=> (Array.isArray(v) ? v : []).filter(Boolean).join(', ');
+  const get = (i)=> (names(i.get_names) || i.name || '—') + inj(i);
+  const give = (i)=> names(i.give_names) || i.drop_name || '—';
+  const cost = (i)=>{
+    if(i.faab==null) return 'no FAAB';
+    const of = String((i.case && i.case.cost) || '').match(/^\$\d+ of (\$\d+)/);
+    return '$'+i.faab + (of ? ' of '+of[1] : '');
+  };
+  const by = (i)=> i.deadline_label || DEADLINE[i.urgency] || 'when you can';
+  const row = (lab, i)=> `<tr><td>${esc(lab)}</td><td>${esc(get(i))}</td><td>${esc(give(i))}</td><td>${esc(cost(i))}</td><td>${esc(by(i))}</td></tr>`;
+  return `<div class="strip"><table><thead><tr><th>Options</th><th>Get</th><th>Give</th><th>Cost</th><th>By</th></tr></thead><tbody>${
+    row('now', primary)}${rungs.map(r=>row(leadWord(r.item, r.parent), r.item)).join('')}</tbody></table></div>`;
+}
+
+/* m = {ok, week, now, league, repo?, items:[action+state, resolved by resolveDependencies],
+        alerts:[actionItems() output], nextCheck, drift}. Sets m.primary and m.openCount as it goes,
+   so the rail and the tab badge can be drawn without sorting again. */
 function renderDoNow(m){
   // `stale` used to be dropped here entirely — a start whose kickoff (or week) passed it by
-  // vanished with no trace, even though the compiler names why (see actionRow's whyLine). It's
-  // shelved alongside done/gone/superseded instead, below, so the fact it happened is visible.
+  // vanished with no trace, even though the compiler names why. It's shelved alongside
+  // done/gone/superseded instead, below, so the fact it happened is visible.
   const items = (m.items||[]).filter(i=>i.state!=='dismissed');
   // Primaries are everything open that isn't hanging off another action, numbered in the
   // order today's focus puts them in (weekFocus); urgency, then report date, within each.
@@ -740,9 +848,11 @@ function renderDoNow(m){
                || String(b.report||'').localeCompare(String(a.report||'')));
   const shelved = items.filter(i=>i.state==='done' || i.state==='gone' || i.state==='superseded' || i.state==='stale');
   const alerts = m.alerts||[];
+  m.primary = open[0] || null;
+  m.openCount = open.length;
 
   // Waiting dependents hang under their parent. They are not instructions yet, so they are
-  // drawn muted and are not counted in the "n open" chip.
+  // drawn muted and are counted as fallbacks, not as "open".
   const kidsOf = new Map();
   items.filter(i=>i.state==='waiting' && i.parent_id!=null && i.parent_id!=='').forEach(i=>{
     const k = String(i.parent_id);
@@ -750,26 +860,37 @@ function renderDoNow(m){
     kidsOf.get(k).push(i);
   });
   const drawn = new Set();
-  const branch = (parent, depth)=>{
+  const branch = (parent, depth, rungs)=>{
     const kids = (kidsOf.get(parent.id==null ? '' : String(parent.id))||[])
       .filter(k=>!drawn.has(k))
       .sort((a,b)=> (a.link==='after'?0:1)-(b.link==='after'?0:1) || urgRank(a.urgency)-urgRank(b.urgency));
-    return kids.map(k=>{ drawn.add(k); return actionRow(k, m, {depth, parent}) + branch(k, depth+1); }).join('');
+    return kids.map(k=>{ drawn.add(k); rungs.push({item:k, parent}); return actionRow(k, m, {depth, parent}) + branch(k, depth+1, rungs); }).join('');
   };
-  let rows = open.map((i,n)=>{ drawn.add(i); return actionRow(i, m, {num:n+1}) + branch(i, 1); }).join('');
+  let rows = open.map((i,n)=>{
+    drawn.add(i);
+    const rungs = [];
+    const kids = branch(i, 1, rungs);
+    return `<div class="plan">${actionRow(i, m, {num:n+1})}${kids}${rungs.length ? compareStrip(i, rungs) : ''}</div>`;
+  }).join('');
   // A dependent whose parent isn't on the card at all (a malformed file) is still shown, flat,
   // rather than silently dropped.
-  const byId = new Map();
-  items.forEach(i=>{ const k = i.id==null ? '' : String(i.id); if(k && !byId.has(k)) byId.set(k,i); });
-  items.filter(i=>i.state==='waiting' && !drawn.has(i)).forEach(i=>{
-    drawn.add(i);
-    rows += actionRow(i, m, {depth:1, parent: byId.get(String(i.parent_id)) || {}});
-  });
+  const orphans = items.filter(i=>i.state==='waiting' && !drawn.has(i));
+  if(orphans.length) rows += `<div class="plan">${orphans.map(i=>{ drawn.add(i); return actionRow(i, m, {depth:1, parent:{}, orphan:true}); }).join('')}</div>`;
 
   let body = rows
     || `<div class="none">${ m.ok===false
         ? 'No actions compiled yet — the next routine run writes them.'
         : `<b>Nothing to do.</b> <span class="next">Next: ${esc(m.nextCheck||'Waivers run Tue 7am')}</span>` }</div>`;
+
+  // Heads up: what the page works out for itself from live Sleeper data. No judgment, never
+  // stale. The quiet ones fold away behind a count.
+  const item = (a)=> `<div class="item"><span class="tag ${esc(a.urgency)}">${esc(a.urgency)}</span>
+      <span class="what"><b>${esc(a.what)}</b><span class="why">${esc(a.why)}</span></span></div>`;
+  const loud = alerts.filter(a=>a.urgency!=='watch'), quiet = alerts.filter(a=>a.urgency==='watch');
+  if(loud.length || quiet.length){
+    body += `<div class="heads">${loud.length ? `<div class="eyebrow">Heads up</div>${loud.map(item).join('')}` : ''}${
+      quiet.length ? fold('heads-quiet', `${quiet.length} quieter note${quiet.length===1?'':'s'}`, '', quiet.map(item).join(''), false) : ''}</div>`;
+  }
 
   // "Done", "gone", "stale" and "superseded" are four different pieces of news: a move you made,
   // one you can no longer make, a start whose window (kickoff or the week itself) closed before
@@ -781,25 +902,20 @@ function renderDoNow(m){
     const nSup  = shelved.length - nDone - nGone - nStale;
     const label = [nDone?`Done (${nDone})`:'', nGone?`no longer possible (${nGone})`:'',
                    nStale?`stale (${nStale})`:'', nSup?`superseded (${nSup})`:''].filter(Boolean).join(' · ');
-    body += `<details class="donedrop"><summary>${label}</summary>${shelved.map(i=>actionRow(i,m)).join('')}</details>`;
+    body += fold('shelved', 'Shelved', label, shelved.map(i=>actionRow(i,m)).join(''), false, 'donedrop');
   }
 
-  // Heads up: what the page works out for itself from live Sleeper data. No judgment, never stale.
-  if(alerts.length) body += `<div class="heads"><div class="htitle">Heads up</div>${
-    alerts.map(a=>`<div class="item"><span class="tag ${esc(a.urgency)}">${esc(a.urgency)}</span>
-      <span class="what"><b>${esc(a.what)}</b><span class="why">${esc(a.why)}</span></span></div>`).join('')}</div>`;
-
   if(m.drift) body += `<div class="drift">Your roster has changed since these were written — the watcher re-runs within the hour.</div>`;
-
 
   // "Ask" opens the companion page in one named tab (clicking again re-focuses it rather than
   // opening another). It comes in on the model, not from a global, because the Ask page draws
   // this same card with this same function and must not link to itself.
-  const askLink = m.askUrl ? `<a class="runlink" href="${esc(m.askUrl)}" target="gridiron-ask" rel="noopener">Ask ↗</a>` : '';
+  const askLink = m.askUrl ? `<a href="${esc(m.askUrl)}" target="gridiron-ask" rel="noopener">Ask ↗</a>` : '';
+  const fallbacks = items.filter(i=>i.state==='waiting').length;
   return `<div class="donow" id="donow">
-      <div class="dhead">
-        <div class="dtitle"><h2>Do now</h2><span class="dcount">Week ${esc(m.week)} · <b>${open.length} open</b></span></div>
-        <div class="dlinks">${askLink}<a class="runlink" href="https://sleeper.com/leagues/${esc(m.league)}" target="_blank" rel="noopener">Open Sleeper ↗</a></div>
+      <div class="phead">
+        <div class="dtitle"><span class="eyebrow">Do now</span> <span class="dcount"><b>${open.length} open</b>${fallbacks ? ` · ${fallbacks} fallback${fallbacks===1?'':'s'}` : ''}</span></div>
+        <div class="dlinks">${askLink}<a class="sleeper" href="https://sleeper.com/leagues/${esc(m.league)}" target="_blank" rel="noopener">Sleeper ↗</a></div>
       </div>${body}</div>`;
 }
 /* ——— end do-now pure ——— */
@@ -859,9 +975,91 @@ function wireDismiss(m){
     m.items = resolveDependencies(m.items.map(i=> dismissKey(i)===key
       ? {...i, state:'dismissed', base_state:'dismissed'} : i));
     const el = $('donow');
-    if(el){ el.outerHTML = renderDoNow(m); wireDismiss(m); }
+    if(el){
+      const y = scrollY;
+      el.outerHTML = renderDoNow(m); wireDismiss(m);
+      restoreOpen(); paintChrome(m); scrollTo(0, y);
+    }
   }));
 }
+
+/* ——— page chrome: rail, tab badge, open/closed memory, router, theme, copy ——— */
+// The phone's bottom rail always shows the one move to make; the Do tab carries the open count.
+function paintChrome(m){
+  const b = $('badge-do');
+  if(b){ b.textContent = m.openCount || ''; b.hidden = !m.openCount; }
+  const r = $('rail');
+  if(!r) return;
+  const p = m.primary;
+  r.className = 'rail' + (p ? '' : ' idle');
+  r.innerHTML = `<div class="rtxt"><span class="eyebrow">${p ? 'Do now' : m.ok===false ? 'No moves compiled yet' : 'Nothing to do'}</span>
+      <div class="rhead">${p ? actionHeadline(p) : 'Next: '+esc(m.nextCheck||'Waivers run Tue 7am')}</div></div>
+    <a class="go" href="https://sleeper.com/leagues/${esc(m.league)}" target="_blank" rel="noopener">Sleeper ↗</a>`;
+}
+
+// Which <details> are open survives the two-minute rebuild, and a reload. Until the reader has
+// touched anything the markup's own `open` attributes are the defaults.
+const OPEN_KEY = 'gridiron.open';
+let openKeys = null;
+function captureOpen(){ openKeys = new Set([...document.querySelectorAll('#app details[data-key][open]')].map(d=>d.dataset.key)); }
+function restoreOpen(){
+  if(!openKeys){ try{ const s = localStorage.getItem(OPEN_KEY); if(s) openKeys = new Set(JSON.parse(s)); }catch{} }
+  if(!openKeys) return;
+  document.querySelectorAll('#app details[data-key]').forEach(d=>{ d.open = openKeys.has(d.dataset.key); });
+}
+document.addEventListener('toggle', e=>{
+  if(e.target.matches && e.target.matches('#app details[data-key]')){
+    captureOpen();
+    try{ localStorage.setItem(OPEN_KEY, JSON.stringify([...openKeys])); }catch{}
+  }
+}, true);
+
+// The hash is the view: #do (default), #week, #league, #brief, #brief/<routine|settings>.
+const VIEWS = ['do','week','league','brief'];
+function route(scrollToTop){
+  const [v, sub] = location.hash.slice(1).split('/');
+  const view = VIEWS.includes(v) ? v : 'do';
+  document.body.dataset.view = view;
+  document.querySelectorAll('.nav a').forEach(a=>a.toggleAttribute('aria-current', a.getAttribute('href')==='#'+view));
+  if(view==='brief' && sub && ((ROUTINES[sub] && sub!=='activity') || sub==='settings') && rendered && sub!==currentBrief) showBrief(sub);
+  if(scrollToTop && matchMedia('(min-width:1100px)').matches) document.getElementById(view)?.scrollIntoView({block:'start'});
+  else if(scrollToTop) window.scrollTo(0,0);
+}
+addEventListener('hashchange', ()=>route(true));
+// Wide screens show all four at once, so the tabs follow the scroll instead of the hash.
+if('IntersectionObserver' in window){
+  const spy = new IntersectionObserver(es=>{
+    if(!matchMedia('(min-width:1100px)').matches) return;
+    es.filter(e=>e.isIntersecting).forEach(e=>{
+      document.querySelectorAll('.nav a').forEach(a=>a.toggleAttribute('aria-current', a.getAttribute('href')==='#'+e.target.id));
+    });
+  }, {rootMargin:'-20% 0px -70% 0px'});
+  window.watchViews = ()=>document.querySelectorAll('.view').forEach(v=>spy.observe(v));
+}
+
+const THEMES = ['auto','light','dark'];
+let theme = 'auto';
+try{ const t = localStorage.getItem('gridiron.theme'); if(THEMES.includes(t)) theme = t; }catch{}
+function applyTheme(){
+  if(theme==='auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.dataset.theme = theme;
+  $('theme').textContent = titleCase(theme);
+}
+$('theme').addEventListener('click', ()=>{
+  theme = THEMES[(THEMES.indexOf(theme)+1) % THEMES.length];
+  try{ localStorage.setItem('gridiron.theme', theme); }catch{}
+  applyTheme();
+});
+applyTheme();
+
+// One delegated Copy listener, so it survives every rebuild.
+document.addEventListener('click', e=>{
+  const b = e.target.closest && e.target.closest('[data-copy]'); if(!b) return;
+  const pre = b.closest('.offer').querySelector('pre');
+  const done = ()=>{ b.textContent = 'Copied'; setTimeout(()=>{ b.textContent = 'Copy'; }, 2000); };
+  const fallback = ()=>{ getSelection().selectAllChildren(pre); };
+  if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(pre.textContent).then(done, fallback);
+  else fallback();
+});
 
 /* ——— the written brief ——— */
 let reportFiles = null;          // null until GitHub has answered at least once; then the last good listing
@@ -915,12 +1113,33 @@ function safeFragment(md){
   return t.content;
 }
 // Put the meta line and a sanitized write-up into the brief, moving the clean nodes in directly.
-function renderReport(box, metaHtml, md){
+function renderReport(box, metaHtml, md, type, dropTitle){
   box.innerHTML = metaHtml;
   const article = document.createElement('article');
   article.className = 'report';
   article.append(safeFragment(md));
+  foldSections(article, type||'x', dropTitle);
   box.append(article);
+  restoreOpen();
+}
+// The write-up is 800 words a tap at a time: each h2 becomes a closed row that opens its section.
+// Anything before the first h2 stays visible; the h1 goes when the verdict is already standing in for it.
+function foldSections(article, type, dropTitle){
+  const nodes = [...article.childNodes];
+  article.textContent = '';
+  let body = null, n = 0;
+  for(const node of nodes){
+    if(node.nodeName==='H1' && dropTitle) continue;
+    if(node.nodeName==='H2'){
+      const d = document.createElement('details');
+      d.className = 'sec'; d.dataset.key = `brief:${type}:${++n}`;
+      const s = document.createElement('summary'); s.textContent = node.textContent;
+      body = document.createElement('div');
+      d.append(s, body); article.append(d);
+      continue;
+    }
+    (body || article).append(node);
+  }
 }
 
 function settingsPanel(){
@@ -934,19 +1153,33 @@ function settingsPanel(){
 }
 
 let currentBrief = null;                 // the tab the reader has open; survives refreshes
+let briefSources = null;                 // the compiled per-routine verdicts, from the last render
 let articleCache = {key:null, md:''};    // the write-up's markdown, refetched only when GitHub says it changed
 async function showBrief(type){
   currentBrief = type;
   document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected', t.dataset.type===type));
-  const box = $('brief');
-  if(type==='settings'){ box.innerHTML = settingsPanel(); return; }
+  // Switching routine is shareable but doesn't stack up history entries.
+  if(document.body.dataset.view==='brief'){ try{ history.replaceState(null,'','#brief/'+type); }catch{} }
+  const box = $('briefpanel');
+  if(!box) return;
+  if(type==='settings'){
+    const n = Object.values(ROUTINES).filter(r=>r.id).length + 1;
+    box.innerHTML = fold('routines','Routines',`${n} scheduled`, settingsPanel(), false);
+    restoreOpen();
+    return;
+  }
   const r = ROUTINES[type], f = newestOf(type), missed = missedRun(type, f);
-  const ghLink = `<a href="https://github.com/${CFG.repo}/tree/main/reports">read them on GitHub</a>`;
+  const ghLink = `<a href="https://github.com/${CFG.repo}/tree/main/reports" target="_blank" rel="noopener">read them on GitHub</a>`;
   const when = f ? esc(longDate(reportDate(f.name)) || f.name.replace('.md','')) : (reportFiles ? 'nothing yet' : 'couldn’t check for new write-ups');
-  const meta = `<div class="brief-meta">
+  // The routine's own one-line answer leads, but only when it belongs to the write-up shown below it.
+  const src = briefSources && briefSources[type];
+  const verdict = (f && src && src.verdict && src.report===f.name)
+    ? `<div class="verdict">${esc(src.verdict)}${src.stale ? '<span class="stale">stale</span>' : ''}</div>` : '';
+  const meta = `${verdict}<div class="brief-meta">
       <span>${when}${r.auto ? ' · '+esc(r.auto) : ''}${
         missed ? ` · <span class="missed">${esc(missed)}'s run left nothing here</span>` : ''}</span>
-      ${r.id ? `<a class="runlink" href="https://claude.ai/code/routines/${esc(r.id)}" target="_blank" rel="noopener">Run fresh ↗</a>` : ''}
+      <span class="links">${r.id ? `<a class="runlink" href="https://claude.ai/code/routines/${esc(r.id)}" target="_blank" rel="noopener">Run fresh ↗</a>` : ''}${
+        f ? `<a class="runlink" href="https://github.com/${CFG.repo}/blob/main/reports/${esc(f.name)}" target="_blank" rel="noopener">Read on GitHub ↗</a>` : ''}</span>
     </div>`;
   if(!f){
     box.innerHTML = meta + (reportFiles
@@ -964,7 +1197,7 @@ async function showBrief(type){
     }catch{ box.innerHTML = meta + `<div class="empty">This one wouldn't load — ${ghLink}.</div>`; return; }
     if(currentBrief !== type) return;      // the reader moved on while it was loading
   }
-  renderReport(box, meta, articleCache.md);
+  renderReport(box, meta, articleCache.md, type, !!verdict);
 }
 
 /* ——— page ——— */
@@ -1061,126 +1294,147 @@ function render(state, got, failed){
     ok: !!actionsDoc, week: wk, league: CFG.league, askUrl: CFG.ask_url,
     now: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),
     items: verified,
+    repo: CFG.repo,
     alerts: actionItems({me, players, games, byes, week:wk, txns, rostered, trendAdd, trendDrop, slots})
-              .filter(a=>!(a.id && !a.keep && spokenFor.has(String(a.id)))),
+              .filter(a=>!(a.id && !a.keep && spokenFor.has(String(a.id))))
+              .filter(a=>!a.covered),      // a covered bye is Byes ahead's business, not a heads-up
     nextCheck: pickNextCheck(actionsDoc && actionsDoc.sources),
     drift: rosterDrifted(actionsDoc, me),
     focus: weekFocus(new Date().getDay()),
   };
   const doNowHtml = renderDoNow(doNow);
-  let html = '';
+  const wide = matchMedia('(min-width:1100px)').matches;
+  const y0 = scrollY;
 
-  /* 2 — this week */
-  // The lineup call for this week, or plainly that it hasn't landed yet: from Thursday on, the
-  // lineup is the first thing on the page whether or not the call changes anything.
+  /* week — the lineup call, the scoreboard, ten lineup rows, and the two folds behind them */
   const lineupSrc = actionsDoc && actionsDoc.sources && actionsDoc.sources.lineup;
+  const callDate = lineupSrc && lineupSrc.written_at
+    ? new Date(lineupSrc.written_at).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'}) : '';
   const lineupCall = lineupSrc && lineupSrc.week===wk && !lineupSrc.stale && lineupSrc.verdict
-    ? `<div class="callout"><b>Lineup call${lineupSrc.written_at ? ', '+esc(new Date(lineupSrc.written_at).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'})) : ''}:</b> ${esc(lineupSrc.verdict)}</div>`
-    : `<div class="callout pending">This week's lineup call hasn't landed yet. It runs Thursday morning.</div>`;
-  if(matchups){
-    const myStarters = (mine && mine.starters) || me.starters || [];
-    const startSet = new Set(myStarters);
-    const bench = (me.players||[]).filter(id=>!startSet.has(id)&&!(me.reserve||[]).includes(id)).map(id=>resolve(players,id)).filter(Boolean);
-    const reserve = (me.reserve||[]).map(id=>resolve(players,id)).filter(Boolean);
-    const cell = (p,pts,side)=>{
-      if(!p) return `<div class="pcell ${side}"><span class="kick">—</span></div>`;
-      const g = games ? games[p.team] : null;
-      const inj = p.inj ? `<span class="badge ${/out|ir|pup|doubtful/i.test(p.inj)?'out':'q'}" title="${esc(p.inj)}">${esc(p.inj.slice(0,3).toUpperCase())}</span>` : '';
-      return `<div class="pcell ${side}"><div class="pline"><span class="pname">${esc(p.name)}</span>${inj}
-        <span class="ppts">${pts!=null?pts.toFixed(1):''}</span></div>
-        <div class="kick ${g&&g.live?'live':''}">${esc(label(p))}</div></div>`;
-    };
-    html += `<section class="thisweek"><h2>This week</h2>
-      <p class="sub">${games ? 'Kickoffs in your local time. ' : ''}Points fill in as games run.</p>${lineupCall}`;
-    if(opp){
-      html += `<div class="scorebug">
-          <div class="side"><div class="team">${esc(name(CFG.me))}</div><div class="rec">${rec(CFG.me)}</div><div class="pts">${(mine.points||0).toFixed(1)}</div></div>
-          <div class="vs">VS</div>
-          <div class="side opp"><div class="team">${esc(name(opp.roster_id))}</div><div class="rec">${rec(opp.roster_id)}</div><div class="pts">${(opp.points||0).toFixed(1)}</div></div>
-        </div>
-        <div class="lineup">
-        <div class="head"><div>${esc(name(CFG.me))} (you)</div><div></div><div class="r">${esc(name(opp.roster_id))}</div></div>`;
-      slots.forEach((slot,i)=>{
-        const a = resolve(players,myStarters[i]);
-        const b = resolve(players,(opp.starters||[])[i]);
-        html += `<div class="slotrow">${cell(a,ppts(mine,myStarters[i]),'')}<div class="slot">${esc(slot.replace('SUPER_FLEX','SFLX'))}</div>${cell(b,ppts(opp,(opp.starters||[])[i]),'opp')}</div>`;
-      });
-    }else{
-      html += `<div class="lineup solo">
-        <div class="nogame">No matchup this week.</div>
-        <div class="head"><div></div><div>${esc(name(CFG.me))} (you)</div></div>`;
-      slots.forEach((slot,i)=>{
-        const a = resolve(players,myStarters[i]);
-        html += `<div class="slotrow"><div class="slot">${esc(slot.replace('SUPER_FLEX','SFLX'))}</div>${cell(a,ppts(mine,myStarters[i]),'')}</div>`;
-      });
-    }
-    html += `<div class="benchnote"><b>Bench:</b> ${bench.map(p=>esc(p.name)).join(' · ')||'—'}<br><b>IR:</b> ${reserve.length?reserve.map(p=>esc(p.name)).join(' · '):'empty'}</div>
-    </div></section>`;
-  }
-  // Tuesday to Wednesday the claims lead and Monday the trades, so the card goes first; Thursday
-  // to Sunday the lineup itself is what matters, so it goes above the card.
-  html = doNow.focus==='lineup' ? html + doNowHtml : doNowHtml + html;
-
-  /* 3 — league activity */
-  const movesHtml = (txns||[]).slice(0,12).map(t=>{
-    const who = (t.roster_ids||[]).map(name).join(', ');
-    const adds = Object.keys(t.adds||{}).map(id=>resolve(players,id)).filter(Boolean);
-    const drops = Object.keys(t.drops||{}).map(id=>resolve(players,id)).filter(Boolean);
-    const free = drops.filter(p=>!rostered.has(p.id));
-    const bid = t.settings&&t.settings.waiver_bid!=null ? ` for $${t.settings.waiver_bid}` : '';
-    return `<div class="move"><span class="who">${esc(who)}</span>
-      <span class="did">${adds.length?`took <span class="in">${adds.map(p=>esc(p.name)).join(', ')}</span>${esc(bid)}`:''}${
-        drops.length?`${adds.length?', let go of ':'let go of '}${drops.map(p=>esc(p.name)).join(', ')}`:''}
-        ${free.length?` <span class="free">still free: ${free.map(p=>esc(p.name)).join(', ')}</span>`:''}</span>
-      <span class="when">${t.status_updated?new Date(t.status_updated).toLocaleDateString(undefined,{month:'short',day:'numeric'}):''}</span></div>`;
-  }).join('');
-  html += `<section><h2>League activity</h2>
-    <p class="sub">Every move the other eleven managers have made, newest first. Anyone marked still free is claimable.</p>
-    <div class="feed">${txns ? (movesHtml || '<div class="allclear">Nobody has made a move yet.</div>')
-                            : '<div class="allclear">Couldn’t load league moves just now.</div>'}</div></section>`;
-
-  /* 4 — the brief */
-  html += `<section><h2>The brief</h2>
-    <p class="sub">The written analysis behind all of this. “Run fresh” starts a new one; it lands here a few minutes later.</p>
-    <div class="tabs" role="tablist">${Object.entries(ROUTINES).map(([t,r])=>`<button class="tab" role="tab" data-type="${t}" aria-selected="false">${r.label}</button>`).join('')}<button class="tab" role="tab" data-type="settings" aria-selected="false">Routines</button></div>
-    <div class="brief" id="brief"></div>
-    <p class="sub" style="margin-top:12px">Something these don't cover — a trade offer to weigh, a what-if? <a href="https://claude.ai/code" target="_blank" rel="noopener">Open a session</a> on <b>the-nebulizer/gridiron</b> and ask.</p>
-  </section>`;
-
-  /* 5 — the season */
-  const standings = rosters.slice().sort((x,y)=>(y.settings?.wins||0)-(x.settings?.wins||0) || pf(y)-pf(x));
-  const budget = league.settings?.waiver_budget||0;
+    ? `<p class="callline"><b>Lineup call${callDate ? ' · '+esc(callDate) : ''} —</b> ${esc(lineupSrc.verdict)}</p>`
+    : `<p class="callline">Lineup call: not in yet · runs Thu 7am</p>`;
   const myPlayers = [...(me.starters||[]), ...(me.players||[])].filter((v,i,a)=>a.indexOf(v)===i).map(id=>resolve(players,id)).filter(Boolean);
   // IR players can't fill an active slot, so they don't count toward covering a bye.
   const activeRoster = myPlayers.filter(p=>!(me.reserve||[]).map(String).includes(String(p.id)));
   const byeRows = {};
   if(byes) myPlayers.forEach(p=>{ const w=byes[p.team]; if(w && w>=wk) (byeRows[w]=byeRows[w]||[]).push(p); });
-  html += `<div class="cols">
-    <section><h2>Standings</h2><p class="sub">FAAB is what each manager can still spend.</p>
-    <table><thead><tr><th>Team</th><th class="r">Rec</th><th class="r">PF</th><th class="r">FAAB</th></tr></thead><tbody>
-    ${standings.map(r=>`<tr class="${r.roster_id===CFG.me?'me':''}"><td>${esc(name(r.roster_id))}</td><td class="num">${rec(r.roster_id)}</td><td class="num">${pf(r).toFixed(2)}</td><td class="num">$${budget-(r.settings?.waiver_budget_used||0)}</td></tr>`).join('')}
-    </tbody></table></section>
-    <section><h2>Byes ahead</h2><p class="sub">Weeks where you'll be short-handed, and who's out. A week marked in red is one you can't field a legal lineup for.</p>
-    <table><thead><tr><th>Week</th><th>Out</th><th class="r">Cover</th></tr></thead><tbody>
-    ${!byes ? '<tr><td colspan="3">The NFL schedule didn’t load, so byes are unknown right now.</td></tr>'
-      : Object.keys(byeRows).map(Number).sort((a,b)=>a-b).map(w=>{
-          // Same matching the heads-up and the reports use: whether the week is coverable is
-          // solved against the real slots, never guessed from which position is out.
-          const gaps = emptySlots(slots||[], activeRoster.filter(p=>byes[p.team]!==w));
-          return `<tr><td class="num" style="text-align:left">W${w}</td>
-            <td>${byeRows[w].map(p=>esc(p.name)+' <span style="color:var(--chalk-dim)">'+esc(p.pos)+'</span>').join(', ')}</td>
-            <td class="num">${gaps.length
-              ? `<span class="missed">no ${gaps.map(g=>esc(prettySlot(g))).join(', no ')}</span>`
-              : '<span class="dim">covered</span>'}</td></tr>`;
-        }).join('') || '<tr><td colspan="3">No byes left this season.</td></tr>'}
-    </tbody></table></section></div>`;
+  // Whether a week is coverable is solved against the real slots (same matching the heads-up and
+  // the reports use), never guessed from which position is out.
+  const byeList = byes ? Object.keys(byeRows).map(Number).sort((a,b)=>a-b)
+    .map(w=>({w, out:byeRows[w], gaps: emptySlots(slots||[], activeRoster.filter(p=>byes[p.team]!==w))})) : [];
+  const firstBad = byeList.find(x=>x.gaps.length);
+  const byeSummary = !byes ? 'schedule didn’t load'
+    : firstBad ? `W${firstBad.w}: ${firstBad.gaps.length===1 ? `no ${esc(prettySlot(firstBad.gaps[0]))} cover` : firstBad.gaps.map(g=>'no '+esc(prettySlot(g))).join(', ')}`
+    : 'all covered';
+  const byesBody = `<table><thead><tr><th>Week</th><th>Out</th><th class="r">Cover</th></tr></thead><tbody>${
+    !byes ? '<tr><td colspan="3">The NFL schedule didn’t load, so byes are unknown right now.</td></tr>'
+      : byeList.map(({w,out,gaps})=>`<tr><td class="num" style="text-align:left">W${w}</td>
+          <td>${out.map(p=>esc(p.name)+' <span class="dim">'+esc(p.pos)+'</span>').join(', ')}</td>
+          <td class="num">${gaps.length ? `<span class="missed">no ${gaps.map(g=>esc(prettySlot(g))).join(', no ')}</span>` : '<span class="dim">covered</span>'}</td></tr>`).join('')
+        || '<tr><td colspan="3">No byes left this season.</td></tr>'}</tbody></table>`;
 
-  $('app').innerHTML = html;
+  let weekHtml = '';
+  if(matchups){
+    const myStarters = (mine && mine.starters) || me.starters || [];
+    const startSet = new Set(myStarters);
+    const bench = (me.players||[]).filter(id=>!startSet.has(id)&&!(me.reserve||[]).includes(id)).map(id=>resolve(players,id)).filter(Boolean);
+    const reserve = (me.reserve||[]).map(id=>resolve(players,id)).filter(Boolean);
+    // "@ KC · Sun 4:25 · CBS": the phone keeps the kickoff and drops the rest (see .sd / .tv).
+    const subline = (p)=>{
+      const parts = label(p).split(' · ');
+      return parts.length<2 ? esc(parts[0]||'')
+        : `<span class="sd">${esc(parts[0])} · </span>${esc(parts[1])}${parts[2] ? `<span class="tv"> · ${esc(parts.slice(2).join(' · '))}</span>` : ''}`;
+    };
+    const cell = (p,side)=>{
+      if(!p) return `<div class="pc ${side}"><span class="kick">—</span></div>`;
+      const g = games ? games[p.team] : null;
+      const inj = p.inj ? `<span class="badge ${/out|ir|pup|doubtful/i.test(p.inj)?'out':'q'}" title="${esc(p.inj)}">${esc(/out|ir|pup|doubtful/i.test(p.inj) ? p.inj.slice(0,3).toUpperCase() : p.inj.charAt(0).toUpperCase())}</span>` : '';
+      return `<div class="pc ${side}"><div class="pl"><span class="pname">${esc(p.name)}</span>${inj}</div>
+        <div class="kick sub${g&&g.live?' live':''}">${subline(p)}</div></div>`;
+    };
+    const posAttr = (slot)=> ['QB','RB','WR','TE','K','DEF'].includes(slot) ? ` data-pos="${slot}"` : '';
+    const pts = (m,id)=>{ const v = ppts(m,id); return `<span class="pts">${v!=null ? v.toFixed(1) : ''}</span>`; };
+    const kicks = games ? Object.values(games).map(g=>g.kick).filter(Boolean).sort((a,b)=>a-b) : [];
+    const summ = [opp ? 'vs '+esc(name(opp.roster_id)) : '', kicks[0] ? 'first kickoff '+esc(dayTime(kicks[0])) : ''].filter(Boolean).join(' · ');
+    weekHtml += `<div class="phead"><span class="eyebrow">This week</span><span class="dcount">${summ}</span></div>${lineupCall}`;
+    if(opp){
+      weekHtml += `<div class="scorebug">
+          <div class="side"><div class="who"><div class="team">${esc(name(CFG.me))}</div><div class="rec">${rec(CFG.me)}</div></div><div class="pts">${(mine.points||0).toFixed(1)}</div></div>
+          <div class="vs">VS</div>
+          <div class="side opp"><div class="who"><div class="team">${esc(name(opp.roster_id))}</div><div class="rec">${rec(opp.roster_id)}</div></div><div class="pts">${(opp.points||0).toFixed(1)}</div></div>
+        </div>
+        <div class="lineup"><div class="lhead"><div></div><div>You</div><div class="r">Pts</div><div class="r">Pts</div><div class="pc opp">Them</div></div>`;
+      slots.forEach((slot,i)=>{
+        weekHtml += `<div class="lrow"><span class="slot"${posAttr(slot)}>${esc(slot.replace('SUPER_FLEX','SFLX'))}</span>${cell(resolve(players,myStarters[i]),'')}${pts(mine,myStarters[i])}${pts(opp,(opp.starters||[])[i])}${cell(resolve(players,(opp.starters||[])[i]),'opp')}</div>`;
+      });
+      weekHtml += `</div>`;
+    }else{
+      weekHtml += `<div class="lineup solo"><div class="nogame">No matchup this week.</div>`;
+      slots.forEach((slot,i)=>{
+        weekHtml += `<div class="lrow"><span class="slot"${posAttr(slot)}>${esc(slot.replace('SUPER_FLEX','SFLX'))}</span>${cell(resolve(players,myStarters[i]),'')}${pts(mine,myStarters[i])}</div>`;
+      });
+      weekHtml += `</div>`;
+    }
+    const benchNote = `<div class="benchnote"><b>Bench:</b> ${bench.map(p=>esc(p.name)).join(' · ')||'—'}<br><b>IR:</b> ${reserve.length?reserve.map(p=>esc(p.name)).join(' · '):'empty'}</div>`;
+    weekHtml += fold('bench', 'Bench & IR', `Bench ${bench.length} · IR ${reserve.length}`, benchNote, false);
+  }else{
+    weekHtml += `<div class="phead"><span class="eyebrow">This week</span></div>${lineupCall}<div class="allclear">Couldn’t load this week’s matchup just now.</div>`;
+  }
+  weekHtml += fold('byes', 'Byes ahead', byeSummary, byesBody, false);
+
+  /* league — every move the other eleven managers made, then the table */
+  let freeCount = 0;
+  const recent = (txns||[]).slice(0,12);
+  const movesHtml = recent.map(t=>{
+    const who = (t.roster_ids||[]).map(name).join(', ');
+    const adds = Object.keys(t.adds||{}).map(id=>resolve(players,id)).filter(Boolean);
+    const drops = Object.keys(t.drops||{}).map(id=>resolve(players,id)).filter(Boolean);
+    const free = drops.filter(p=>!rostered.has(p.id));
+    freeCount += free.length;
+    const bid = t.settings&&t.settings.waiver_bid!=null ? ` for $${t.settings.waiver_bid}` : '';
+    return `<div class="tx"><span class="who">${esc(who)}</span>
+      <span class="did">${adds.length?`took <span class="in">${adds.map(p=>esc(p.name)).join(', ')}</span>${esc(bid)}`:''}${
+        drops.length?`${adds.length?', let go of ':'let go of '}${drops.map(p=>esc(p.name)).join(', ')}`:''}${
+        free.length?` <span class="free" title="${esc(free.map(p=>p.name).join(', '))}">FREE</span>`:''}</span>
+      <span class="when">${t.status_updated?new Date(t.status_updated).toLocaleDateString(undefined,{month:'short',day:'numeric'}):''}</span></div>`;
+  }).join('');
+  const standings = rosters.slice().sort((x,y)=>(y.settings?.wins||0)-(x.settings?.wins||0) || pf(y)-pf(x));
+  const budget = league.settings?.waiver_budget||0;
+  const ord = (n)=>{ const s=['th','st','nd','rd'], v=n%100; return n+(s[(v-20)%10]||s[v]||s[0]); };
+  const myRank = standings.findIndex(r=>r.roster_id===CFG.me)+1;
+  const standSum = `${ord(myRank)} · ${rec(CFG.me)} · $${budget-(me.settings?.waiver_budget_used||0)} left`;
+  const standBody = `<table><thead><tr><th>Team</th><th class="r">Rec</th><th class="r">PF</th><th class="r">FAAB</th></tr></thead><tbody>
+    ${standings.map(r=>`<tr class="${r.roster_id===CFG.me?'me':''}"><td>${esc(name(r.roster_id))}</td><td class="num">${rec(r.roster_id)}</td><td class="num">${pf(r).toFixed(2)}</td><td class="num">$${budget-(r.settings?.waiver_budget_used||0)}</td></tr>`).join('')}
+    </tbody></table>`;
+  const leagueHtml = `<div class="phead"><span class="eyebrow">League</span></div>`
+    + fold('activity', 'Activity', txns ? `${recent.length} move${recent.length===1?'':'s'}${freeCount ? ` · ${freeCount} still free` : ''}` : 'couldn’t load',
+        txns ? (movesHtml || '<div class="allclear">Nobody has made a move yet.</div>') : '<div class="allclear">Couldn’t load league moves just now.</div>', true)
+    + fold('standings', 'Standings', standSum, standBody, false);
+
+  /* brief — a routine picker, the verdict and the write-up folded by section */
+  briefSources = actionsDoc && actionsDoc.sources || null;
+  const briefHtml = `<div class="phead"><span class="eyebrow">The brief</span></div>
+    <div class="tabs" role="tablist">${Object.entries(ROUTINES).filter(([t])=>t!=='activity').map(([t,r])=>`<button class="tab" role="tab" data-type="${t}" aria-selected="false">${r.label}</button>`).join('')}<button class="tab" role="tab" data-type="settings" aria-selected="false">Routines</button></div>
+    <div class="brief" id="briefpanel"></div>`;
+
+  $('app').innerHTML = `<div class="views">
+      <section class="view" id="do">${doNowHtml}</section>
+      <section class="view" id="week">${weekHtml}</section>
+      <section class="view" id="league">${leagueHtml}</section>
+      <section class="view" id="brief">${briefHtml}</section>
+    </div><div class="rail" id="rail"></div>`;
   rendered = true;
+  restoreOpen();
   wireDismiss(doNow);
+  paintChrome(doNow);
   document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>showBrief(t.dataset.type)));
+  const hashSub = location.hash.startsWith('#brief/') ? location.hash.slice(7) : '';
   const newest = (reportFiles||[]).slice().sort((a,b)=>b.name.localeCompare(a.name))[0];
-  showBrief(currentBrief || (newest ? (Object.keys(ROUTINES).find(t=>newest.name.includes('-'+t)) || 'waivers') : 'waivers'));
+  showBrief((ROUTINES[hashSub] && hashSub!=='activity' || hashSub==='settings' ? hashSub : '') || currentBrief
+    || (newest ? (Object.keys(ROUTINES).find(t=>t!=='activity' && newest.name.includes('-'+t)) || 'waivers') : 'waivers'));
+  route(false);
+  if(window.watchViews) window.watchViews();
+  scrollTo(0, y0);
 
   // One plain line for whatever didn't come through; the exception text stays in the tooltip.
   const missing = [...new Set(Object.keys(failed).map(k=>FEED_NAMES[k]||k))];
@@ -1192,10 +1446,11 @@ async function doLoad(){
   if(!rendered) $('app').innerHTML = '<div class="loading">Reading the field…</div>';
   try{
     const state = await cached('state', 15*MIN, ()=>j(`${API}/v1/state/nfl`));
-    $('weekchip').innerHTML = `${esc(state.season)} SEASON · <b>WEEK ${state.week || 1}</b>`;
+    const dayName = new Date().toLocaleDateString(undefined,{weekday:'short'}).toUpperCase();
+    $('weekchip').innerHTML = `<span class="long">WEEK</span><span class="short">WK</span> ${state.week || 1} · ${esc(dayName)}`;
     const [{got, failed}] = await Promise.all([fetchAll(state), loadReports()]);
     render(state, got, failed);
-    $('stamp').textContent = 'updated '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    $('stamp').textContent = new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
   }catch(e){
     if(!rendered){
       $('app').innerHTML = `<div class="error" title="${esc(e.message)}"><b>Couldn't reach Sleeper.</b><br><br>Everything on this page comes from them, so there's nothing to show until they answer.<br><br>Check your connection, then refresh.</div>`;

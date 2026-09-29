@@ -39,7 +39,7 @@ Directly under the report's `# H1` line, before any other content, a fenced code
 Rest of the report: the supporting argument, in prose.
 ````
 
-Every id in a block comes from the snapshot you just synced; never type one from memory. The block is required even when there is nothing to do: `"actions": []` with a `verdict` such as "Hold — nothing clears the bar." The dashboard never renders the report body at all — it shows the `verdict` as a one-line outcome and links to the write-up on GitHub. On GitHub the block shows as a code block.
+Every id in a block comes from the snapshot you just synced; never type one from memory. The block is required even when there is nothing to do: `"actions": []` with a `verdict` such as "Hold — nothing clears the bar." The card shows the move and its one-line reason; the facts, the source and the fallbacks open on demand, as short statements never paragraphs. The full write-up stays folded by section and on GitHub. The Brief view leads with the `verdict` and links to the write-up on GitHub. On GitHub the block shows as a code block.
 
 ### Top-level fields
 
@@ -63,7 +63,7 @@ Common fields:
 | `why` | string | One sentence, at most 200 characters. Required. |
 | `id` | string | Optional. Compiler generates `<source>:<kind>:<player>` (`<source>:trade:<with>` for trades) when absent. **Required, and must be distinct, when a report makes more than one trade offer to the same partner** — two offers with no `id` both default to the same `<source>:trade:<with>` key, which is rejected at write time rather than silently collapsing to one (see "Sequencing"). |
 | `after` | string | Optional. Id of an action that must be **done** before this one makes sense. The card nests this under it as "Then". |
-| `if_not` | string | Optional. Id of an action this one is the **fallback** for: do this only if that one is declined, dismissed, or no longer possible. The card nests this under it as "If that falls through". |
+| `if_not` | string | Optional. Id of an action this one is the **fallback** for: do this only if that one is declined, dismissed, or no longer possible. The card nests this under it as "if declined" (parent is a trade) / "if that misses" (parent is an add). |
 
 Per-kind fields and validation (all checked against `data/league/snapshot.json`):
 
@@ -167,10 +167,10 @@ How the card treats a dependent action:
 
 | link | parent state | dependent shows as |
 |---|---|---|
-| `after` | open | nested under the parent, "Then:", not counted as open |
+| `after` | open | nested under the parent, "then", not counted as open |
 | `after` | done | promoted to open |
 | `after` | gone / dismissed | gone |
-| `if_not` | open | nested under the parent, "If that falls through:", not counted as open |
+| `if_not` | open | nested under the parent, "if declined" / "if that misses", not counted as open |
 | `if_not` | done | superseded, shelved |
 | `if_not` | gone / dismissed | promoted to open |
 
@@ -254,7 +254,7 @@ Sits above the scorebug. Reads `reports/actions.json` from raw.githubusercontent
 - `stale` — a `start` action whose window has closed: its `week` is behind the live NFL week, or its player's or `for`'s game has already kicked off. Recomputed live here (not read straight off the compiled JSON), using the same per-team live game data the "This week" section already fetches, so a page open since before today's Tuesday rollover — or since before kickoff — still catches it correctly; that feed failing to load reads as unknown, never as kicked off. Shelved rather than dropped: the "stale" chip always shows in place of the (now moot) deadline chip, and when a reason is known — the compiler's own `state_reason`, naming who kicked off, carried straight through from `reports/actions.json` — it renders in the same muted line an open action's `why` uses, in place of that action's own (now moot) `why`. A week-behind stale, which the page recomputes with no reason to carry, shows the chip alone. Other kinds never go stale.
 - `dismissed` — trades only, via a button; stored in `localStorage` keyed by action id + the source report filename, wrapped in try/catch. A dismissed trade stays hidden until a newer trades report replaces it.
 
-Each open item shows, in order: the kind tag and order number, the move in one bold line with player names, the deadline chip (mono, right-aligned), the **case** as a small two-column grid (label left — Starts / Need / Cost / Later — text right, only the lines the action carries), the `why` sentence, for a trade its `message` under a collapsed "Offer message" toggle, and a source line ("Waivers · 2026-09-15 · verified live 14:02"). Shelved (done / gone / stale / superseded) items don't draw the case — it argued for a move that is over. One "Open Sleeper ↗" link in the card header, not per item. A dependent says "If that falls through:" or "Then:" and nothing more — which player the two actions contend over is the compiler's business, not the reader's.
+Each open item is a row that opens in place. Closed: the kind tag and order number, the move in one bold line, the deadline chip, and the `why` clamped to two lines. Open: the full `why`; the **case** as chips under plain-English labels (Where he fits / The need / The cost / What they give up / Rest of season, only the lines the action carries); "Because" with the evidence host and date; for a trade its `message` with a Copy button; and a source line ("Waivers · 2026-09-15 · checked 14:02") with a link to the write-up. When a plan has fallbacks, a compare strip lists every option's GET / GIVE / COST / BY. Shelved (done / gone / stale / superseded) items don't draw the case — it argued for a move that is over. One "Sleeper ↗" link in the card header (the phone also has it in a bottom rail), not per item. A dependent leads with "if declined", "if that misses" or "then" and nothing more — which player the two actions contend over is the compiler's business, not the reader's.
 
 **Mechanical alerts** the page computes itself from live data and shows under the actions as "Heads up" (they need no judgment and never go stale). A heads-up whose player already has an open action in the card above is suppressed — the routines have already turned it into an instruction, so it isn't also raised as a separate alert:
 

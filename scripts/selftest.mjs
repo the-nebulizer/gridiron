@@ -2394,8 +2394,8 @@ console.log('\n  the dashboard: caseGrid, kindTag — extending the do-now pure 
   };
   const row = ctx.actionRow(openAdd, { now: '14:02' }, { num: 1 });
   check('an open add with a four-line case renders a case grid', row.includes('class="case"'), row);
-  const idx = ['>Starts<', '>Need<', '>Cost<', '>Later<'].map((l) => row.indexOf(l));
-  check('...with the labels Starts / Need / Cost / Later, in that order',
+  const idx = ['>Where he fits<', '>The need<', '>The cost<', '>Rest of season<'].map((l) => row.indexOf(l));
+  check('...with the labels Where he fits / The need / The cost / Rest of season, in that order',
     idx.every((n) => n !== -1) && idx.every((n, i) => i === 0 || n > idx[i - 1]), JSON.stringify(idx));
   check('...and the row is tagged claim, not a bare number', row.includes('<span class="kind">claim</span>'), row);
 
