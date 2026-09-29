@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-09-29T12:19:13.475Z",
+  "compiled_at": "2026-09-29T18:48:21.287Z",
   "season": "2026",
   "week": 4,
   "games_have_started": true,
@@ -34,7 +34,7 @@
       "verdict": "Bid $9 on Ollie Gordon as a bench stash, only if neither pending RB trade lands first. Hold Dicker and the Giants — both play this week.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-09-29T12:19:08.707Z"
+      "written_at": "2026-09-29T12:19:16.000Z"
     },
     "lineup": {
       "report": "2026-09-24-lineup.md",
@@ -45,12 +45,12 @@
       "written_at": "2026-09-24T12:28:33.000Z"
     },
     "trades": {
-      "report": "2026-09-28-trades.md",
-      "week": 3,
-      "verdict": "Send Kirk Cousins to ObiWanless (roster 6) for RJ Harvey first — their SUPER_FLEX has been sitting empty. Keep last week's Bryce Young-for-Brian Robinson offer to amandaberry alive, but only follow through on it if the Harvey deal falls through.",
-      "next_check": "Waivers, Tue 7am",
-      "stale": true,
-      "written_at": "2026-09-28T12:23:16.000Z"
+      "report": "2026-09-29-trades.md",
+      "week": 4,
+      "verdict": "Offer Kirk Cousins to SchoaTime (roster 1) for Tony Pollard. Leave the Cousins-for-Harvey offer to ObiWanless open as the fallback, and withdraw the Bryce Young-for-Brian Robinson offer to amandaberry.",
+      "next_check": "Lineup, Thu 7am",
+      "stale": false,
+      "written_at": "2026-09-29T18:48:18.798Z"
     },
     "inactives": {
       "report": "2026-09-27-inactives.md",
@@ -102,11 +102,58 @@
       }
     },
     {
+      "id": "pollard_schoatime",
+      "source": "trades",
+      "report": "2026-09-29-trades.md",
+      "kind": "trade",
+      "week": 4,
+      "with": 1,
+      "with_owner": "SchoaTime",
+      "give": [
+        "1166"
+      ],
+      "give_names": [
+        "Kirk Cousins"
+      ],
+      "get": [
+        "5967"
+      ],
+      "get_names": [
+        "Tony Pollard"
+      ],
+      "message": "Saw Baker's out at least three weeks — rough luck. Cousins can go straight into your SUPER_FLEX, and his bye isn't until 13, so he covers every week Baker misses. I'd take Tony Pollard for him; he's sitting on your bench behind Chase Brown and Price anyway.",
+      "displaces": null,
+      "displaces_name": null,
+      "evidence": {
+        "note": "Mayfield dislocated his thumb in Week 3, out at least three weeks. Pollard is Tennessee's lead back (17 carries, 4 catches in Week 3).",
+        "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/todd-bowles-baker-mayfield-out-a-minimum-of-three-weeks-with-thumb-dislocation",
+        "as_of": "2026-09-28"
+      },
+      "consumes": [
+        "1166"
+      ],
+      "urgency": "this_week",
+      "why": "Pollard is a starting back who sits on their bench; Cousins fills a hole they have for at least three weeks. A better return for Cousins than RJ Harvey, and it opens nothing on my calendar.",
+      "case": {
+        "starts": "Tony Pollard is depth (RB4)",
+        "need": "RB: you have 3 — not thin · gives QB depth (you have 4, start 2)",
+        "cost": "gives Kirk Cousins — 0 starters, 1 bench · no FAAB",
+        "asks": "SchoaTime benches Tony Pollard — one of 4 RBs they carry",
+        "tradeoff": {
+          "net": "neutral",
+          "fixes": [],
+          "opens": []
+        },
+        "later": "opens no holes"
+      }
+    },
+    {
       "id": "harvey_obiwanless",
       "source": "trades",
-      "report": "2026-09-28-trades.md",
+      "report": "2026-09-29-trades.md",
       "kind": "trade",
-      "week": 3,
+      "week": 4,
+      "if_not": "pollard_schoatime",
       "with": 6,
       "with_owner": "ObiWanless",
       "give": [
@@ -132,8 +179,8 @@
       "consumes": [
         "1166"
       ],
-      "urgency": "this_week",
-      "why": "They've punted a scoring slot every week; Cousins fills it outright. Harvey adds a real body to my 3-deep RB room, which has zero spare right now.",
+      "urgency": "optional",
+      "why": "Already sent, so leave it open: whichever of the two is accepted first gets Cousins, and Sleeper cancels the other.",
       "case": {
         "starts": "RJ Harvey is depth (RB4)",
         "need": "RB: you have 3 — not thin · gives QB depth (you have 4, start 2)",
@@ -145,59 +192,6 @@
           "opens": []
         },
         "later": "opens no holes"
-      }
-    },
-    {
-      "id": "robinson",
-      "source": "trades",
-      "report": "2026-09-28-trades.md",
-      "kind": "trade",
-      "week": 3,
-      "if_not": "harvey_obiwanless",
-      "with": 9,
-      "with_owner": "amandaberry",
-      "give": [
-        "9228"
-      ],
-      "give_names": [
-        "Bryce Young"
-      ],
-      "get": [
-        "8154"
-      ],
-      "get_names": [
-        "Brian Robinson"
-      ],
-      "message": "Hey — you're starting Lawrence and Love with nobody behind either one, and Bryce Young is Carolina's starter with a Week 5 bye, so he covers both of your quarterbacks' off weeks (Lawrence in 7, Love in 11) instead of just one. Would you do Young for Brian Robinson? You're carrying five backs and he's behind Bijan; I could use a body at running back.",
-      "displaces": null,
-      "displaces_name": null,
-      "evidence": {
-        "note": "Brian Robinson is a backup behind Bijan Robinson with 22 touches for 98 yards through two games, and was limited with an ankle issue Monday of Week 3.",
-        "url": "https://www.rotowire.com/football/headlines/brian-robinson-injury-dealing-with-ankle-injury-638473",
-        "as_of": "2026-09-22"
-      },
-      "consumes": [
-        "9228"
-      ],
-      "urgency": "optional",
-      "why": "Still unanswered from last Monday. Only complete this if the Harvey deal falls through — doing both leaves just Lamar and Goff at QB, zero backup.",
-      "case": {
-        "starts": "Brian Robinson is depth (RB4)",
-        "need": "RB: you have 3 — not thin · gives QB depth (you have 4, start 2)",
-        "cost": "gives Bryce Young — 0 starters, 1 bench · no FAAB",
-        "asks": "amandaberry benches Brian Robinson — one of 5 RBs they carry",
-        "tradeoff": {
-          "net": "costs_only",
-          "fixes": [],
-          "opens": [
-            {
-              "week": 13,
-              "slot": "SUPER_FLEX",
-              "kind": "downgrade"
-            }
-          ]
-        },
-        "later": "opens a W13 SUPERFLEX downgrade"
       }
     }
   ]
