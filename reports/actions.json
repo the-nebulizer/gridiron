@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-09-29T18:48:21.287Z",
+  "compiled_at": "2026-09-29T20:10:32.660Z",
   "season": "2026",
   "week": 4,
   "games_have_started": true,
@@ -47,10 +47,10 @@
     "trades": {
       "report": "2026-09-29-trades.md",
       "week": 4,
-      "verdict": "Offer Kirk Cousins to SchoaTime (roster 1) for Tony Pollard. Leave the Cousins-for-Harvey offer to ObiWanless open as the fallback, and withdraw the Bryce Young-for-Brian Robinson offer to amandaberry.",
+      "verdict": "Offer Kirk Cousins to SchoaTime (roster 1) for Tony Pollard. If they say no, offer Cousins to ObiWanless for RJ Harvey instead.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-09-29T18:48:18.798Z"
+      "written_at": "2026-09-29T20:10:32.521Z"
     },
     "inactives": {
       "report": "2026-09-27-inactives.md",
@@ -180,7 +180,7 @@
         "1166"
       ],
       "urgency": "optional",
-      "why": "Already sent, so leave it open: whichever of the two is accepted first gets Cousins, and Sleeper cancels the other.",
+      "why": "Only if SchoaTime says no. ObiWanless still has an empty SUPER_FLEX, so Cousins has a second buyer, but Harvey is the weaker return.",
       "case": {
         "starts": "RJ Harvey is depth (RB4)",
         "need": "RB: you have 3 — not thin · gives QB depth (you have 4, start 2)",
