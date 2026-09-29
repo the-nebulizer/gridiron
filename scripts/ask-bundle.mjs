@@ -16,6 +16,7 @@
 //   node scripts/ask-bundle.mjs --check   # verify the emitted file, no rebuild
 import { readFile, writeFile, access } from 'node:fs/promises';
 import path from 'node:path';
+import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -329,9 +330,9 @@ async function build() {
   const asOf = chicagoAsOf(snapshot.fetched_at);
 
   let html = template;
-  html = html.replaceAll('/*__DATA__*/', dataJson);
-  html = html.replaceAll('/*__DONOW_PURE__*/', doNowPure);
-  html = html.replaceAll('/*__OUTLOOK_CORE__*/', outlookCoreSrc);
+  html = html.replaceAll('/*__DATA__*/', () => dataJson);
+  html = html.replaceAll('/*__DONOW_PURE__*/', () => doNowPure);
+  html = html.replaceAll('/*__OUTLOOK_CORE__*/', () => outlookCoreSrc);
   html = html.replaceAll('__AS_OF__', asOf);
 
   await writeFile(outPath, html);
@@ -373,6 +374,11 @@ async function check() {
   ];
   for (const [label, needle] of requiredSnippets) {
     if (!html.includes(needle)) die(`ask-bundle --check: ${label} region missing — no "${needle}" in ask/index.html.`);
+  }
+
+  // Every executable <script> block must parse: needle greps alone passed a build with a mangled script.
+  for (const m of html.matchAll(/<script(?![^>]*type="application\/json")[^>]*>([\s\S]*?)<\/script>/g)) {
+    try { new vm.Script(m[1]); } catch (e) { die(`ask-bundle --check: an inline <script> does not parse: ${e.message}`); }
   }
 
   console.log(`ask-bundle --check: OK — data ${dataBytes} bytes, week ${parsed.week}, ${parsed.card?.actions?.length ?? 0} action(s).`);
