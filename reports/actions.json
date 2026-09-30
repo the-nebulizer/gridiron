@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-09-30T01:16:59.445Z",
+  "compiled_at": "2026-09-30T12:32:24.550Z",
   "season": "2026",
   "week": 4,
   "games_have_started": true,
@@ -13,8 +13,8 @@
       "9484",
       "8228",
       "3163",
-      "8259",
-      "NYG"
+      "11792",
+      "CHI"
     ],
     "bench": [
       "1166",
@@ -31,169 +31,41 @@
     "waivers": {
       "report": "2026-09-30-waivers.md",
       "week": 4,
-      "verdict": "Bid $9 on Ollie Gordon as running-back insurance (drop Jakobi Meyers), $6 on Braelon Allen as the fallback if that loses, and $3 to swap the Giants defense for the Bears. Kicker holds.",
+      "verdict": "Hold — nothing clears the bar. Kicker and defense both play at home this week; Week 6 is the one to watch, when Reichard's bye leaves the kicker slot empty.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-09-30T01:16:55.864Z"
+      "written_at": "2026-09-30T12:29:21.115Z"
     },
     "lineup": {
-      "report": "2026-09-24-lineup.md",
-      "week": 3,
-      "verdict": "Hold the lineup as set. Jaylen Warren (Questionable, shoulder) is the one name to watch before Sunday, but nothing changes it yet.",
+      "report": "2026-09-30-lineup.md",
+      "week": 4,
+      "verdict": "Hold the lineup. All ten starters are healthy, including the newly added Will Reichard and Chicago Bears, both playing at home.",
       "next_check": "Inactives, Sun 10am",
-      "stale": true,
-      "written_at": "2026-09-24T12:28:33.000Z"
+      "stale": false,
+      "written_at": "2026-09-30T12:29:29.875Z"
     },
     "trades": {
-      "report": "2026-09-29-trades.md",
+      "report": "2026-09-30-trades.md",
       "week": 4,
       "verdict": "Offer Kirk Cousins to SchoaTime (roster 1) for Tony Pollard. If they say no, offer Cousins to ObiWanless for RJ Harvey instead.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-09-29T20:10:32.000Z"
+      "written_at": "2026-09-30T12:32:16.171Z"
     },
     "inactives": {
-      "report": "2026-09-27-inactives.md",
-      "week": 3,
-      "verdict": "Hold your lineup — nobody is ruled out. Jaylen Warren's questionable tag isn't costing him the start.",
+      "report": "2026-09-30-inactives.md",
+      "week": 4,
+      "verdict": "Not actionable yet — no NFL game has kicked off. The first Week 4 game is tomorrow night, and the rest of the slate follows Sunday.",
       "next_check": "Trades, Mon 7am",
-      "stale": true,
-      "written_at": "2026-09-27T15:11:02.000Z"
+      "stale": false,
+      "written_at": "2026-09-30T12:29:54.059Z"
     }
   },
   "actions": [
     {
-      "id": "gordon_miami",
-      "source": "waivers",
-      "report": "2026-09-30-waivers.md",
-      "kind": "add",
-      "week": 4,
-      "if_not": "harvey_obiwanless",
-      "player": "12495",
-      "name": "Ollie Gordon",
-      "pos": "RB",
-      "team": "MIA",
-      "drop": "5947",
-      "drop_name": "Jakobi Meyers",
-      "mode": "waiver",
-      "faab": 9,
-      "displaces": null,
-      "displaces_name": null,
-      "evidence": {
-        "note": "Achane tore his ACL in Week 3 and is out for the season; Gordon carried 17 times as Miami's lead back with Jaylen Wright out (foot), though Wright is listed ahead of him on the depth chart.",
-        "url": "https://www.nbcsports.com/fantasy/football/news/2026-nfl-week-4-injury-report-achane-acl-baker-thumb-jefferson-ankle-breece-hall-quad-and-more",
-        "as_of": "2026-09-30"
-      },
-      "consumes": [
-        "5947"
-      ],
-      "urgency": "by_tuesday",
-      "why": "Warren is Questionable and Charbonnet is still on PUP, so a fourth back is real insurance; Gordon doesn't start this week, so he's priced as a stash.",
-      "case": {
-        "starts": "Bench — RB4 behind Ashton Jeanty, Bucky Irving, Jaylen Warren",
-        "tradeoff": {
-          "net": "neutral",
-          "fixes": [],
-          "opens": []
-        },
-        "need": "RB: you have 3 — not thin · fixes nothing on the calendar",
-        "cost": "$9 of $92 · 4 of 12 teams still have $100 · #1 most-added in Sleeper this week · drops Jakobi Meyers (WR, bench)",
-        "later": "opens no holes"
-      }
-    },
-    {
-      "id": "allen_jets",
-      "source": "waivers",
-      "report": "2026-09-30-waivers.md",
-      "kind": "add",
-      "week": 4,
-      "if_not": "gordon_miami",
-      "player": "11576",
-      "name": "Braelon Allen",
-      "pos": "RB",
-      "team": "NYJ",
-      "drop": "5947",
-      "drop_name": "Jakobi Meyers",
-      "mode": "waiver",
-      "faab": 6,
-      "displaces": null,
-      "displaces_name": null,
-      "evidence": {
-        "note": "Breece Hall is week-to-week with a quad injury and out for Week 4; Braelon Allen took over the Jets' backfield in Week 3 and is expected to start at Chicago.",
-        "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-09-28/report-breece-hall-week-to-week-with-quad-injury",
-        "as_of": "2026-09-30"
-      },
-      "consumes": [
-        "5947"
-      ],
-      "urgency": "by_tuesday",
-      "why": "Fallback if the Gordon bid loses: he projects higher than Gordon this week, but only starts for the Jets while Hall is out.",
-      "case": {
-        "starts": "Bench — RB4 behind Ashton Jeanty, Bucky Irving, Jaylen Warren",
-        "tradeoff": {
-          "net": "neutral",
-          "fixes": [],
-          "opens": []
-        },
-        "need": "RB: you have 3 — not thin · fixes nothing on the calendar",
-        "cost": "$6 of $92 · 4 of 12 teams still have $100 · #3 most-added in Sleeper this week · drops Jakobi Meyers (WR, bench)",
-        "later": "opens no holes"
-      }
-    },
-    {
-      "id": "waivers:add:CHI",
-      "source": "waivers",
-      "report": "2026-09-30-waivers.md",
-      "kind": "add",
-      "week": 4,
-      "player": "CHI",
-      "name": "Chicago Bears",
-      "pos": "DEF",
-      "team": "CHI",
-      "drop": "NYG",
-      "drop_name": "New York Giants",
-      "mode": "waiver",
-      "faab": 3,
-      "displaces": "NYG",
-      "displaces_name": "New York Giants",
-      "evidence": {
-        "note": "NBC ranks the Bears the #8 Week 4 defense, at home against the Jets; the Giants lost Brian Burns for the season and Arizona scored 30 last week.",
-        "url": "https://www.nbcsports.com/fantasy/football/news/2026-fantasy-football-week-4-defense-dst-rankings-and-streamers",
-        "as_of": "2026-09-30"
-      },
-      "consumes": [
-        "NYG"
-      ],
-      "urgency": "by_tuesday",
-      "why": "A cheap, small matchup upgrade at home; if the claim loses, the Giants simply stay.",
-      "case": {
-        "starts": "Starts over New York Giants at DEF",
-        "tradeoff": {
-          "net": "mixed",
-          "fixes": [
-            {
-              "week": 8,
-              "slot": "DEF",
-              "kind": "hole"
-            }
-          ],
-          "opens": [
-            {
-              "week": 10,
-              "slot": "DEF",
-              "kind": "hole"
-            }
-          ]
-        },
-        "need": "DEF: you have 1 — your thinnest spot · fixes W8",
-        "cost": "$3 of $92 · 4 of 12 teams still have $100 · #42 most-added in Sleeper this week · drops New York Giants (DEF, starter)",
-        "later": "opens a W10 DEF hole · drops your only DEF"
-      }
-    },
-    {
       "id": "pollard_schoatime",
       "source": "trades",
-      "report": "2026-09-29-trades.md",
+      "report": "2026-09-30-trades.md",
       "kind": "trade",
       "week": 4,
       "with": 1,
@@ -210,24 +82,24 @@
       "get_names": [
         "Tony Pollard"
       ],
-      "message": "Saw Baker's out at least three weeks — rough luck. Cousins can go straight into your SUPER_FLEX, and his bye isn't until 13, so he covers every week Baker misses. I'd take Tony Pollard for him; he's sitting on your bench behind Chase Brown and Price anyway.",
+      "message": "Saw Baker's out at least three weeks — rough luck, and I know you're stuck starting a running back in your SUPER_FLEX with no real QB behind Purdy. Cousins slots straight in there, and his bye isn't until 13, so he covers every week Baker misses. I'd take Tony Pollard for him — you'd still have Price and Black behind Chase Brown.",
       "displaces": null,
       "displaces_name": null,
       "evidence": {
-        "note": "Mayfield dislocated his thumb in Week 3, out at least three weeks. Pollard is Tennessee's lead back (17 carries, 4 catches in Week 3).",
-        "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/todd-bowles-baker-mayfield-out-a-minimum-of-three-weeks-with-thumb-dislocation",
-        "as_of": "2026-09-28"
+        "note": "Mayfield's MRI showed no ligament damage but he's still out at least three weeks; Jalon Daniels starts for Tampa Bay in Week 4. Pollard remains Tennessee's lead back.",
+        "url": "https://www.espn.com/nfl/story/_/id/50052996/buccaneers-mayfield-thumb-least-three-weeks-bowles-says",
+        "as_of": "2026-09-30"
       },
       "consumes": [
         "1166"
       ],
       "urgency": "this_week",
-      "why": "Pollard is a starting back who sits on their bench; Cousins fills a hole they have for at least three weeks. A better return for Cousins than RJ Harvey, and it opens nothing on my calendar.",
+      "why": "SchoaTime starts a RB in SUPER_FLEX with no backup QB; a real QB there outscores that most weeks even after benching Pollard. Better return than RJ Harvey; opens nothing on my calendar.",
       "case": {
         "starts": "Tony Pollard is depth (RB4)",
         "need": "RB: you have 3 — not thin · gives QB depth (you have 4, start 2)",
         "cost": "gives Kirk Cousins — 0 starters, 1 bench · no FAAB",
-        "asks": "SchoaTime starts Tony Pollard — one of 4 RBs they carry · asks them to bench a starter for bench pieces",
+        "asks": "SchoaTime starts Tony Pollard — one of 5 RBs they carry · asks them to bench a starter for bench pieces",
         "tradeoff": {
           "net": "neutral",
           "fixes": [],
@@ -239,7 +111,7 @@
     {
       "id": "harvey_obiwanless",
       "source": "trades",
-      "report": "2026-09-29-trades.md",
+      "report": "2026-09-30-trades.md",
       "kind": "trade",
       "week": 4,
       "if_not": "pollard_schoatime",
@@ -263,7 +135,7 @@
       "evidence": {
         "note": "Harvey played 51% of Denver's snaps in the opener as the pass-catching back in a crowded room (Dobbins, Coleman); real role, just not the lead ball-carrier.",
         "url": "https://sports.yahoo.com/articles/rj-harvey-fantasy-outlook-2026-121818146.html",
-        "as_of": "2026-09-28"
+        "as_of": "2026-09-30"
       },
       "consumes": [
         "1166"
@@ -274,7 +146,7 @@
         "starts": "RJ Harvey is depth (RB4)",
         "need": "RB: you have 3 — not thin · gives QB depth (you have 4, start 2)",
         "cost": "gives Kirk Cousins — 0 starters, 1 bench · no FAAB",
-        "asks": "ObiWanless benches RJ Harvey, Questionable — one of 5 RBs they carry",
+        "asks": "ObiWanless benches RJ Harvey — one of 5 RBs they carry",
         "tradeoff": {
           "net": "neutral",
           "fixes": [],
