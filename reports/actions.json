@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-09-29T23:19:47.853Z",
+  "compiled_at": "2026-09-30T01:11:55.879Z",
   "season": "2026",
   "week": 4,
   "games_have_started": true,
@@ -29,12 +29,12 @@
   },
   "sources": {
     "waivers": {
-      "report": "2026-09-29-waivers.md",
+      "report": "2026-09-30-waivers.md",
       "week": 4,
-      "verdict": "Bid $9 on Ollie Gordon as a bench stash, only if neither pending RB trade lands first. Hold Dicker and the Giants — both play this week.",
+      "verdict": "Bid $9 on Ollie Gordon as running-back insurance (drop Jakobi Meyers), and $3 to swap the Giants defense for the Bears. Kicker holds.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-09-29T12:19:16.000Z"
+      "written_at": "2026-09-30T01:11:52.041Z"
     },
     "lineup": {
       "report": "2026-09-24-lineup.md",
@@ -65,7 +65,7 @@
     {
       "id": "waivers:add:12495",
       "source": "waivers",
-      "report": "2026-09-29-waivers.md",
+      "report": "2026-09-30-waivers.md",
       "kind": "add",
       "week": 4,
       "if_not": "harvey_obiwanless",
@@ -80,15 +80,15 @@
       "displaces": null,
       "displaces_name": null,
       "evidence": {
-        "note": "Achane tore his ACL in Week 3, out for the season; Wright is listed ahead of Gordon on Miami's depth chart but missed Week 3 (foot) and his Week 4 status is unresolved.",
-        "url": "https://www.nfl.com/news/dolphins-rb-devon-achane-miss-2026-season-acl-tear",
-        "as_of": "2026-09-28"
+        "note": "Achane tore his ACL in Week 3 and is out for the season; Gordon carried 17 times as Miami's lead back with Jaylen Wright out (foot), though Wright is listed ahead of him on the depth chart.",
+        "url": "https://www.nbcsports.com/fantasy/football/news/2026-nfl-week-4-injury-report-achane-acl-baker-thumb-jefferson-ankle-breece-hall-quad-and-more",
+        "as_of": "2026-09-30"
       },
       "consumes": [
         "5947"
       ],
       "urgency": "by_tuesday",
-      "why": "Achane's season is over and someone in Miami's backfield is about to see a huge workload; Gordon still has to beat out Wright for it, so this is a stash, not a starting swap.",
+      "why": "Warren is Questionable and Charbonnet is still on PUP, so a fourth back is real insurance; Gordon doesn't start this week, so he's priced as a stash.",
       "case": {
         "starts": "Bench — RB4 behind Ashton Jeanty, Bucky Irving, Jaylen Warren",
         "tradeoff": {
@@ -99,6 +99,56 @@
         "need": "RB: you have 3 — not thin · fixes nothing on the calendar",
         "cost": "$9 of $92 · 4 of 12 teams still have $100 · #1 most-added in Sleeper this week · drops Jakobi Meyers (WR, bench)",
         "later": "opens no holes"
+      }
+    },
+    {
+      "id": "waivers:add:CHI",
+      "source": "waivers",
+      "report": "2026-09-30-waivers.md",
+      "kind": "add",
+      "week": 4,
+      "player": "CHI",
+      "name": "Chicago Bears",
+      "pos": "DEF",
+      "team": "CHI",
+      "drop": "NYG",
+      "drop_name": "New York Giants",
+      "mode": "waiver",
+      "faab": 3,
+      "displaces": "NYG",
+      "displaces_name": "New York Giants",
+      "evidence": {
+        "note": "NBC ranks the Bears the #8 Week 4 defense, at home against the Jets; the Giants lost Brian Burns for the season and Arizona scored 30 last week.",
+        "url": "https://www.nbcsports.com/fantasy/football/news/2026-fantasy-football-week-4-defense-dst-rankings-and-streamers",
+        "as_of": "2026-09-30"
+      },
+      "consumes": [
+        "NYG"
+      ],
+      "urgency": "by_tuesday",
+      "why": "A cheap, small matchup upgrade at home; if the claim loses, the Giants simply stay.",
+      "case": {
+        "starts": "Starts over New York Giants at DEF",
+        "tradeoff": {
+          "net": "mixed",
+          "fixes": [
+            {
+              "week": 8,
+              "slot": "DEF",
+              "kind": "hole"
+            }
+          ],
+          "opens": [
+            {
+              "week": 10,
+              "slot": "DEF",
+              "kind": "hole"
+            }
+          ]
+        },
+        "need": "DEF: you have 1 — your thinnest spot · fixes W8",
+        "cost": "$3 of $92 · 4 of 12 teams still have $100 · #42 most-added in Sleeper this week · drops New York Giants (DEF, starter)",
+        "later": "opens a W10 DEF hole · drops your only DEF"
       }
     },
     {
