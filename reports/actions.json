@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-09-30T01:11:55.879Z",
+  "compiled_at": "2026-09-30T01:16:59.445Z",
   "season": "2026",
   "week": 4,
   "games_have_started": true,
@@ -31,10 +31,10 @@
     "waivers": {
       "report": "2026-09-30-waivers.md",
       "week": 4,
-      "verdict": "Bid $9 on Ollie Gordon as running-back insurance (drop Jakobi Meyers), and $3 to swap the Giants defense for the Bears. Kicker holds.",
+      "verdict": "Bid $9 on Ollie Gordon as running-back insurance (drop Jakobi Meyers), $6 on Braelon Allen as the fallback if that loses, and $3 to swap the Giants defense for the Bears. Kicker holds.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-09-30T01:11:52.041Z"
+      "written_at": "2026-09-30T01:16:55.864Z"
     },
     "lineup": {
       "report": "2026-09-24-lineup.md",
@@ -63,7 +63,7 @@
   },
   "actions": [
     {
-      "id": "waivers:add:12495",
+      "id": "gordon_miami",
       "source": "waivers",
       "report": "2026-09-30-waivers.md",
       "kind": "add",
@@ -98,6 +98,45 @@
         },
         "need": "RB: you have 3 — not thin · fixes nothing on the calendar",
         "cost": "$9 of $92 · 4 of 12 teams still have $100 · #1 most-added in Sleeper this week · drops Jakobi Meyers (WR, bench)",
+        "later": "opens no holes"
+      }
+    },
+    {
+      "id": "allen_jets",
+      "source": "waivers",
+      "report": "2026-09-30-waivers.md",
+      "kind": "add",
+      "week": 4,
+      "if_not": "gordon_miami",
+      "player": "11576",
+      "name": "Braelon Allen",
+      "pos": "RB",
+      "team": "NYJ",
+      "drop": "5947",
+      "drop_name": "Jakobi Meyers",
+      "mode": "waiver",
+      "faab": 6,
+      "displaces": null,
+      "displaces_name": null,
+      "evidence": {
+        "note": "Breece Hall is week-to-week with a quad injury and out for Week 4; Braelon Allen took over the Jets' backfield in Week 3 and is expected to start at Chicago.",
+        "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-09-28/report-breece-hall-week-to-week-with-quad-injury",
+        "as_of": "2026-09-30"
+      },
+      "consumes": [
+        "5947"
+      ],
+      "urgency": "by_tuesday",
+      "why": "Fallback if the Gordon bid loses: he projects higher than Gordon this week, but only starts for the Jets while Hall is out.",
+      "case": {
+        "starts": "Bench — RB4 behind Ashton Jeanty, Bucky Irving, Jaylen Warren",
+        "tradeoff": {
+          "net": "neutral",
+          "fixes": [],
+          "opens": []
+        },
+        "need": "RB: you have 3 — not thin · fixes nothing on the calendar",
+        "cost": "$6 of $92 · 4 of 12 teams still have $100 · #3 most-added in Sleeper this week · drops Jakobi Meyers (WR, bench)",
         "later": "opens no holes"
       }
     },
