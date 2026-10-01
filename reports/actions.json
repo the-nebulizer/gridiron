@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-09-30T12:32:24.550Z",
+  "compiled_at": "2026-10-01T12:27:31.473Z",
   "season": "2026",
   "week": 4,
   "games_have_started": true,
@@ -34,15 +34,15 @@
       "verdict": "Hold — nothing clears the bar. Kicker and defense both play at home this week; Week 6 is the one to watch, when Reichard's bye leaves the kicker slot empty.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-09-30T12:29:21.115Z"
+      "written_at": "2026-09-30T12:32:34.000Z"
     },
     "lineup": {
-      "report": "2026-09-30-lineup.md",
+      "report": "2026-10-01-lineup.md",
       "week": 4,
-      "verdict": "Hold the lineup. All ten starters are healthy, including the newly added Will Reichard and Chicago Bears, both playing at home.",
+      "verdict": "Hold the lineup. Lamar Jackson and Bucky Irving are both Questionable but trending toward playing Sunday; no healthy upgrade beats either on the bench.",
       "next_check": "Inactives, Sun 10am",
       "stale": false,
-      "written_at": "2026-09-30T12:29:29.875Z"
+      "written_at": "2026-10-01T12:27:26.314Z"
     },
     "trades": {
       "report": "2026-09-30-trades.md",
@@ -50,7 +50,7 @@
       "verdict": "Offer Kirk Cousins to SchoaTime (roster 1) for Tony Pollard. If they say no, offer Cousins to ObiWanless for RJ Harvey instead.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-09-30T12:32:16.171Z"
+      "written_at": "2026-09-30T12:32:34.000Z"
     },
     "inactives": {
       "report": "2026-09-30-inactives.md",
@@ -58,7 +58,7 @@
       "verdict": "Not actionable yet — no NFL game has kicked off. The first Week 4 game is tomorrow night, and the rest of the slate follows Sunday.",
       "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-09-30T12:29:54.059Z"
+      "written_at": "2026-09-30T12:32:34.000Z"
     }
   },
   "actions": [
@@ -99,7 +99,7 @@
         "starts": "Tony Pollard is depth (RB4)",
         "need": "RB: you have 3 — not thin · gives QB depth (you have 4, start 2)",
         "cost": "gives Kirk Cousins — 0 starters, 1 bench · no FAAB",
-        "asks": "SchoaTime starts Tony Pollard — one of 5 RBs they carry · asks them to bench a starter for bench pieces",
+        "asks": "SchoaTime benches Tony Pollard, Questionable — one of 5 RBs they carry",
         "tradeoff": {
           "net": "neutral",
           "fixes": [],
