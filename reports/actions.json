@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-10-01T12:27:31.473Z",
+  "compiled_at": "2026-10-02T02:25:35.108Z",
   "season": "2026",
   "week": 4,
   "games_have_started": true,
@@ -12,16 +12,16 @@
       "2449",
       "9484",
       "8228",
-      "3163",
+      "9228",
       "11792",
       "CHI"
     ],
     "bench": [
       "1166",
       "1479",
+      "3163",
       "4993",
-      "5947",
-      "9228"
+      "5947"
     ],
     "reserve": [
       "9753"
@@ -29,130 +29,62 @@
   },
   "sources": {
     "waivers": {
-      "report": "2026-09-30-waivers.md",
+      "report": "2026-10-02-waivers.md",
       "week": 4,
-      "verdict": "Hold — nothing clears the bar. Kicker and defense both play at home this week; Week 6 is the one to watch, when Reichard's bye leaves the kicker slot empty.",
+      "verdict": "Hold — Reichard and the Bears are still the right starts at kicker and defense; nothing on the wire clears the bar.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-09-30T12:32:34.000Z"
+      "written_at": "2026-10-02T02:24:46.756Z"
     },
     "lineup": {
-      "report": "2026-10-01-lineup.md",
+      "report": "2026-10-02-lineup.md",
       "week": 4,
-      "verdict": "Hold the lineup. Lamar Jackson and Bucky Irving are both Questionable but trending toward playing Sunday; no healthy upgrade beats either on the bench.",
+      "verdict": "Start Jared Goff over Bryce Young at SUPER_FLEX — the swap into Young doesn't hold up against this week's numbers.",
       "next_check": "Inactives, Sun 10am",
       "stale": false,
-      "written_at": "2026-10-01T12:27:26.314Z"
+      "written_at": "2026-10-02T02:24:17.380Z"
     },
     "trades": {
-      "report": "2026-09-30-trades.md",
+      "report": "2026-10-02-trades.md",
       "week": 4,
-      "verdict": "Offer Kirk Cousins to SchoaTime (roster 1) for Tony Pollard. If they say no, offer Cousins to ObiWanless for RJ Harvey instead.",
+      "verdict": "Hold. Both intended buyers for Kirk Cousins already filled their open quarterback spot off waivers this week; no other mismatch clears the bar today.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-09-30T12:32:34.000Z"
+      "written_at": "2026-10-02T02:25:18.108Z"
     },
     "inactives": {
-      "report": "2026-09-30-inactives.md",
+      "report": "2026-10-02-inactives.md",
       "week": 4,
-      "verdict": "Not actionable yet — no NFL game has kicked off. The first Week 4 game is tomorrow night, and the rest of the slate follows Sunday.",
+      "verdict": "Not actionable yet — Sunday's slate hasn't kicked off. Thursday night's game is done; nothing else has started.",
       "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-09-30T12:32:34.000Z"
+      "written_at": "2026-10-02T02:25:25.424Z"
     }
   },
   "actions": [
     {
-      "id": "pollard_schoatime",
-      "source": "trades",
-      "report": "2026-09-30-trades.md",
-      "kind": "trade",
+      "id": "lineup:start:3163",
+      "source": "lineup",
+      "report": "2026-10-02-lineup.md",
+      "kind": "start",
       "week": 4,
-      "with": 1,
-      "with_owner": "SchoaTime",
-      "give": [
-        "1166"
-      ],
-      "give_names": [
-        "Kirk Cousins"
-      ],
-      "get": [
-        "5967"
-      ],
-      "get_names": [
-        "Tony Pollard"
-      ],
-      "message": "Saw Baker's out at least three weeks — rough luck, and I know you're stuck starting a running back in your SUPER_FLEX with no real QB behind Purdy. Cousins slots straight in there, and his bye isn't until 13, so he covers every week Baker misses. I'd take Tony Pollard for him — you'd still have Price and Black behind Chase Brown.",
-      "displaces": null,
-      "displaces_name": null,
-      "evidence": {
-        "note": "Mayfield's MRI showed no ligament damage but he's still out at least three weeks; Jalon Daniels starts for Tampa Bay in Week 4. Pollard remains Tennessee's lead back.",
-        "url": "https://www.espn.com/nfl/story/_/id/50052996/buccaneers-mayfield-thumb-least-three-weeks-bowles-says",
-        "as_of": "2026-09-30"
-      },
+      "player": "3163",
+      "name": "Jared Goff",
+      "pos": "QB",
+      "team": "DET",
+      "slot": "SUPER_FLEX",
+      "for": "9228",
+      "for_name": "Bryce Young",
       "consumes": [
-        "1166"
+        "9228",
+        "3163"
       ],
-      "urgency": "this_week",
-      "why": "SchoaTime starts a RB in SUPER_FLEX with no backup QB; a real QB there outscores that most weeks even after benching Pollard. Better return than RJ Harvey; opens nothing on my calendar.",
+      "urgency": "before_kickoff",
+      "deadline_label": "before Sun 8:20pm ET",
+      "why": "Goff is the far more established arm (consensus QB16 vs QB25 in superflex) with no injury concern on either side; Young is on bye next week regardless.",
       "case": {
-        "starts": "Tony Pollard is depth (RB4)",
-        "need": "RB: you have 3 — not thin · gives QB depth (you have 4, start 2)",
-        "cost": "gives Kirk Cousins — 0 starters, 1 bench · no FAAB",
-        "asks": "SchoaTime benches Tony Pollard, Questionable — one of 5 RBs they carry",
-        "tradeoff": {
-          "net": "neutral",
-          "fixes": [],
-          "opens": []
-        },
-        "later": "opens no holes"
-      }
-    },
-    {
-      "id": "harvey_obiwanless",
-      "source": "trades",
-      "report": "2026-09-30-trades.md",
-      "kind": "trade",
-      "week": 4,
-      "if_not": "pollard_schoatime",
-      "with": 6,
-      "with_owner": "ObiWanless",
-      "give": [
-        "1166"
-      ],
-      "give_names": [
-        "Kirk Cousins"
-      ],
-      "get": [
-        "12489"
-      ],
-      "get_names": [
-        "RJ Harvey"
-      ],
-      "message": "Your SUPER_FLEX has been empty behind Burrow — Cousins is a plug-and-play veteran starter there. I'll take RJ Harvey off your bench in return; you're set at RB with Barkley and Walker anyway.",
-      "displaces": null,
-      "displaces_name": null,
-      "evidence": {
-        "note": "Harvey played 51% of Denver's snaps in the opener as the pass-catching back in a crowded room (Dobbins, Coleman); real role, just not the lead ball-carrier.",
-        "url": "https://sports.yahoo.com/articles/rj-harvey-fantasy-outlook-2026-121818146.html",
-        "as_of": "2026-09-30"
-      },
-      "consumes": [
-        "1166"
-      ],
-      "urgency": "optional",
-      "why": "Only if SchoaTime says no. ObiWanless still has an empty SUPER_FLEX, so Cousins has a second buyer, but Harvey is the weaker return.",
-      "case": {
-        "starts": "RJ Harvey is depth (RB4)",
-        "need": "RB: you have 3 — not thin · gives QB depth (you have 4, start 2)",
-        "cost": "gives Kirk Cousins — 0 starters, 1 bench · no FAAB",
-        "asks": "ObiWanless benches RJ Harvey — one of 5 RBs they carry",
-        "tradeoff": {
-          "net": "neutral",
-          "fixes": [],
-          "opens": []
-        },
-        "later": "opens no holes"
+        "starts": "Jared Goff in at SUPERFLEX, Bryce Young to the bench",
+        "need": "Bryce Young: healthy, CAR bye W5"
       }
     }
   ]
