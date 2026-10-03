@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-10-02T02:25:35.108Z",
+  "compiled_at": "2026-10-03T15:09:36.768Z",
   "season": "2026",
   "week": 4,
   "games_have_started": true,
@@ -29,43 +29,43 @@
   },
   "sources": {
     "waivers": {
-      "report": "2026-10-02-waivers.md",
+      "report": "2026-10-03-waivers.md",
       "week": 4,
-      "verdict": "Hold — Reichard and the Bears are still the right starts at kicker and defense; nothing on the wire clears the bar.",
+      "verdict": "Hold — Reichard and the Bears are still the right starts at kicker and defense; nothing on the wire clears the bar, and Keenan Allen going Out isn't a reason to drop him.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-10-02T02:24:46.756Z"
+      "written_at": "2026-10-03T15:09:06.166Z"
     },
     "lineup": {
-      "report": "2026-10-02-lineup.md",
+      "report": "2026-10-03-lineup.md",
       "week": 4,
-      "verdict": "Start Jared Goff over Bryce Young at SUPER_FLEX — the swap into Young doesn't hold up against this week's numbers.",
+      "verdict": "Start Jared Goff over Bryce Young at SUPER_FLEX — still the right call, unchanged from the last check.",
       "next_check": "Inactives, Sun 10am",
       "stale": false,
-      "written_at": "2026-10-02T02:24:17.380Z"
+      "written_at": "2026-10-03T15:08:51.722Z"
     },
     "trades": {
-      "report": "2026-10-02-trades.md",
+      "report": "2026-10-03-trades.md",
       "week": 4,
-      "verdict": "Hold. Both intended buyers for Kirk Cousins already filled their open quarterback spot off waivers this week; no other mismatch clears the bar today.",
+      "verdict": "Hold. Keenan Allen's new Out tag doesn't create or kill any deal; rescanned all 12 rosters and nothing clears the bar today.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-10-02T02:25:18.108Z"
+      "written_at": "2026-10-03T15:09:20.942Z"
     },
     "inactives": {
-      "report": "2026-10-02-inactives.md",
+      "report": "2026-10-03-inactives.md",
       "week": 4,
-      "verdict": "Not actionable yet — Sunday's slate hasn't kicked off. Thursday night's game is done; nothing else has started.",
+      "verdict": "Not actionable yet — Sunday's slate hasn't kicked off. Keenan Allen is now Out, but he's bench, not a starter, so there's no pivot to make.",
       "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-10-02T02:25:25.424Z"
+      "written_at": "2026-10-03T15:09:27.350Z"
     }
   },
   "actions": [
     {
       "id": "lineup:start:3163",
       "source": "lineup",
-      "report": "2026-10-02-lineup.md",
+      "report": "2026-10-03-lineup.md",
       "kind": "start",
       "week": 4,
       "player": "3163",
