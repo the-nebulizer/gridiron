@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-10-04T15:19:37.094Z",
+  "compiled_at": "2026-10-05T12:09:51.733Z",
   "season": "2026",
   "week": 4,
   "games_have_started": true,
@@ -45,12 +45,12 @@
       "written_at": "2026-10-03T15:09:52.000Z"
     },
     "trades": {
-      "report": "2026-10-03-trades.md",
+      "report": "2026-10-05-trades.md",
       "week": 4,
-      "verdict": "Hold. Keenan Allen's new Out tag doesn't create or kill any deal; rescanned all 12 rosters and nothing clears the bar today.",
-      "next_check": "Lineup, Thu 7am",
+      "verdict": "Send Kirk Cousins for Alvin Kamara to amandaberry (roster 9).",
+      "next_check": "Waivers, Tue 7am",
       "stale": false,
-      "written_at": "2026-10-03T15:09:52.000Z"
+      "written_at": "2026-10-05T12:09:42.746Z"
     },
     "inactives": {
       "report": "2026-10-04-inactives.md",
@@ -58,7 +58,7 @@
       "verdict": "Hold — every starter is active this morning; no pivot needed.",
       "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-10-04T15:19:28.016Z"
+      "written_at": "2026-10-04T15:19:42.000Z"
     }
   },
   "actions": [
@@ -68,6 +68,8 @@
       "report": "2026-10-03-lineup.md",
       "kind": "start",
       "week": 4,
+      "state": "stale",
+      "state_reason": "Jared Goff's game has already kicked off (complete)",
       "player": "3163",
       "name": "Jared Goff",
       "pos": "QB",
@@ -75,16 +77,55 @@
       "slot": "SUPER_FLEX",
       "for": "9228",
       "for_name": "Bryce Young",
-      "consumes": [
-        "9228",
-        "3163"
-      ],
+      "consumes": [],
       "urgency": "before_kickoff",
       "deadline_label": "before Sun 8:20pm ET",
-      "why": "Goff is the far more established arm (consensus QB16 vs QB25 in superflex) with no injury concern on either side; Young is on bye next week regardless.",
+      "why": "Goff is the far more established arm (consensus QB16 vs QB25 in superflex) with no injury concern on either side; Young is on bye next week regardless."
+    },
+    {
+      "id": "trades:trade:9",
+      "source": "trades",
+      "report": "2026-10-05-trades.md",
+      "kind": "trade",
+      "week": 4,
+      "with": 9,
+      "with_owner": "amandaberry",
+      "give": [
+        "1166"
+      ],
+      "give_names": [
+        "Kirk Cousins"
+      ],
+      "get": [
+        "4035"
+      ],
+      "get_names": [
+        "Alvin Kamara"
+      ],
+      "message": "Kirk Cousins for Alvin Kamara — you're all-in at RB (Gibbs/Robinson start, Kamara/Dowdle/Gainwell stacked behind them) but carrying zero backup QB in a superflex league. Cousins is the Raiders' clear starter. With Etienne down for a month, Kamara's a bench piece I'd rather have than you would right now.",
+      "displaces": null,
+      "displaces_name": null,
+      "evidence": {
+        "note": "Travis Etienne went to IR with a hamstring injury (out at least 4 games, not back before W9); Kamara is projected into New Orleans' lead backfield role while he's out.",
+        "url": "https://www.draftsharks.com/fantasy-football-news/83030/travis-etienne-to-ir",
+        "as_of": "2026-10-05"
+      },
+      "consumes": [
+        "1166"
+      ],
+      "urgency": "this_week",
+      "why": "Kamara now leads NO's backfield with Etienne on IR — real RB4 value for me. amandaberry runs zero backup QB in superflex; Cousins is their confirmed-starter upgrade.",
       "case": {
-        "starts": "Jared Goff in at SUPERFLEX, Bryce Young to the bench",
-        "need": "Bryce Young: healthy, CAR bye W5"
+        "starts": "Alvin Kamara is depth (RB4)",
+        "need": "RB: you have 3 — not thin · gives QB depth (you have 4, start 2)",
+        "cost": "gives Kirk Cousins — 0 starters, 1 bench · no FAAB",
+        "asks": "amandaberry benches Alvin Kamara — one of 5 RBs they carry",
+        "tradeoff": {
+          "net": "neutral",
+          "fixes": [],
+          "opens": []
+        },
+        "later": "opens no holes"
       }
     }
   ]
