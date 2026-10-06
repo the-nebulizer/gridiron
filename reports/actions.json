@@ -1,27 +1,27 @@
 {
-  "compiled_at": "2026-10-06T12:18:24.973Z",
+  "compiled_at": "2026-10-06T17:13:43.508Z",
   "season": "2026",
   "week": 5,
   "games_have_started": true,
   "roster": {
     "starters": [
-      "4881",
+      "3163",
       "12527",
       "11584",
-      "12526",
       "2449",
+      "5947",
       "9484",
       "8228",
-      "9228",
+      "1166",
       "11792",
       "CHI"
     ],
     "bench": [
-      "1166",
+      "12526",
       "1479",
-      "3163",
+      "4881",
       "4993",
-      "5947"
+      "9228"
     ],
     "reserve": [
       "9753"
@@ -31,81 +31,68 @@
     "waivers": {
       "report": "2026-10-06-waivers.md",
       "week": 5,
-      "verdict": "Add Keon Coleman for $5 as a cheap stash; drop Jakobi Meyers to make room. Hold at kicker and defense — Reichard and the Bears are still the right starts.",
+      "verdict": "Hold — no FAAB move clears the bar this week. Keep Will Reichard at kicker and the Bears at defense. The Keon Coleman stash from the last check no longer fits: Jakobi Meyers, the bench spot it would have cost, is now your starting receiver.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-10-06T12:18:17.151Z"
+      "written_at": "2026-10-06T17:13:13.445Z"
     },
     "lineup": {
-      "report": "2026-10-03-lineup.md",
-      "week": 4,
-      "verdict": "Start Jared Goff over Bryce Young at SUPER_FLEX — still the right call, unchanged from the last check.",
+      "report": "2026-10-06-lineup.md",
+      "week": 5,
+      "verdict": "Hold this week's lineup — Jared Goff and Kirk Cousins start at QB and SUPER_FLEX over a Questionable Lamar Jackson; recheck his practice status before Thursday.",
       "next_check": "Inactives, Sun 10am",
-      "stale": true,
-      "written_at": "2026-10-03T15:09:52.000Z"
+      "stale": false,
+      "written_at": "2026-10-06T17:12:57.589Z"
     },
     "trades": {
-      "report": "2026-10-05-trades.md",
-      "week": 4,
-      "verdict": "Send Kirk Cousins for Alvin Kamara to amandaberry (roster 9).",
+      "report": "2026-10-06-trades.md",
+      "week": 5,
+      "verdict": "Still send Kirk Cousins for Alvin Kamara to amandaberry — but Cousins is now your active SUPER_FLEX starter, so if the trade lands before Thursday you'll need Lamar Jackson in that slot regardless of his questionable tag.",
       "next_check": "Waivers, Tue 7am",
-      "stale": true,
-      "written_at": "2026-10-05T12:09:57.000Z"
+      "stale": false,
+      "written_at": "2026-10-06T17:13:30.317Z"
     },
     "inactives": {
-      "report": "2026-10-04-inactives.md",
-      "week": 4,
-      "verdict": "Hold — every starter is active this morning; no pivot needed.",
+      "report": "2026-10-06-inactives.md",
+      "week": 5,
+      "verdict": "No games close enough to check yet — the earliest Week 5 kickoff is Thursday night, with the main slate Sunday.",
       "next_check": "Trades, Mon 7am",
-      "stale": true,
-      "written_at": "2026-10-04T15:19:42.000Z"
+      "stale": false,
+      "written_at": "2026-10-06T17:13:35.789Z"
     }
   },
   "actions": [
     {
-      "id": "waivers:add:11637",
-      "source": "waivers",
-      "report": "2026-10-06-waivers.md",
-      "kind": "add",
+      "id": "trades:start:4881",
+      "source": "trades",
+      "report": "2026-10-06-trades.md",
+      "kind": "start",
       "week": 5,
-      "player": "11637",
-      "name": "Keon Coleman",
-      "pos": "WR",
-      "team": "BUF",
-      "drop": "5947",
-      "drop_name": "Jakobi Meyers",
-      "mode": "waiver",
-      "faab": 5,
-      "displaces": null,
-      "displaces_name": null,
-      "evidence": {
-        "note": "Bills WR Khalil Shakir (ankle) was ruled out for Week 5, pushing Coleman into the clear WR1/2 role opposite a thinned-out Buffalo receiving corps.",
-        "url": "https://www.4for4.com/news/bills-wr-khalil-shakir-officially-out-week-5",
-        "as_of": "2026-10-06"
-      },
+      "after": "trades:trade:9",
+      "player": "4881",
+      "name": "Lamar Jackson",
+      "pos": "QB",
+      "team": "BAL",
+      "slot": "SUPER_FLEX",
+      "for": "1166",
+      "for_name": "Kirk Cousins",
       "consumes": [
-        "5947"
+        "1166",
+        "4881"
       ],
-      "urgency": "by_tuesday",
-      "why": "Shakir's out, Coleman steps into real snaps on a top offense; better stash than Meyers, who's buried in Jacksonville's passing game.",
+      "urgency": "before_kickoff",
+      "why": "Only quarterback left in SUPER_FLEX if Cousins trades away — Young is on bye, so Jackson fills it whether or not his tag has cleared by then.",
       "case": {
-        "starts": "Bench — WR5 behind Tetairoa McMillan, Stefon Diggs",
-        "tradeoff": {
-          "net": "neutral",
-          "fixes": [],
-          "opens": []
-        },
-        "need": "WR: you have 4 — not thin · fixes nothing on the calendar",
-        "cost": "$5 of $89 · 2 of 12 teams still have $100 · #1 most-added in Sleeper this week · drops Jakobi Meyers (WR, bench)",
-        "later": "opens no holes"
+        "starts": "Lamar Jackson in at SUPERFLEX, Kirk Cousins to the bench",
+        "need": "Kirk Cousins: healthy, LV bye W13"
       }
     },
     {
       "id": "trades:trade:9",
       "source": "trades",
-      "report": "2026-10-05-trades.md",
+      "report": "2026-10-06-trades.md",
       "kind": "trade",
-      "week": 4,
+      "week": 5,
       "with": 9,
       "with_owner": "amandaberry",
       "give": [
@@ -132,18 +119,18 @@
         "1166"
       ],
       "urgency": "this_week",
-      "why": "Kamara now leads NO's backfield with Etienne on IR — real RB4 value for me. amandaberry runs zero backup QB in superflex; Cousins is their confirmed-starter upgrade.",
+      "why": "Kamara leads NO's backfield with Etienne on IR; still good value off a 4-QB bench, but Cousins is now my live starter, not spare depth.",
       "case": {
         "starts": "Alvin Kamara is depth (RB4)",
         "need": "RB: you have 3 — not thin · gives QB depth (you have 4, start 2)",
-        "cost": "gives Kirk Cousins — 0 starters, 1 bench · no FAAB",
+        "cost": "gives Kirk Cousins — 1 starter, 0 bench · no FAAB",
         "asks": "amandaberry benches Alvin Kamara, Questionable — one of 5 RBs they carry",
         "tradeoff": {
           "net": "neutral",
           "fixes": [],
           "opens": []
         },
-        "later": "opens no holes"
+        "later": "opens no holes · empties SUPERFLEX this week — set a starter there before kickoff"
       }
     }
   ]
