@@ -1,7 +1,7 @@
 {
-  "compiled_at": "2026-10-05T12:09:51.733Z",
+  "compiled_at": "2026-10-06T12:18:24.973Z",
   "season": "2026",
-  "week": 4,
+  "week": 5,
   "games_have_started": true,
   "roster": {
     "starters": [
@@ -29,19 +29,19 @@
   },
   "sources": {
     "waivers": {
-      "report": "2026-10-03-waivers.md",
-      "week": 4,
-      "verdict": "Hold — Reichard and the Bears are still the right starts at kicker and defense; nothing on the wire clears the bar, and Keenan Allen going Out isn't a reason to drop him.",
+      "report": "2026-10-06-waivers.md",
+      "week": 5,
+      "verdict": "Add Keon Coleman for $5 as a cheap stash; drop Jakobi Meyers to make room. Hold at kicker and defense — Reichard and the Bears are still the right starts.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-10-03T15:09:52.000Z"
+      "written_at": "2026-10-06T12:18:17.151Z"
     },
     "lineup": {
       "report": "2026-10-03-lineup.md",
       "week": 4,
       "verdict": "Start Jared Goff over Bryce Young at SUPER_FLEX — still the right call, unchanged from the last check.",
       "next_check": "Inactives, Sun 10am",
-      "stale": false,
+      "stale": true,
       "written_at": "2026-10-03T15:09:52.000Z"
     },
     "trades": {
@@ -49,38 +49,56 @@
       "week": 4,
       "verdict": "Send Kirk Cousins for Alvin Kamara to amandaberry (roster 9).",
       "next_check": "Waivers, Tue 7am",
-      "stale": false,
-      "written_at": "2026-10-05T12:09:42.746Z"
+      "stale": true,
+      "written_at": "2026-10-05T12:09:57.000Z"
     },
     "inactives": {
       "report": "2026-10-04-inactives.md",
       "week": 4,
       "verdict": "Hold — every starter is active this morning; no pivot needed.",
       "next_check": "Trades, Mon 7am",
-      "stale": false,
+      "stale": true,
       "written_at": "2026-10-04T15:19:42.000Z"
     }
   },
   "actions": [
     {
-      "id": "lineup:start:3163",
-      "source": "lineup",
-      "report": "2026-10-03-lineup.md",
-      "kind": "start",
-      "week": 4,
-      "state": "stale",
-      "state_reason": "Jared Goff's game has already kicked off (complete)",
-      "player": "3163",
-      "name": "Jared Goff",
-      "pos": "QB",
-      "team": "DET",
-      "slot": "SUPER_FLEX",
-      "for": "9228",
-      "for_name": "Bryce Young",
-      "consumes": [],
-      "urgency": "before_kickoff",
-      "deadline_label": "before Sun 8:20pm ET",
-      "why": "Goff is the far more established arm (consensus QB16 vs QB25 in superflex) with no injury concern on either side; Young is on bye next week regardless."
+      "id": "waivers:add:11637",
+      "source": "waivers",
+      "report": "2026-10-06-waivers.md",
+      "kind": "add",
+      "week": 5,
+      "player": "11637",
+      "name": "Keon Coleman",
+      "pos": "WR",
+      "team": "BUF",
+      "drop": "5947",
+      "drop_name": "Jakobi Meyers",
+      "mode": "waiver",
+      "faab": 5,
+      "displaces": null,
+      "displaces_name": null,
+      "evidence": {
+        "note": "Bills WR Khalil Shakir (ankle) was ruled out for Week 5, pushing Coleman into the clear WR1/2 role opposite a thinned-out Buffalo receiving corps.",
+        "url": "https://www.4for4.com/news/bills-wr-khalil-shakir-officially-out-week-5",
+        "as_of": "2026-10-06"
+      },
+      "consumes": [
+        "5947"
+      ],
+      "urgency": "by_tuesday",
+      "why": "Shakir's out, Coleman steps into real snaps on a top offense; better stash than Meyers, who's buried in Jacksonville's passing game.",
+      "case": {
+        "starts": "Bench — WR5 behind Tetairoa McMillan, Stefon Diggs",
+        "tradeoff": {
+          "net": "neutral",
+          "fixes": [],
+          "opens": []
+        },
+        "need": "WR: you have 4 — not thin · fixes nothing on the calendar",
+        "cost": "$5 of $89 · 2 of 12 teams still have $100 · #1 most-added in Sleeper this week · drops Jakobi Meyers (WR, bench)",
+        "later": "opens no holes"
+      }
     },
     {
       "id": "trades:trade:9",
@@ -119,7 +137,7 @@
         "starts": "Alvin Kamara is depth (RB4)",
         "need": "RB: you have 3 — not thin · gives QB depth (you have 4, start 2)",
         "cost": "gives Kirk Cousins — 0 starters, 1 bench · no FAAB",
-        "asks": "amandaberry benches Alvin Kamara — one of 5 RBs they carry",
+        "asks": "amandaberry benches Alvin Kamara, Questionable — one of 5 RBs they carry",
         "tradeoff": {
           "net": "neutral",
           "fixes": [],
