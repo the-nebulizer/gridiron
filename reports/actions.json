@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-10-08T01:07:24.409Z",
+  "compiled_at": "2026-10-08T02:08:31.407Z",
   "season": "2026",
   "week": 5,
   "games_have_started": true,
@@ -9,18 +9,18 @@
       "12527",
       "11584",
       "2449",
-      "5947",
+      "11610",
       "9484",
       "8228",
       "1166",
       "11792",
-      "CHI"
+      "CIN"
     ],
     "bench": [
-      "11610",
       "12526",
       "4881",
       "4993",
+      "5947",
       "9228"
     ],
     "reserve": [
@@ -31,26 +31,26 @@
     "waivers": {
       "report": "2026-10-08-waivers.md",
       "week": 5,
-      "verdict": "Hold — no FAAB move clears the bar this week. Keep Will Reichard at kicker and the Bears at defense. This morning's swap is a lateral bench move: Malik Washington's bye lands a week before the hole Diggs and Meyers create, so he covers it exactly as well as Roman Wilson did.",
+      "verdict": "Hold — no FAAB move clears the bar. This morning's second swap was Cincinnati in for Chicago at defense, $0 and already locked into today's lineup for a good matchup at Miami; keep Will Reichard at kicker.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-10-08T01:06:50.162Z"
+      "written_at": "2026-10-08T02:07:34.986Z"
     },
     "lineup": {
       "report": "2026-10-08-lineup.md",
       "week": 5,
-      "verdict": "Hold this week's lineup — Jared Goff and Kirk Cousins still start at QB and SUPER_FLEX over a Questionable Lamar Jackson; nothing new on either Jackson or tonight's Buccaneers game changes that.",
+      "verdict": "Hold this week's lineup — Jared Goff and Kirk Cousins still start at QB and SUPER_FLEX over a Questionable Lamar Jackson; today's defense swap (Cincinnati in for Chicago) is already the right call and needs nothing further.",
       "next_check": "Inactives, Sun 10am",
       "stale": false,
-      "written_at": "2026-10-08T01:06:35.770Z"
+      "written_at": "2026-10-08T02:07:49.654Z"
     },
     "trades": {
       "report": "2026-10-08-trades.md",
       "week": 5,
-      "verdict": "Still send Kirk Cousins for Alvin Kamara to amandaberry — today's bench swap didn't touch this, and Kamara himself now showing a Questionable tag doesn't change the case either way.",
+      "verdict": "Still send Kirk Cousins for Alvin Kamara to amandaberry — today's defense swap didn't touch this, and Kamara's Questionable tag still reads the same way it did this morning.",
       "next_check": "Waivers, Tue 7am",
       "stale": false,
-      "written_at": "2026-10-08T01:07:08.422Z"
+      "written_at": "2026-10-08T02:08:12.050Z"
     },
     "inactives": {
       "report": "2026-10-08-inactives.md",
@@ -58,7 +58,7 @@
       "verdict": "No games close enough to check yet — Thursday night's Buccaneers-Cowboys game is the only one anywhere near kickoff, and nobody has an official game-day status.",
       "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-10-08T01:07:13.874Z"
+      "written_at": "2026-10-08T02:08:19.966Z"
     }
   },
   "actions": [

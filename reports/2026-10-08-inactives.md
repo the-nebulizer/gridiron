@@ -1,4 +1,4 @@
-# Week 5 inactives — still nothing to check; the bench swap doesn't reach the lineup
+# Week 5 inactives — still nothing to check; the defense swap doesn't reach the pivot question
 
 ```actions
 {
@@ -9,6 +9,6 @@
 }
 ```
 
-> Refreshed Oct 8 after a roster change: added Malik Washington, dropped Roman Wilson.
+> Refreshed Oct 8 after a roster change: added Cincinnati Bengals (DEF), dropped Chicago Bears (DEF).
 
-Today's swap doesn't touch this check — neither Malik Washington nor Roman Wilson is a starter, so there's no lineup slot riding on it. Otherwise there's nothing live to react to: every game on the board, including tonight's Tampa Bay–Dallas matchup, is still pre-game, and no starter carries an Out or Doubtful tag. Bucky Irving plays running back for the Buccaneers in that Thursday window — this roster's one piece of early business — with no injury designation on him. The lineup right now starts Jared Goff and Kirk Cousins at quarterback (Lamar Jackson benched, Questionable tag and all) and Jakobi Meyers in for the bye-week Tetairoa McMillan at receiver; see this week's lineup report for the full ten and the reasoning. The real inactives check happens Sunday morning once the injury reports are final.
+Today's defense swap — Cincinnati in for Chicago, at Miami instead of Green Bay — is already set in the lineup and doesn't change anything about this check: no games have actually kicked off yet, so there's nothing to pivot on. Every game on the board, including tonight's Tampa Bay–Dallas matchup, is still pre-game, and no starter carries an Out or Doubtful tag. Bucky Irving plays running back for the Buccaneers in that Thursday window — this roster's one piece of early business — with no injury designation on him. The lineup right now starts Jared Goff and Kirk Cousins at quarterback (Lamar Jackson benched, Questionable tag and all), Malik Washington in for the bye-week Tetairoa McMillan at receiver, and the new Bengals defense; see this week's lineup report for the full ten and the reasoning. The real inactives check happens Sunday morning once the injury reports are final.
