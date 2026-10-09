@@ -3,12 +3,12 @@
 ```actions
 {
   "week": 5,
-  "verdict": "No games close enough to check yet — tonight's Buccaneers-Cowboys game is about to kick off, but Sunday's full slate is still two days out and nobody has an official game-day status.",
+  "verdict": "No games imminent — Thursday's Buccaneers-Cowboys game already finished clean, and Sunday's full slate is still two days out with no official game-day statuses yet.",
   "next_check": "Trades, Mon 7am",
   "actions": []
 }
 ```
 
-> Refreshed Oct 9 after a roster change: swapped Jaylen Warren into the RB slot and Ashton Jeanty into FLEX — both already starting, nothing for this check to react to.
+> Refreshed Oct 9 after a roster change: added Juwan Johnson, dropped Mike Gesicki.
 
-Today's only roster move — Warren and Jeanty trading the RB slot and FLEX — doesn't change anything here: no games have kicked off, so there's nothing to pivot on. Tonight's Tampa Bay–Dallas game is the only one anywhere near kickoff, and Bucky Irving plays in it with no injury designation. Everyone else on this roster, including a newly-Questionable Ashton Jeanty, is reading the same tag they've carried all week, and Sunday's 13-game slate — where the real game-day calls live — is still two days away. See this week's lineup report for the full ten and the reasoning behind each slot. The real inactives check happens Sunday morning once the injury reports are final.
+Today's only roster move — the $11 waiver claim swapping Juwan Johnson in for Mike Gesicki at backup tight end — doesn't change anything here: neither player is in the starting lineup, and no games are underway to react to anyway. Thursday night's Tampa Bay–Dallas game is already final; Bucky Irving played it with no injury designation. Everyone else on this roster is carrying the same tag they've had all week, including Stefon Diggs, Ashton Jeanty, and Lamar Jackson, all still Questionable. See this week's lineup report for the full ten and the bench pivots already lined up. The real inactives check happens Sunday morning once the injury reports are final.

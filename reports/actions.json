@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-10-09T00:15:09.494Z",
+  "compiled_at": "2026-10-09T12:38:08.752Z",
   "season": "2026",
   "week": 5,
   "games_have_started": true,
@@ -19,8 +19,8 @@
     "bench": [
       "12526",
       "4881",
-      "4993",
       "5947",
+      "7002",
       "9228"
     ],
     "reserve": [
@@ -31,34 +31,34 @@
     "waivers": {
       "report": "2026-10-09-waivers.md",
       "week": 5,
-      "verdict": "Hold — nothing on the wire clears the bar. Keep Will Reichard at kicker and Cincinnati at defense; both still have the better matchup this week.",
+      "verdict": "Hold — nothing on the wire clears the bar. The week's only move was the $11 waiver claim for Juwan Johnson over Mike Gesicki at TE, which already processed; keep Will Reichard at kicker and Cincinnati at defense, both still the better matchup this week.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-10-09T00:14:31.047Z"
+      "written_at": "2026-10-09T12:37:46.198Z"
     },
     "lineup": {
       "report": "2026-10-09-lineup.md",
       "week": 5,
-      "verdict": "Hold this week's lineup — the only change since yesterday swapped Jaylen Warren and Ashton Jeanty between the dedicated RB slot and FLEX, which is the same two backs starting either way. Nothing to do before tonight's early Tampa Bay–Dallas kickoff.",
+      "verdict": "Hold this week's lineup — today's only roster move was a bench swap at TE (Juwan Johnson in, Mike Gesicki out) that doesn't touch a single starting slot. Nothing to do before Sunday.",
       "next_check": "Inactives, Sun 10am",
       "stale": false,
-      "written_at": "2026-10-09T00:13:35.979Z"
+      "written_at": "2026-10-09T12:37:38.762Z"
     },
     "trades": {
       "report": "2026-10-09-trades.md",
       "week": 5,
-      "verdict": "Still send Kirk Cousins for Alvin Kamara to amandaberry — he's now their active FLEX starter off a two-touchdown game, which argues for sending this before his price climbs further, not for backing off.",
+      "verdict": "Still send Kirk Cousins for Alvin Kamara to amandaberry — he remains their active FLEX starter off a two-touchdown game, which argues for sending this before his price climbs further, not for backing off. Unrelated to today's bench-only TE swap.",
       "next_check": "Waivers, Tue 7am",
       "stale": false,
-      "written_at": "2026-10-09T00:15:01.683Z"
+      "written_at": "2026-10-09T12:37:58.490Z"
     },
     "inactives": {
       "report": "2026-10-09-inactives.md",
       "week": 5,
-      "verdict": "No games close enough to check yet — tonight's Buccaneers-Cowboys game is about to kick off, but Sunday's full slate is still two days out and nobody has an official game-day status.",
+      "verdict": "No games imminent — Thursday's Buccaneers-Cowboys game already finished clean, and Sunday's full slate is still two days out with no official game-day statuses yet.",
       "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-10-09T00:14:50.491Z"
+      "written_at": "2026-10-09T12:38:02.354Z"
     }
   },
   "actions": [

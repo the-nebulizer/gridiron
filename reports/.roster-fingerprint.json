@@ -1,6 +1,6 @@
 {
-  "fingerprint": "aa1bfde3477cfcf65c761e9b051a71ab7c85b95cf1a082d2a56c657cfb75751d",
-  "updated_at": "2026-10-09T00:05:34.296Z",
+  "fingerprint": "0d3c75e1a93b1cc6b60d644590615fc9866694d71e0b9ac389f400060d49f8f7",
+  "updated_at": "2026-10-09T12:32:34.046Z",
   "roster": {
     "starters": [
       "3163",
@@ -17,8 +17,8 @@
     "bench": [
       "12526",
       "4881",
-      "4993",
       "5947",
+      "7002",
       "9228"
     ],
     "reserve": [
