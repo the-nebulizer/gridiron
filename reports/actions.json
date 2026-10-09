@@ -1,17 +1,17 @@
 {
-  "compiled_at": "2026-10-08T12:33:36.292Z",
+  "compiled_at": "2026-10-09T00:15:09.494Z",
   "season": "2026",
   "week": 5,
   "games_have_started": true,
   "roster": {
     "starters": [
       "3163",
-      "12527",
+      "8228",
       "11584",
       "2449",
       "11610",
       "9484",
-      "8228",
+      "12527",
       "1166",
       "11792",
       "CIN"
@@ -29,43 +29,43 @@
   },
   "sources": {
     "waivers": {
-      "report": "2026-10-08-waivers.md",
+      "report": "2026-10-09-waivers.md",
       "week": 5,
-      "verdict": "Hold — no FAAB move clears the bar. This morning's second swap was Cincinnati in for Chicago at defense, $0 and already locked into today's lineup for a good matchup at Miami; keep Will Reichard at kicker.",
+      "verdict": "Hold — nothing on the wire clears the bar. Keep Will Reichard at kicker and Cincinnati at defense; both still have the better matchup this week.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-10-08T02:08:53.000Z"
+      "written_at": "2026-10-09T00:14:31.047Z"
     },
     "lineup": {
-      "report": "2026-10-08-lineup.md",
+      "report": "2026-10-09-lineup.md",
       "week": 5,
-      "verdict": "Hold this week's lineup — Jared Goff and Kirk Cousins stay in at QB and SUPER_FLEX, and Bucky Irving's glute issue is behind him for tonight's Dallas game.",
+      "verdict": "Hold this week's lineup — the only change since yesterday swapped Jaylen Warren and Ashton Jeanty between the dedicated RB slot and FLEX, which is the same two backs starting either way. Nothing to do before tonight's early Tampa Bay–Dallas kickoff.",
       "next_check": "Inactives, Sun 10am",
       "stale": false,
-      "written_at": "2026-10-08T12:33:26.582Z"
+      "written_at": "2026-10-09T00:13:35.979Z"
     },
     "trades": {
-      "report": "2026-10-08-trades.md",
+      "report": "2026-10-09-trades.md",
       "week": 5,
-      "verdict": "Still send Kirk Cousins for Alvin Kamara to amandaberry — today's defense swap didn't touch this, and Kamara's Questionable tag still reads the same way it did this morning.",
+      "verdict": "Still send Kirk Cousins for Alvin Kamara to amandaberry — he's now their active FLEX starter off a two-touchdown game, which argues for sending this before his price climbs further, not for backing off.",
       "next_check": "Waivers, Tue 7am",
       "stale": false,
-      "written_at": "2026-10-08T02:08:53.000Z"
+      "written_at": "2026-10-09T00:15:01.683Z"
     },
     "inactives": {
-      "report": "2026-10-08-inactives.md",
+      "report": "2026-10-09-inactives.md",
       "week": 5,
-      "verdict": "No games close enough to check yet — Thursday night's Buccaneers-Cowboys game is the only one anywhere near kickoff, and nobody has an official game-day status.",
+      "verdict": "No games close enough to check yet — tonight's Buccaneers-Cowboys game is about to kick off, but Sunday's full slate is still two days out and nobody has an official game-day status.",
       "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-10-08T02:08:53.000Z"
+      "written_at": "2026-10-09T00:14:50.491Z"
     }
   },
   "actions": [
     {
       "id": "trades:start:4881",
       "source": "trades",
-      "report": "2026-10-08-trades.md",
+      "report": "2026-10-09-trades.md",
       "kind": "start",
       "week": 5,
       "after": "trades:trade:9",
@@ -81,7 +81,7 @@
         "4881"
       ],
       "urgency": "before_kickoff",
-      "why": "Only quarterback left in SUPER_FLEX if Cousins trades away — Young is on bye, so Jackson fills it whether or not his tag has cleared by then.",
+      "why": "Only quarterback left in SUPER_FLEX if Cousins trades away — Young is on bye, and Jackson is now the only option regardless of his ankle.",
       "case": {
         "starts": "Lamar Jackson in at SUPERFLEX, Kirk Cousins to the bench",
         "need": "Kirk Cousins: healthy, LV bye W13"
@@ -90,7 +90,7 @@
     {
       "id": "trades:trade:9",
       "source": "trades",
-      "report": "2026-10-08-trades.md",
+      "report": "2026-10-09-trades.md",
       "kind": "trade",
       "week": 5,
       "with": 9,
@@ -107,24 +107,24 @@
       "get_names": [
         "Alvin Kamara"
       ],
-      "message": "Kirk Cousins for Alvin Kamara — you're all-in at RB (Gibbs/Robinson start, Kamara/Dowdle/Gainwell stacked behind them) but carrying zero backup QB in a superflex league. Cousins is the Raiders' clear starter. With Etienne down for a month, Kamara's a bench piece I'd rather have than you would right now.",
+      "message": "Kirk Cousins for Alvin Kamara — you're all-in at RB (Gibbs/Robinson start, Kamara/Dowdle/Gainwell stacked behind them) but carrying zero backup QB in a superflex league. Cousins is the Raiders' clear starter. Kamara's playing well right now, but with Etienne down for a month there's only so much workload to go around once he's back.",
       "displaces": null,
       "displaces_name": null,
       "evidence": {
-        "note": "Travis Etienne is on IR with a hamstring injury (out at least four games, not back before W9); Kamara projects into New Orleans' lead backfield role while he's out.",
-        "url": "https://www.draftsharks.com/fantasy-football-news/83030/travis-etienne-to-ir",
-        "as_of": "2026-10-05"
+        "note": "Kamara scored twice on the ground in Week 4 and has moved into amandaberry's starting FLEX over Rico Dowdle, ahead of New Orleans' Week 5 game, with Travis Etienne still on IR.",
+        "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-10-06/alvin-kamara-cashes-in-on-2-rushing-scores-in-loss",
+        "as_of": "2026-10-06"
       },
       "consumes": [
         "1166"
       ],
       "urgency": "this_week",
-      "why": "Kamara leads NO's backfield with Etienne on IR; still good value off a 4-QB bench, but Cousins is now my live starter, not spare depth.",
+      "why": "Kamara is leading NO's backfield with Etienne on IR and just scored twice — good value off a 4-QB bench even at a slightly higher price, but Cousins is now my live starter, not spare depth.",
       "case": {
         "starts": "Alvin Kamara is depth (RB4)",
         "need": "RB: you have 3 — not thin · gives QB depth (you have 4, start 2)",
         "cost": "gives Kirk Cousins — 1 starter, 0 bench · no FAAB",
-        "asks": "amandaberry benches Alvin Kamara, Questionable — one of 5 RBs they carry",
+        "asks": "amandaberry starts Alvin Kamara, Questionable — one of 5 RBs they carry",
         "tradeoff": {
           "net": "neutral",
           "fixes": [],
