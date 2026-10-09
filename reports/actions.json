@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-10-09T18:19:24.816Z",
+  "compiled_at": "2026-10-09T20:13:35.276Z",
   "season": "2026",
   "week": 5,
   "games_have_started": true,
@@ -31,34 +31,34 @@
     "waivers": {
       "report": "2026-10-09-waivers.md",
       "week": 5,
-      "verdict": "Add Daniel Jones for $0 now; drop Jakobi Meyers. Lamar Jackson's ankle just turned to Out and Bryce Young is on bye this week, so there's no playable backup quarterback left — Jones fixes that today without touching the other three.",
+      "verdict": "Add Daniel Jones for $0 now; drop Lamar Jackson to make room. Jackson's own ankle has him Out, so Jones replaces exactly the insurance Jackson can no longer provide — and with Stefon Diggs' hamstring also turning Out today, Jakobi Meyers has to stay on the roster to start this week instead of being the drop.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-10-09T18:18:34.853Z"
+      "written_at": "2026-10-09T20:10:50.142Z"
     },
     "lineup": {
       "report": "2026-10-09-lineup.md",
       "week": 5,
-      "verdict": "Hold this week's lineup. Lamar Jackson's ankle was just upgraded to Out, but he was bench depth, not a starter, so nothing here changes — the real fallout is a trade contingency, fixed on today's waivers report.",
+      "verdict": "Start Jakobi Meyers at WR in place of Stefon Diggs. Diggs' hamstring just turned Out, and with Tetairoa McMillan on bye this week, Meyers is the only other healthy receiver on the roster.",
       "next_check": "Inactives, Sun 10am",
       "stale": false,
-      "written_at": "2026-10-09T18:18:44.704Z"
+      "written_at": "2026-10-09T20:10:33.542Z"
     },
     "trades": {
       "report": "2026-10-09-trades.md",
       "week": 5,
-      "verdict": "Still send Kirk Cousins for Alvin Kamara to amandaberry — he remains their active FLEX starter off a two-touchdown game. Lamar Jackson's ankle turned to Out today, which breaks the old fallback plan at SUPER_FLEX if this trade lands before Sunday; today's waivers report replaces it with a free pickup of Daniel Jones, so the offer still stands.",
+      "verdict": "Still send Kirk Cousins for Alvin Kamara to amandaberry — he remains their active FLEX starter off a two-touchdown game, Questionable tag and all. Stefon Diggs' hamstring turning Out today doesn't change this deal; the SUPER_FLEX fallback it needs is today's waiver add of Daniel Jones, not Lamar Jackson, whose own ankle is also Out now.",
       "next_check": "Waivers, Tue 7am",
       "stale": false,
-      "written_at": "2026-10-09T18:19:08.157Z"
+      "written_at": "2026-10-09T20:13:00.894Z"
     },
     "inactives": {
       "report": "2026-10-09-inactives.md",
       "week": 5,
-      "verdict": "No games imminent — Thursday's Buccaneers-Cowboys game already finished clean, and Sunday's full slate is still two days out with no official game-day statuses yet. Lamar Jackson's ankle turned Out today, but he's bench depth, not a starter, so it doesn't change today's check.",
+      "verdict": "No games imminent — Thursday's Buccaneers-Cowboys game already finished clean, and Sunday's full slate is still two days out with no official inactive lists yet. Stefon Diggs' hamstring turned Out today, but the bench pivot (Jakobi Meyers in at WR) is already queued on today's lineup report, so there's nothing new to decide here.",
       "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-10-09T18:16:29.836Z"
+      "written_at": "2026-10-09T20:11:10.682Z"
     }
   },
   "actions": [
@@ -72,8 +72,8 @@
       "name": "Daniel Jones",
       "pos": "QB",
       "team": "IND",
-      "drop": "5947",
-      "drop_name": "Jakobi Meyers",
+      "drop": "4881",
+      "drop_name": "Lamar Jackson",
       "mode": "fcfs",
       "displaces": null,
       "displaces_name": null,
@@ -83,11 +83,11 @@
         "as_of": "2026-05-29"
       },
       "consumes": [
-        "5947"
+        "4881"
       ],
       "urgency": "now",
       "deadline_label": "first-come-first-serve, $0",
-      "why": "Jackson's ankle just turned Out and Young is on bye this week — Jones is a real starting QB and the only fallback for SUPER_FLEX if Cousins trades away before Sunday.",
+      "why": "Jackson's ankle is Out and Young is on bye, so Jones is the only standing QB fallback; dropping Jackson instead of Meyers keeps today's WR pivot on the roster.",
       "case": {
         "starts": "Bench — QB5 behind Jared Goff, Kirk Cousins",
         "tradeoff": {
@@ -96,8 +96,33 @@
           "opens": []
         },
         "need": "QB: you have 4 — not thin · fixes nothing on the calendar",
-        "cost": "$0, first come first served · drops Jakobi Meyers (WR, bench)",
+        "cost": "$0, first come first served · drops Lamar Jackson (QB, bench)",
         "later": "opens no holes"
+      }
+    },
+    {
+      "id": "lineup:start:5947",
+      "source": "lineup",
+      "report": "2026-10-09-lineup.md",
+      "kind": "start",
+      "week": 5,
+      "player": "5947",
+      "name": "Jakobi Meyers",
+      "pos": "WR",
+      "team": "JAX",
+      "slot": "WR",
+      "for": "2449",
+      "for_name": "Stefon Diggs",
+      "consumes": [
+        "2449",
+        "5947"
+      ],
+      "urgency": "before_kickoff",
+      "deadline_label": "before Sun 1:00pm ET",
+      "why": "Diggs' hamstring turned Out Friday; Meyers is the only healthy WR left on the bench with McMillan on bye.",
+      "case": {
+        "starts": "Jakobi Meyers in at WR, Stefon Diggs to the bench",
+        "need": "Stefon Diggs: Out, WAS bye W7"
       }
     },
     {
@@ -106,6 +131,7 @@
       "report": "2026-10-09-trades.md",
       "kind": "trade",
       "week": 5,
+      "after": "waivers:add:5870",
       "with": 9,
       "with_owner": "amandaberry",
       "give": [
@@ -131,7 +157,7 @@
         "1166"
       ],
       "urgency": "this_week",
-      "why": "Kamara leads NO's backfield with Etienne on IR and just scored twice — good value off a 4-QB bench. Jackson can't cover SUPER_FLEX now he's Out; the waivers add of Daniel Jones is the real fallback.",
+      "why": "Kamara leads NO's backfield with Etienne on IR and just scored twice — good value off a 4-QB bench. Daniel Jones, added on today's waivers, covers SUPER_FLEX once Cousins leaves.",
       "case": {
         "starts": "Alvin Kamara is depth (RB4)",
         "need": "RB: you have 3 — not thin · gives QB depth (you have 4, start 2)",
