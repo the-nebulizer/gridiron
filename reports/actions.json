@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-10-09T20:13:35.276Z",
+  "compiled_at": "2026-10-09T21:08:13.941Z",
   "season": "2026",
   "week": 5,
   "games_have_started": true,
@@ -10,7 +10,7 @@
       "11584",
       "2449",
       "11610",
-      "9484",
+      "7002",
       "12527",
       "1166",
       "11792",
@@ -20,8 +20,8 @@
       "12526",
       "4881",
       "5947",
-      "7002",
-      "9228"
+      "9228",
+      "9484"
     ],
     "reserve": [
       "9753"
@@ -31,34 +31,34 @@
     "waivers": {
       "report": "2026-10-09-waivers.md",
       "week": 5,
-      "verdict": "Add Daniel Jones for $0 now; drop Lamar Jackson to make room. Jackson's own ankle has him Out, so Jones replaces exactly the insurance Jackson can no longer provide — and with Stefon Diggs' hamstring also turning Out today, Jakobi Meyers has to stay on the roster to start this week instead of being the drop.",
+      "verdict": "Add Daniel Jones for $0 now; drop Lamar Jackson to make room. Jackson's own ankle has him Out, so Jones replaces exactly the insurance Jackson can no longer provide — and with Stefon Diggs' hamstring also Out, Jakobi Meyers has to stay on the roster to start this week instead of being the drop.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-10-09T20:10:50.142Z"
+      "written_at": "2026-10-09T21:07:28.433Z"
     },
     "lineup": {
       "report": "2026-10-09-lineup.md",
       "week": 5,
-      "verdict": "Start Jakobi Meyers at WR in place of Stefon Diggs. Diggs' hamstring just turned Out, and with Tetairoa McMillan on bye this week, Meyers is the only other healthy receiver on the roster.",
+      "verdict": "Start Jakobi Meyers at WR in place of Stefon Diggs. Diggs' hamstring is Out, and with Tetairoa McMillan on bye this week, Meyers is the only other healthy receiver on the roster. Separately, the TE spot already flipped to Juwan Johnson over Tucker Kraft in Sleeper — both are healthy with no bye, so that one needs no action here.",
       "next_check": "Inactives, Sun 10am",
       "stale": false,
-      "written_at": "2026-10-09T20:10:33.542Z"
+      "written_at": "2026-10-09T21:07:10.589Z"
     },
     "trades": {
       "report": "2026-10-09-trades.md",
       "week": 5,
-      "verdict": "Still send Kirk Cousins for Alvin Kamara to amandaberry — he remains their active FLEX starter off a two-touchdown game, Questionable tag and all. Stefon Diggs' hamstring turning Out today doesn't change this deal; the SUPER_FLEX fallback it needs is today's waiver add of Daniel Jones, not Lamar Jackson, whose own ankle is also Out now.",
+      "verdict": "Still send Kirk Cousins for Alvin Kamara to amandaberry — he remains their active FLEX starter off a two-touchdown game, Questionable tag and all. Today's lineup change (Juwan Johnson now starting at TE over Tucker Kraft) doesn't touch this deal; the SUPER_FLEX fallback it needs is today's waiver add of Daniel Jones, not Lamar Jackson, whose own ankle is also Out.",
       "next_check": "Waivers, Tue 7am",
       "stale": false,
-      "written_at": "2026-10-09T20:13:00.894Z"
+      "written_at": "2026-10-09T21:07:51.025Z"
     },
     "inactives": {
       "report": "2026-10-09-inactives.md",
       "week": 5,
-      "verdict": "No games imminent — Thursday's Buccaneers-Cowboys game already finished clean, and Sunday's full slate is still two days out with no official inactive lists yet. Stefon Diggs' hamstring turned Out today, but the bench pivot (Jakobi Meyers in at WR) is already queued on today's lineup report, so there's nothing new to decide here.",
+      "verdict": "No games imminent — Thursday's Buccaneers-Cowboys game already finished clean, and Sunday's full slate is still two days out with no official inactive lists yet. Today's roster change was Juwan Johnson taking over the TE spot from Tucker Kraft, a plain lineup call rather than an injury, so there's nothing new to decide here. Diggs' Out tag and the Meyers pivot are already queued on today's lineup report.",
       "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-10-09T20:11:10.682Z"
+      "written_at": "2026-10-09T21:07:59.097Z"
     }
   },
   "actions": [
@@ -119,7 +119,7 @@
       ],
       "urgency": "before_kickoff",
       "deadline_label": "before Sun 1:00pm ET",
-      "why": "Diggs' hamstring turned Out Friday; Meyers is the only healthy WR left on the bench with McMillan on bye.",
+      "why": "Diggs' hamstring is Out; Meyers is the only healthy WR left on the bench with McMillan on bye.",
       "case": {
         "starts": "Jakobi Meyers in at WR, Stefon Diggs to the bench",
         "need": "Stefon Diggs: Out, WAS bye W7"
