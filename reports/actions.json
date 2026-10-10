@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-10-10T01:08:45.360Z",
+  "compiled_at": "2026-10-10T14:07:42.975Z",
   "season": "2026",
   "week": 5,
   "games_have_started": true,
@@ -8,21 +8,20 @@
       "3163",
       "8228",
       "11584",
-      "2449",
+      "5947",
       "11610",
       "7002",
       "12527",
       "1166",
       "11792",
-      null
+      "CHI"
     ],
     "bench": [
       "12526",
+      "2449",
       "4881",
-      "5947",
       "9228",
-      "9484",
-      "CHI"
+      "9484"
     ],
     "reserve": [
       "9753"
@@ -32,34 +31,34 @@
     "waivers": {
       "report": "2026-10-10-waivers.md",
       "week": 5,
-      "verdict": "Add Daniel Jones for $0 now; drop Lamar Jackson to make room. This is the same call as yesterday — Jackson's ankle is still Out, Bryce Young is on his own bye this week, and Jones is still sitting in the pool unclaimed.",
+      "verdict": "Add Daniel Jones for $0 now; drop Lamar Jackson to make room. Same call as the last two reports — Jackson's ankle is still Out, Bryce Young is on his own bye this week, and Jones is still sitting in the pool unclaimed.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-10-10T01:07:48.048Z"
+      "written_at": "2026-10-10T14:07:06.056Z"
     },
     "lineup": {
       "report": "2026-10-10-lineup.md",
       "week": 5,
-      "verdict": "Set Chicago Bears at DEF — last night's defense swap left that slot empty in Sleeper. Also still start Jakobi Meyers over Stefon Diggs (Out), a move flagged yesterday that still hasn't been made.",
+      "verdict": "Hold — Jakobi Meyers is in for Stefon Diggs and Chicago Bears is set at DEF, both now live in Sleeper. Nothing to change before kickoff; watch Ashton Jeanty Sunday morning.",
       "next_check": "Inactives, Sun 10am",
       "stale": false,
-      "written_at": "2026-10-10T01:07:21.896Z"
+      "written_at": "2026-10-10T14:06:49.636Z"
     },
     "trades": {
       "report": "2026-10-10-trades.md",
       "week": 5,
-      "verdict": "Still send Kirk Cousins for Alvin Kamara to amandaberry — he remains their active FLEX/RB starter off a two-touchdown game, Questionable tag and all. Today's defense swap (Chicago Bears in for Cincinnati) doesn't touch this deal; it still waits on today's waiver add of Daniel Jones to cover SUPER_FLEX once Cousins leaves.",
+      "verdict": "Still send Kirk Cousins for Alvin Kamara to amandaberry — he remains their active FLEX/RB starter off a two-touchdown game, Questionable tag and all. Today's lineup swaps (Meyers in for Diggs, Chicago Bears at DEF) don't touch this deal; it still waits on today's waiver add of Daniel Jones to cover SUPER_FLEX once Cousins leaves.",
       "next_check": "Waivers, Tue 7am",
       "stale": false,
-      "written_at": "2026-10-10T01:08:13.724Z"
+      "written_at": "2026-10-10T14:07:24.968Z"
     },
     "inactives": {
       "report": "2026-10-10-inactives.md",
       "week": 5,
-      "verdict": "No games imminent yet — Thursday's Buccaneers-Cowboys game is already final and clean, and Sunday's full slate is one day out with no official inactive lists yet. Today's roster change was swapping in the Chicago Bears at defense, a plain streaming move rather than an injury, so there's nothing new to decide here. Diggs' Out tag and the still-needed Meyers pivot, plus getting Chicago into the actual DEF slot, are already queued on today's lineup report.",
+      "verdict": "No games imminent yet — Thursday's Buccaneers-Cowboys game is already final and clean, and Sunday's full slate is one day out with no official inactive lists yet. Today's roster change was both flagged lineup swaps finally getting made in Sleeper — Meyers in for Diggs, Chicago Bears at DEF — not a new injury, so there's nothing new to decide here.",
       "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-10-10T01:08:25.964Z"
+      "written_at": "2026-10-10T14:07:33.572Z"
     }
   },
   "actions": [
@@ -99,52 +98,6 @@
         "need": "QB: you have 4 — not thin · fixes nothing on the calendar",
         "cost": "$0, first come first served · drops Lamar Jackson (QB, bench)",
         "later": "opens no holes"
-      }
-    },
-    {
-      "id": "lineup:start:CHI",
-      "source": "lineup",
-      "report": "2026-10-10-lineup.md",
-      "kind": "start",
-      "week": 5,
-      "player": "CHI",
-      "name": "Chicago Bears",
-      "pos": "DEF",
-      "team": "CHI",
-      "slot": "DEF",
-      "consumes": [
-        "CHI"
-      ],
-      "urgency": "now",
-      "deadline_label": "before Sun 1:00pm ET",
-      "why": "Dropping Cincinnati for Chicago last night never got slotted in; the DEF spot is empty and Chicago is the only defense on the roster, playing at Green Bay Sunday.",
-      "case": {
-        "starts": "Chicago Bears in at DEF"
-      }
-    },
-    {
-      "id": "lineup:start:5947",
-      "source": "lineup",
-      "report": "2026-10-10-lineup.md",
-      "kind": "start",
-      "week": 5,
-      "player": "5947",
-      "name": "Jakobi Meyers",
-      "pos": "WR",
-      "team": "JAX",
-      "slot": "WR",
-      "for": "2449",
-      "for_name": "Stefon Diggs",
-      "consumes": [
-        "2449",
-        "5947"
-      ],
-      "urgency": "before_kickoff",
-      "deadline_label": "before Sun 1:00pm ET",
-      "why": "Diggs' hamstring is still Out and the swap hasn't been made in Sleeper; Meyers is still the only healthy bench WR with McMillan on bye.",
-      "case": {
-        "starts": "Jakobi Meyers in at WR, Stefon Diggs to the bench",
-        "need": "Stefon Diggs: Out, WAS bye W7"
       }
     },
     {
