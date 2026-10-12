@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-10-11T15:19:08.358Z",
+  "compiled_at": "2026-10-12T12:12:12.669Z",
   "season": "2026",
   "week": 5,
   "games_have_started": true,
@@ -45,12 +45,12 @@
       "written_at": "2026-10-10T14:07:58.000Z"
     },
     "trades": {
-      "report": "2026-10-10-trades.md",
+      "report": "2026-10-12-trades.md",
       "week": 5,
-      "verdict": "Still send Kirk Cousins for Alvin Kamara to amandaberry — he remains their active FLEX/RB starter off a two-touchdown game, Questionable tag and all. Today's lineup swaps (Meyers in for Diggs, Chicago Bears at DEF) don't touch this deal; it still waits on today's waiver add of Daniel Jones to cover SUPER_FLEX once Cousins leaves.",
+      "verdict": "Send Kirk Cousins for Alvin Kamara to amandaberry once Daniel Jones is on the roster. Kamara's role is unchanged — Etienne is out through Week 9 — but he's taken a knee and a back knock the last two weeks, so this is a buy with real, acknowledged injury risk, not a clean one.",
       "next_check": "Waivers, Tue 7am",
       "stale": false,
-      "written_at": "2026-10-10T14:07:58.000Z"
+      "written_at": "2026-10-12T12:12:03.130Z"
     },
     "inactives": {
       "report": "2026-10-11-inactives.md",
@@ -58,7 +58,7 @@
       "verdict": "Hold — no starter is confirmed Out. Ashton Jeanty (ankle/foot) is the one game-time call, for the 1pm ET Raiders-Patriots kickoff; Las Vegas's official inactive list hasn't posted yet (due ~11:30am ET). If he sits, flip Tucker Kraft in at FLEX before kickoff.",
       "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-10-11T15:18:59.380Z"
+      "written_at": "2026-10-11T15:19:13.000Z"
     }
   },
   "actions": [
@@ -103,7 +103,7 @@
     {
       "id": "trades:trade:9",
       "source": "trades",
-      "report": "2026-10-10-trades.md",
+      "report": "2026-10-12-trades.md",
       "kind": "trade",
       "week": 5,
       "after": "waivers:add:5870",
@@ -124,20 +124,20 @@
       "displaces": null,
       "displaces_name": null,
       "evidence": {
-        "note": "Kamara scored twice on the ground in Week 4 and has moved into amandaberry's starting lineup over Rico Dowdle, ahead of New Orleans' Week 5 game, with Travis Etienne still on IR.",
-        "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-10-06/alvin-kamara-cashes-in-on-2-rushing-scores-in-loss",
-        "as_of": "2026-10-06"
+        "note": "Etienne (hamstring) went on IR Oct 1, out through the Week 8 bye, eligible back W9; Kamara has led the backfield since, scoring twice despite playing through knee and back dings.",
+        "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-10-01/saints-place-travis-etienne-hamstring-on-ir",
+        "as_of": "2026-10-11"
       },
       "consumes": [
         "1166"
       ],
       "urgency": "this_week",
-      "why": "Kamara leads NO's backfield with Etienne on IR and just scored twice — good value off a 4-QB bench. Daniel Jones, on today's waivers, covers SUPER_FLEX once Cousins leaves.",
+      "why": "Etienne's out through W9, so Kamara is a clean lead-back claim off a 4-QB bench; Jones (today's $0 add) covers SUPER_FLEX once Cousins leaves.",
       "case": {
         "starts": "Alvin Kamara is depth (RB4)",
         "need": "RB: you have 3 — not thin · gives QB depth (you have 4, start 2)",
         "cost": "gives Kirk Cousins — 1 starter, 0 bench · no FAAB",
-        "asks": "amandaberry starts Alvin Kamara, Questionable — one of 5 RBs they carry",
+        "asks": "amandaberry starts Alvin Kamara — one of 5 RBs they carry",
         "tradeoff": {
           "net": "neutral",
           "fixes": [],
