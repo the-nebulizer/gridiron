@@ -1,7 +1,7 @@
 {
-  "compiled_at": "2026-10-12T12:12:12.669Z",
+  "compiled_at": "2026-10-13T12:20:02.710Z",
   "season": "2026",
-  "week": 5,
+  "week": 6,
   "games_have_started": true,
   "roster": {
     "starters": [
@@ -29,19 +29,19 @@
   },
   "sources": {
     "waivers": {
-      "report": "2026-10-10-waivers.md",
-      "week": 5,
-      "verdict": "Add Daniel Jones for $0 now; drop Lamar Jackson to make room. Same call as the last two reports — Jackson's ankle is still Out, Bryce Young is on his own bye this week, and Jones is still sitting in the pool unclaimed.",
+      "report": "2026-10-13-waivers.md",
+      "week": 6,
+      "verdict": "Claim Nick Folk for $3 to fill the kicker slot Reichard's bye leaves empty this week; drop Stefon Diggs to make room.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-10-10T14:07:58.000Z"
+      "written_at": "2026-10-13T12:19:54.141Z"
     },
     "lineup": {
       "report": "2026-10-10-lineup.md",
       "week": 5,
       "verdict": "Hold — Jakobi Meyers is in for Stefon Diggs and Chicago Bears is set at DEF, both now live in Sleeper. Nothing to change before kickoff; watch Ashton Jeanty Sunday morning.",
       "next_check": "Inactives, Sun 10am",
-      "stale": false,
+      "stale": true,
       "written_at": "2026-10-10T14:07:58.000Z"
     },
     "trades": {
@@ -49,54 +49,60 @@
       "week": 5,
       "verdict": "Send Kirk Cousins for Alvin Kamara to amandaberry once Daniel Jones is on the roster. Kamara's role is unchanged — Etienne is out through Week 9 — but he's taken a knee and a back knock the last two weeks, so this is a buy with real, acknowledged injury risk, not a clean one.",
       "next_check": "Waivers, Tue 7am",
-      "stale": false,
-      "written_at": "2026-10-12T12:12:03.130Z"
+      "stale": true,
+      "written_at": "2026-10-12T12:12:17.000Z"
     },
     "inactives": {
       "report": "2026-10-11-inactives.md",
       "week": 5,
       "verdict": "Hold — no starter is confirmed Out. Ashton Jeanty (ankle/foot) is the one game-time call, for the 1pm ET Raiders-Patriots kickoff; Las Vegas's official inactive list hasn't posted yet (due ~11:30am ET). If he sits, flip Tucker Kraft in at FLEX before kickoff.",
       "next_check": "Trades, Mon 7am",
-      "stale": false,
+      "stale": true,
       "written_at": "2026-10-11T15:19:13.000Z"
     }
   },
   "actions": [
     {
-      "id": "waivers:add:5870",
+      "id": "waivers:add:650",
       "source": "waivers",
-      "report": "2026-10-10-waivers.md",
+      "report": "2026-10-13-waivers.md",
       "kind": "add",
-      "week": 5,
-      "player": "5870",
-      "name": "Daniel Jones",
-      "pos": "QB",
-      "team": "IND",
-      "drop": "4881",
-      "drop_name": "Lamar Jackson",
-      "mode": "fcfs",
-      "displaces": null,
-      "displaces_name": null,
+      "week": 6,
+      "player": "650",
+      "name": "Nick Folk",
+      "pos": "K",
+      "team": "ATL",
+      "drop": "2449",
+      "drop_name": "Stefon Diggs",
+      "mode": "waiver",
+      "faab": 3,
+      "displaces": "11792",
+      "displaces_name": "Will Reichard",
       "evidence": {
-        "note": "Jones re-signed with Indianapolis in March on a two-year, $88M deal and is the Colts' clear-cut starter this season, with Anthony Richardson battling for the backup job behind him.",
-        "url": "https://www.nationalfootballpost.com/2026/05/29/colts-tab-qb-daniel-jones-as-starter",
-        "as_of": "2026-05-29"
+        "note": "Falcons signed Folk in free agency to be their 2026 starting kicker after cycling through Parker Romo and Zane Gonzalez; he hit 28 of 29 field goals with the Jets last year.",
+        "url": "https://www.atlantafalcons.com/news/atlanta-falcons-sign-kicker-nick-folk-free-agency"
       },
       "consumes": [
-        "4881"
+        "2449"
       ],
       "urgency": "now",
-      "deadline_label": "first-come-first-serve, $0",
-      "why": "Jackson's ankle is still Out and Young is on bye this week, so Jones remains the only standing SUPER_FLEX fallback; he's still unclaimed.",
+      "deadline_label": "waivers process Wednesday",
+      "why": "Reichard is on bye and I have no other kicker — this slot scores zero unless I claim one; Folk is Atlanta's clear starter at home in a dome vs Chicago.",
       "case": {
-        "starts": "Bench — QB5 behind Jared Goff, Kirk Cousins",
+        "starts": "Starts over Will Reichard at K",
         "tradeoff": {
-          "net": "neutral",
-          "fixes": [],
+          "net": "fixes_only",
+          "fixes": [
+            {
+              "week": 6,
+              "slot": "K",
+              "kind": "hole"
+            }
+          ],
           "opens": []
         },
-        "need": "QB: you have 4 — not thin · fixes nothing on the calendar",
-        "cost": "$0, first come first served · drops Lamar Jackson (QB, bench)",
+        "need": "K: you have 1 — your thinnest spot · fixes W6",
+        "cost": "$3 of $78 · 2 of 12 teams still have $100 · #19 most-added in Sleeper this week · drops Stefon Diggs (WR, bench)",
         "later": "opens no holes"
       }
     },
@@ -106,7 +112,6 @@
       "report": "2026-10-12-trades.md",
       "kind": "trade",
       "week": 5,
-      "after": "waivers:add:5870",
       "with": 9,
       "with_owner": "amandaberry",
       "give": [
