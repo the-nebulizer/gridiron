@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-10-13T22:30:10.913Z",
+  "compiled_at": "2026-10-13T22:33:27.701Z",
   "season": "2026",
   "week": 6,
   "games_have_started": true,
@@ -31,10 +31,10 @@
     "waivers": {
       "report": "2026-10-13-waivers.md",
       "week": 6,
-      "verdict": "Claim Nick Folk for $3 to fill the kicker slot Reichard's bye leaves empty this week; drop Bryce Young to make room.",
+      "verdict": "Hold — no claim tonight and nobody gets dropped. Reichard's bye still needs a kicker, but free agents can be added free from Wednesday, so make that call Friday after the injury reports: add Nick Folk (Loop or Santos if he's gone) and drop Reichard himself, not a skill player.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-10-13T22:30:05.496Z"
+      "written_at": "2026-10-13T22:33:25.956Z"
     },
     "lineup": {
       "report": "2026-10-10-lineup.md",
@@ -50,7 +50,7 @@
       "verdict": "Hold — no offer this week. The Cousins-for-Kamara idea is withdrawn: it isn't certain to leave you better off.",
       "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-10-13T22:29:50.524Z"
+      "written_at": "2026-10-13T22:30:26.000Z"
     },
     "inactives": {
       "report": "2026-10-11-inactives.md",
@@ -61,56 +61,5 @@
       "written_at": "2026-10-11T15:19:13.000Z"
     }
   },
-  "actions": [
-    {
-      "id": "waivers:add:650",
-      "source": "waivers",
-      "report": "2026-10-13-waivers.md",
-      "kind": "add",
-      "week": 6,
-      "player": "650",
-      "name": "Nick Folk",
-      "pos": "K",
-      "team": "ATL",
-      "drop": "9228",
-      "drop_name": "Bryce Young",
-      "mode": "waiver",
-      "faab": 3,
-      "displaces": "11792",
-      "displaces_name": "Will Reichard",
-      "evidence": {
-        "note": "Falcons signed Folk in free agency to be their 2026 starting kicker after cycling through Parker Romo and Zane Gonzalez; he hit 28 of 29 field goals with the Jets last year.",
-        "url": "https://www.atlantafalcons.com/news/atlanta-falcons-sign-kicker-nick-folk-free-agency"
-      },
-      "consumes": [
-        "9228"
-      ],
-      "urgency": "now",
-      "deadline_label": "waivers process Wednesday",
-      "why": "Reichard is on bye and I have no other kicker — this slot scores zero unless I claim one; Folk is Atlanta's clear starter at home in a dome vs Chicago.",
-      "case": {
-        "starts": "Starts over Will Reichard at K",
-        "tradeoff": {
-          "net": "mixed",
-          "fixes": [
-            {
-              "week": 6,
-              "slot": "K",
-              "kind": "hole"
-            }
-          ],
-          "opens": [
-            {
-              "week": 13,
-              "slot": "SUPER_FLEX",
-              "kind": "downgrade"
-            }
-          ]
-        },
-        "need": "K: you have 1 — your thinnest spot · fixes W6",
-        "cost": "$3 of $78 · 2 of 12 teams still have $100 · #12 most-added in Sleeper this week · drops Bryce Young (QB, bench)",
-        "later": "opens a W13 SUPERFLEX downgrade"
-      }
-    }
-  ]
+  "actions": []
 }
