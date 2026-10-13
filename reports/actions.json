@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-10-13T22:33:27.701Z",
+  "compiled_at": "2026-10-13T22:43:41.387Z",
   "season": "2026",
   "week": 6,
   "games_have_started": true,
@@ -31,10 +31,10 @@
     "waivers": {
       "report": "2026-10-13-waivers.md",
       "week": 6,
-      "verdict": "Hold — no claim tonight and nobody gets dropped. Reichard's bye still needs a kicker, but free agents can be added free from Wednesday, so make that call Friday after the injury reports: add Nick Folk (Loop or Santos if he's gone) and drop Reichard himself, not a skill player.",
+      "verdict": "Hold — no claim tonight. Free agency reopens after Wednesday's run; on Friday, after the injury news, add Nick Folk for $0 (Santos or Bass if he's gone) and drop Jakobi Meyers. Keep Young, Lamar, Diggs and Reichard.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-10-13T22:33:25.956Z"
+      "written_at": "2026-10-13T22:43:39.276Z"
     },
     "lineup": {
       "report": "2026-10-10-lineup.md",

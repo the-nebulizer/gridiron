@@ -223,6 +223,26 @@ function buildSnapshotLite(snapshot, availableOut, trendingOut) {
   };
 }
 
+// Points for every player the page can name from my roster or the free-agent
+// list it carries: season average, games, last-3 average, and the next four
+// weekly projections in this league's scoring (see scripts/value-core.mjs).
+// Without it the page could only answer "who is better" from impressions —
+// the exact failure the points model was built to end.
+function buildPoints(snapshot, availableOut) {
+  const prod = snapshot.production ?? {};
+  const me = snapshot.teams.find((t) => t.roster_id === snapshot.my_roster_id);
+  const ids = [...me.starters, ...me.bench, ...me.reserve].filter(Boolean).map((p) => p.id);
+  for (const list of Object.values(availableOut)) for (const p of list) ids.push(p.id);
+  const out = {};
+  for (const id of new Set(ids)) {
+    const p = prod[id];
+    if (!p) continue;
+    const proj = Object.entries(p.proj ?? {}).sort((a, b) => a[0] - b[0]).slice(0, 4).map(([w, v]) => `W${w} ${v}`).join(', ');
+    out[id] = { avg: p.avg, gp: p.gp, last3: p.last3, proj };
+  }
+  return out;
+}
+
 function buildData(snapshot, actions) {
   const me = snapshot.teams.find((t) => t.roster_id === snapshot.my_roster_id);
 
@@ -256,6 +276,7 @@ function buildData(snapshot, actions) {
       faab: snapshot.teams.map((t) => ({ owner: t.owner, remaining: t.faab_remaining })),
       card: { sources: actions.sources, actions: actions.actions },
       snapshot_lite: buildSnapshotLite(snapshot, availableOut, trendingOut),
+      points: buildPoints(snapshot, availableOut),
     };
   };
 

@@ -64,6 +64,7 @@ Common fields:
 | `id` | string | Optional. Compiler generates `<source>:<kind>:<player>` (`<source>:trade:<with>` for trades) when absent. **Required, and must be distinct, when a report makes more than one trade offer to the same partner** — two offers with no `id` both default to the same `<source>:trade:<with>` key, which is rejected at write time rather than silently collapsing to one (see "Sequencing"). |
 | `after` | string | Optional. Id of an action that must be **done** before this one makes sense. The card nests this under it as "Then". |
 | `if_not` | string | Optional. Id of an action this one is the **fallback** for: do this only if that one is declined, dismissed, or no longer possible. The card nests this under it as "if declined" (parent is a trade) / "if that misses" (parent is an add) / "if that falls through" (parent is any other kind — a `start`, `drop`, `ir` or `activate`, all legal). |
+| `value_note` | string | Optional, `add` only, ≤200 chars. The one sentence that overrules the points model: what the projection misses (a return date, keeper value, Ben's stated preference). Required by `--check` when the chosen drop is more than 5 projected points (rest of season, net of cover) worse than the best drop, or when the swap loses points both this week and after. Rendered on the card as "Why anyway". |
 
 Per-kind fields and validation (all checked against `data/league/snapshot.json`):
 
@@ -119,6 +120,18 @@ One artifact worth knowing, since it looks like a bug and isn't: fixing a week t
 One rule falls out of the case and the compiler enforces it at write time: **depth is priced like depth.** An `add` with `displaces: null` at a position that is not thin **and not otherwise uncovered** (the same two-tier `thin_positions` / `no_cover_positions` test `need` reads above — a backup QB is real need at 2-for-2 in superflex even though no *dedicated* slot is short), bidding more than 10% of my remaining FAAB, fails `--check` ("a fifth WR who doesn't start is not a $15 player — name who he displaces, or price him as a stash"). The compile, which runs over older reports, downgrades that to a warning.
 
 An action from a report written before this rule exists (no `displaces`) compiles with a `starts` line that says so — "The report didn't say who he displaces" — rather than failing the compile; the next run of that routine rewrites it.
+
+### Points — what the move does to the best lineup
+
+Every `add`, `drop` and `trade` is scored by `scripts/value-core.mjs`: the best legal lineup, solved as an assignment for every week left, with the move against without it. Points are this league's scoring applied to real box scores (validated exactly against Sleeper's credited matchup points) and Sleeper's weekly projections; injury tags zero a player for the current week only, because projections don't know about injuries. The case carries:
+
+- `points` — "+8.5 this week · +4.3 rest of season · 0 playoffs", rendered as "Projected points".
+- `better_drop` — present when another drop scores more than 5 points better; rendered as "Better drop".
+- `override` — the action's `value_note`, rendered as "Why anyway".
+- `value` — the same numbers as data, with `by_week`.
+- The cost line's drop now carries what that player has done: "drops Bryce Young (QB, bench, 27.7/g in 4 games)".
+
+`--check` refuses, with the alternative in the message: (1) a drop more than 5 points worse than the best one, without `value_note`; (2) an add that loses points this week and over the rest of the season, without `value_note`; (3) a waiver bid above $0 on a kicker or defense whose game comes after the next waiver run when the league reopens free agency after each run (`snapshot.free_agency`); (4) any trade that does not project better this week, rest of season, and in the playoffs — Ben's standing rule is that an offer goes out only when he is certain to be better off, and there is no override for it.
 
 ### Evidence — the claim a move rests on
 

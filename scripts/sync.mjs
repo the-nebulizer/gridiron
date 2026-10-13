@@ -8,6 +8,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as sleeper from './sleeper.mjs';
 import { buildOutlook } from './outlook.mjs';
+import { scoreLine } from './value-core.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const config = JSON.parse(await readFile(path.join(root, 'config.json'), 'utf8'));
@@ -218,6 +219,68 @@ for (const [pos, list] of Object.entries(availableByPosition)) {
   availableByPosition[pos] = list.slice(0, POOL_CAP[pos]);
 }
 
+// Points scored so far and projected ahead, in THIS league's scoring, for
+// every player a recommendation could touch: all rostered players, the
+// free-agent pool, and trending adds. Without it the routines judged players
+// on impressions — and named Bryce Young, the highest-scoring QB on the
+// roster, as a drop. See scripts/value-core.mjs.
+const lastWeek = Math.max((league.settings?.playoff_week_start ?? 15) + 2, 17);
+const [weekStats, weekProj] = await Promise.all([
+  Promise.all(Array.from({ length: Math.max(week - 1, 0) }, (_, i) => sleeper.getWeekStats(state.season, i + 1))),
+  Promise.all(Array.from({ length: lastWeek - week + 1 }, (_, i) => sleeper.getWeekProjections(state.season, week + i))),
+]);
+const productionIds = new Set([
+  ...allRosteredIds,
+  ...Object.values(availableByPosition).flat().map((p) => p.id),
+  ...trendingAdds.map((t) => t.player_id),
+]);
+const r1 = (x) => Math.round(x * 10) / 10;
+const production = {};
+for (const id of productionIds) {
+  const pts = {};
+  weekStats.forEach((s, i) => { const line = s?.[id]; if (line?.gp > 0) pts[i + 1] = r1(scoreLine(line, league.scoring_settings)); });
+  const proj = {};
+  weekProj.forEach((s, i) => { const line = s?.[id]; proj[week + i] = line?.gp > 0 ? r1(scoreLine(line, league.scoring_settings)) : 0; });
+  const played = Object.values(pts);
+  const last = Object.keys(pts).map(Number).sort((a, b) => a - b).slice(-3).map((w) => pts[w]);
+  production[id] = {
+    gp: played.length,
+    avg: played.length ? r1(played.reduce((a, b) => a + b, 0) / played.length) : null,
+    last3: last.length ? r1(last.reduce((a, b) => a + b, 0) / last.length) : null,
+    pts,
+    proj,
+  };
+}
+
+// When can a free agent next be added for $0? Read off the league's own log,
+// not assumed: every week this season, as soon as the Wednesday run cleared,
+// Sleeper reopened the pool first-come-first-serve until kickoff. A $3 bid on
+// a kicker the night before that happens buys nothing but a decision made
+// without Friday's injury news (2026-10-13).
+// The run day comes from the league setting (Sleeper numbers days from
+// Monday = 0, so 2 is Wednesday; every completed weekly run this season
+// processed Wednesday ~07:04 UTC). Claims that process on other days are
+// single players clearing a 2-day drop window, not the weekly run.
+function freeAgencyWindow(raw, nowMs, waiverDay) {
+  const reopened = raw.some((t) => t.leg === week - 1 && t.type === 'free_agent' && t.status === 'complete' &&
+    Object.keys(t.adds ?? {}).length > 0);
+  let next = null;
+  if (Number.isInteger(waiverDay)) {
+    const jsDay = (waiverDay + 1) % 7;
+    const d = new Date(nowMs);
+    d.setUTCHours(7, 0, 0, 0);
+    while (d.getUTCDay() !== jsDay || d.getTime() <= nowMs) d.setUTCDate(d.getUTCDate() + 1);
+    next = d.toISOString().slice(0, 10);
+  }
+  return {
+    // true when last week's log shows free-agent adds — the pool reopened
+    reopens_after_waiver_run: reopened,
+    next_waiver_run: next,
+    // a free-agent add has already completed this week: the pool is open now
+    open_now: raw.some((t) => t.leg === week && t.type === 'free_agent' && t.status === 'complete'),
+  };
+}
+
 const snapshot = {
   fetched_at: new Date().toISOString(),
   players_cached_at: playersCachedAt,
@@ -297,6 +360,9 @@ const snapshot = {
   available: availableByPosition,
   // Opponent per remaining week, per NFL team — see buildTeamSchedule.
   team_schedule: teamSchedule,
+  free_agency: freeAgencyWindow(transactionsRaw, Date.now(), league.settings?.waiver_day_of_week),
+  // Actual and projected points per player — see where it is built above.
+  production,
 };
 
 // CLAUDE.md, docs/LEAGUE.md, docs/ACTIONS.md and the waivers/trade skills all

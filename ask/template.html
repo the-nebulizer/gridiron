@@ -449,7 +449,7 @@ function askCardSection(data){
     const what = askMoveLine(i);
     L.push(`${head} ${what}  (${askDeadline(i)}${i.state && i.state !== 'open' ? ', ' + i.state : ''})`);
     const c = (i.case && typeof i.case === 'object' && !Array.isArray(i.case)) ? i.case : {};
-    for(const [k, label] of [['starts','Starts'],['need','Need'],['cost','Cost'],['later','Later']]){
+    for(const [k, label] of [['starts','Starts'],['points','Points'],['better_drop','Better drop'],['override','Why anyway'],['need','Need'],['cost','Cost'],['later','Later']]){
       if(typeof c[k] === 'string' && c[k]) L.push(`      ${label}: ${c[k]}`);
     }
     if(i.why) L.push(`      Why: ${i.why}`);

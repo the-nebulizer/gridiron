@@ -14,7 +14,8 @@ import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
 import { buildOutlook, SLOT_ELIGIBILITY, fillSlots } from './outlook.mjs';
 import { streamOptions, streamSeason, parseOpponent } from './stream.mjs';
-import { lifecycleState, buildIndex, freeAgencyIsOpen } from './actions.mjs';
+import { lifecycleState, buildIndex, freeAgencyIsOpen, pointsFindings } from './actions.mjs';
+import { scoreLine, bestLineup, weekPoints, moveValue, swapTable, dropTable } from './value-core.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const verbose = process.argv.includes('-v');
@@ -2605,6 +2606,86 @@ console.log('\n  the dashboard and the Ask page: one copy of the card stylesheet
   // slice the Ask page borrows, so the Ask page has to carry its own or the button is dead there.
   const askTemplate = readFileSync(path.join(root, 'ask', 'template.html'), 'utf8');
   check('the Ask page wires the Copy button the shared card draws', /closest\('\[data-copy\]'\)/.test(askTemplate));
+}
+
+// ---- points, not impressions (scripts/value-core.mjs) ---------------------
+// 2026-10-13: three drops named in one day — Diggs, then Bryce Young (the
+// roster's highest-scoring QB), then the kicker himself — each from prose,
+// none from a number, plus a $3 bid on a kicker the night before free agency
+// reopened and a trade offer that projected worse in every window.
+
+console.log('\npoints — every add, drop and trade is scored against the best lineup');
+
+{
+  check('scoreLine uses the league settings (6-pt pass TD, half PPR)',
+    scoreLine({ pass_td: 2, rec: 4, pass_yd: 100 }, { pass_td: 6, rec: 0.5, pass_yd: 0.04 }) === 18);
+
+  // Greedy fails here: SUPER_FLEX processed first takes the QB and strands QB.
+  const qb = { id: 'q', position: 'QB' }, wr = { id: 'w', position: 'WR' };
+  const pts = { q: 20, w: 15 };
+  const best = bestLineup(['SUPER_FLEX', 'QB'], [qb, wr], (p) => pts[p.id]);
+  check('bestLineup solves the assignment, not a greedy fill (QB at QB, WR at SUPER_FLEX)', best.total === 35, JSON.stringify(best));
+
+  const flat = (n, from = 6) => Object.fromEntries(Array.from({ length: 12 }, (_, i) => [from + i, n]));
+  const pl = (id, position, bye, injury_status = null, team = id.toUpperCase()) => ({ id, name: id, position, team, bye_week: bye, injury_status });
+  const me = {
+    roster_id: 1, owner: 'me',
+    starters: [pl('qa', 'QB', 9), pl('ra', 'RB', 9), pl('wa', 'WR', 9), pl('ta', 'TE', 9), pl('rb', 'RB', 10), pl('qb', 'QB', 10), pl('ka', 'K', 6), pl('da', 'DEF', 8)],
+    bench: [pl('qc', 'QB', 11), pl('wb', 'WR', 12), pl('wc', 'WR', 12, 'Out')],
+    reserve: [],
+  };
+  const other = { roster_id: 2, owner: 'them', starters: [pl('xr', 'RB', 7), pl('xq', 'QB', 7)], bench: [], reserve: [] };
+  const fk = pl('fk', 'K', 11, null, 'FKT');
+  const production = {
+    qa: { gp: 5, avg: 25, proj: flat(25) }, qb: { gp: 5, avg: 20, proj: flat(20) }, qc: { gp: 4, avg: 27, proj: flat(19) },
+    ra: { gp: 5, avg: 14, proj: flat(14) }, rb: { gp: 5, avg: 12, proj: flat(12) },
+    wa: { gp: 5, avg: 12, proj: flat(12) }, wb: { gp: 5, avg: 8, proj: flat(8) }, wc: { gp: 4, avg: 9, proj: flat(8.5) },
+    ta: { gp: 5, avg: 9, proj: flat(9) }, ka: { gp: 5, avg: 13, proj: flat(9.1) }, da: { gp: 5, avg: 7, proj: flat(6) },
+    fk: { gp: 5, avg: 8, proj: flat(8.5) },
+    xr: { gp: 5, avg: 6, proj: flat(6) }, xq: { gp: 5, avg: 26, proj: flat(26) },
+  };
+  for (const id of ['qa', 'ra', 'wa', 'ta', 'rb', 'qb', 'qc', 'wb', 'wc', 'xr', 'xq']) production[id].proj[me.starters.concat(me.bench, other.starters).find((p) => p.id === id).bye_week] = 0;
+  production.ka.proj[6] = 0; production.fk.proj[11] = 0; production.da.proj[8] = 0;
+  const snap = {
+    week: 6, my_roster_id: 1,
+    league: { roster_positions: ['QB', 'RB', 'WR', 'TE', 'FLEX', 'SUPER_FLEX', 'K', 'DEF', 'BN', 'BN', 'BN'], playoff_week_start: 15 },
+    teams: [me, other],
+    available: { K: [fk] },
+    games: { FKT: { kickoff: '2026-10-18', status: 'pre_game' } },
+    free_agency: { reopens_after_waiver_run: true, next_waiver_run: '2026-10-14', open_now: false },
+    production,
+  };
+  const index = buildIndex(snap);
+
+  check('an Out tag zeroes the current week only — projections do not know about injuries',
+    weekPoints(snap, me.bench[2], 6) === 0 && weekPoints(snap, me.bench[2], 7) === 8.5);
+
+  const v = moveValue(snap, { add: ['fk'], drop: ['qc'] });
+  check('the kicker-for-backup-QB swap fills W6 but costs the QB bye weeks', v.this_week === 8.5 && v.rest_of_season < 8.5, JSON.stringify(v));
+
+  const table = dropTable(snap);
+  check('dropTable puts the roster\'s top scorer nowhere near the top of the drop order',
+    table.findIndex((r) => r.id === 'qc') > table.findIndex((r) => r.id === 'wb'), table.map((r) => r.id).join(','));
+
+  const add = (extra) => ({ kind: 'add', player: 'fk', name: 'fk', pos: 'K', mode: 'waiver', faab: 0, ...extra });
+  const best2 = swapTable(snap, 'fk').options[0];
+  const f1 = pointsFindings(add({ drop: 'qa', drop_name: 'qa' }), snap, index);
+  check('dropping the best QB for a kicker is refused, naming the better drop',
+    f1.fails.some((m) => m.includes(`dropping ${best2.drop_name} instead`)), f1.fails.join('\n'));
+  const f1b = pointsFindings(add({ player: 'fk', drop: 'ka', drop_name: 'ka', faab: 0 }), { ...snap, week: 7 }, index);
+  check('a swap that loses points this week and later is refused as a loss',
+    f1b.fails.some((m) => /a loss now and later/.test(m)), `${f1b.line}\n${f1b.fails.join('\n')}`);
+  const f2 = pointsFindings(add({ drop: best2.drop, drop_name: best2.drop_name }), snap, index);
+  check('the best drop passes, with a points line for the card', f2.fails.length === 0 && /this week .* rest of season .* playoffs/.test(f2.line), f2.fails.join('\n'));
+  const f3 = pointsFindings(add({ drop: 'qa', drop_name: 'qa', value_note: 'keeper value' }), snap, index);
+  check('value_note lets the report overrule the numbers, on the record', f3.fails.length === 0 && /dropping/.test(f3.better ?? ''));
+  const f4 = pointsFindings(add({ drop: best2.drop, drop_name: best2.drop_name, faab: 3 }), snap, index);
+  check('a kicker bid the night before free agency reopens is refused', f4.fails.some((m) => /reopens free agency/.test(m)), f4.fails.join('\n'));
+
+  const bad = pointsFindings({ kind: 'trade', give: ['qb'], get: ['xr'] }, snap, index);
+  check('a trade that projects worse is refused under the certainty rule', bad.fails.length === 1, bad.line);
+  const good = pointsFindings({ kind: 'trade', give: ['wb'], get: ['xq'] }, snap, index);
+  check('a trade that projects better now, later and in the playoffs passes', good.fails.length === 0, good.line);
 }
 
 // ---- the modules must be importable without doing anything ------------

@@ -24,6 +24,13 @@ export const getTransactions = (leagueId, week) => get(`/league/${leagueId}/tran
 // for real waiver targets.
 export const getTrending = (type) => get(`/players/nfl/trending/${type}?lookback_hours=48&limit=200`);
 
+// Weekly stat lines and projections, keyed by player id (team code for a
+// defense). Raw stat lines, not points: scoring them with the league's own
+// settings (value-core.mjs scoreLine) reproduces Sleeper's credited points
+// exactly, where the precomputed pts_half_ppr would miss 6-point pass TDs.
+export const getWeekStats = (season, week) => get(`/stats/nfl/regular/${season}/${week}`);
+export const getWeekProjections = (season, week) => get(`/projections/nfl/regular/${season}/${week}`);
+
 // Season schedule: one entry per game ({week, date, home, away, status}).
 // NOT under /v1 — this is the path Sleeper's own clients use. It is the only
 // source of bye weeks: the players dump carries no bye field at all.

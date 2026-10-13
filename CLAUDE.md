@@ -76,6 +76,19 @@ It commits, pushes `HEAD:main`, rebases once if main moved, and if it still can'
 
 A session with the Artifact tool that has just published reports should also refresh the Ask page (`npm run ask`, then publish `ask/index.html` to `config.json`'s `ask_url`) — the cloud routines can't do this and shouldn't try.
 
+## Points, not impressions
+
+Every sync also pulls this season's box scores and Sleeper's weekly projections through Week 17, scored in this league's settings (`snapshot.production`; validated exactly against Sleeper's own matchup points). `scripts/value.mjs` turns them into the questions a recommendation turns on — what dropping each player costs my best lineup, what each possible drop does for a given add, what a trade does in every window, and the best lineup this week:
+
+```
+node scripts/value.mjs                      # the drop order, with averages and cover value
+node scripts/value.mjs --add <id>           # every possible drop for that add, best first
+node scripts/value.mjs --trade --give <ids> --get <ids>
+node scripts/value.mjs --lineup             # best lineup by projection, injury tags applied
+```
+
+No routine describes a player's production, names a drop, or ranks a start from memory; it quotes these numbers, and says what the projection misses when it overrules them (`value_note`, which the card shows). The compiler refuses the patterns that shipped on 2026-10-13: a drop far worse than the best one, a swap that loses points now and later, a kicker bid the night before free agency reopens, and a trade that doesn't project better in every window. Projections are a baseline, not truth: news still matters, and close numbers mean close calls — say so.
+
 ## Trades: certain or nothing
 
 Ben's standing rule: **no trade offer goes on the card unless it is certain he is better off making it than not.** A neutral deal, a depth piece, or a buy with acknowledged injury risk is a hold. See `.claude/skills/trade/SKILL.md`.
@@ -104,6 +117,7 @@ Reports in `reports/` and the dashboard's own copy are written for Ben, not for 
 
 - `config.json` — league/user IDs (public data, committed)
 - `scripts/sleeper.mjs` — API client; `scripts/sync.mjs` — snapshot builder; `scripts/actions.mjs` — compiles report action blocks into `reports/actions.json`
+- `scripts/value.mjs` / `scripts/value-core.mjs` — the points model: best lineup per week by projection, and what any add, drop or trade does to it. `--check` uses it on every add, drop and trade
 - `scripts/outlook.mjs` — the forward view: positional counts, and every week ahead I can't field a legal lineup. Runs inside every sync; also a what-if tool (`--add` / `--drop`)
 - `scripts/stream.mjs` — the weekly kicker/defense question: who I hold, who they play, and every unrostered option with its opponent (`--pos K`, `--season`). The snapshot's `team_schedule` is what makes this answerable — opponent per remaining week, per NFL team, out of the same schedule fetch that gives byes
 - The snapshot's `available` block is the real free-agent pool by position — `trending` is Sleeper-wide noise and hides most of it

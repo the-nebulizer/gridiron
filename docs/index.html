@@ -749,12 +749,12 @@ function actionHeadline(i){
 const KIND_TAG = {add:'claim', drop:'drop', start:'lineup', ir:'ir', activate:'ir', trade:'trade'};
 const kindTag = (i)=> i.kind==='add' && i.mode==='fcfs' ? 'add' : (KIND_TAG[i.kind] || '');
 
-// The case: up to five short facts, always in this order, always under these plain-English
+// The case: up to eight short facts (points = projected starting-lineup points, scripts/value-core.mjs), always in this order, always under these plain-English
 // labels. Shelved items (done/gone/superseded) don't draw it — it argued for a move that is over.
 // 'asks' is the trade-only line: what the deal asks of the other manager, computed from their
 // own roster rather than asserted by the report (see docs/ACTIONS.md "The case"). Each line is
 // split on " · " into chips; the last line carries the tradeoff's net so it can be coloured.
-const CASE_LINES = [['starts','Where he fits'], ['need','The need'], ['cost','The cost'], ['asks','What they give up'], ['later','Rest of season']];
+const CASE_LINES = [['starts','Where he fits'], ['points','Projected points'], ['better_drop','Better drop'], ['override','Why anyway'], ['need','The need'], ['cost','The cost'], ['asks','What they give up'], ['later','Rest of season']];
 function caseGrid(i){
   if(i.state!=='open' && i.state!=='waiting') return '';
   const c = i.case;

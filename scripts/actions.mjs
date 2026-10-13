@@ -33,6 +33,7 @@
 import { readFile, writeFile, readdir, stat } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 import { SLOT_ELIGIBILITY, buildOutlook } from './outlook.mjs';
+import { moveValue, swapTable } from './value-core.mjs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -49,6 +50,9 @@ const MAX_AGE_MS = 3 * 60 * 60 * 1000;
 // remaining FAAB is priced like a starter — that's the rule "depth is priced
 // like depth" enforces.
 const DEPTH_BID_CAP = 0.1;
+// How much better (projected lineup points, rest of season, net of cover) an
+// alternative drop has to be before the report must say why it didn't take it.
+const BETTER_DROP_MARGIN = 5;
 
 const isNonEmptyString = (v) => typeof v === 'string' && v.trim().length > 0;
 const rel = (p) => path.relative(root, p);
@@ -423,7 +427,7 @@ function addCaseCost(action, snapshot, index) {
       const dropPos = index.byId.get(action.drop)?.pos ?? '?';
       const starting = (snapshot.teams.find((t) => t.roster_id === snapshot.my_roster_id)?.starters ?? [])
         .some((p) => p?.id === action.drop);
-      cost += ` · drops ${action.drop_name} (${dropPos}, ${starting ? 'starter' : 'bench'})`;
+      cost += ` · drops ${action.drop_name} (${dropPos}, ${starting ? 'starter' : 'bench'}${prodTag(snapshot, action.drop)})`;
     }
     return cost;
   }
@@ -445,9 +449,17 @@ function addCaseCost(action, snapshot, index) {
     const dropPos = index.byId.get(action.drop)?.pos ?? '?';
     const starting = (snapshot.teams.find((t) => t.roster_id === snapshot.my_roster_id)?.starters ?? [])
       .some((p) => p?.id === action.drop);
-    cost += ` · drops ${action.drop_name} (${dropPos}, ${starting ? 'starter' : 'bench'})`;
+    cost += ` · drops ${action.drop_name} (${dropPos}, ${starting ? 'starter' : 'bench'}${prodTag(snapshot, action.drop)})`;
   }
   return cost;
+}
+
+// ", 27.7/g in 4 games" — what the dropped player has actually done, so a
+// card can never present the roster's best scorer as dead weight unremarked.
+function prodTag(snapshot, id) {
+  const p = snapshot.production?.[id];
+  if (!p || !p.gp) return '';
+  return `, ${p.avg}/g in ${p.gp} game${p.gp === 1 ? '' : 's'}`;
 }
 
 function buildAddCase(action, snapshot, index, baseline) {
@@ -633,6 +645,60 @@ function buildRemovalCase(action, snapshot, index, baseline) {
   c.later = later;
 
   return c;
+}
+
+const signed = (x) => (x > 0 ? `+${x}` : `${x}`);
+
+function pointsLine(v) {
+  return `${signed(v.this_week)} this week · ${signed(v.rest_of_season)} rest of season · ${signed(v.playoffs)} playoffs`;
+}
+
+// The numbers behind a move and the refusals they justify. Exported for the
+// suite. `out` is the built action.
+export function pointsFindings(out, snapshot, index) {
+  const fails = [];
+  let value, better = null;
+  if (out.kind === 'trade') {
+    value = moveValue(snapshot, { add: out.get ?? [], drop: out.give ?? [] });
+    // Ben's standing rule (2026-10-13): no offer unless he is certainly better
+    // off. A projection is not certainty, but a deal that doesn't even
+    // project better — overall, in the playoffs, and this week — is
+    // certainly not it.
+    if (!(value.rest_of_season > 0) || value.playoffs < 0 || value.this_week < 0) {
+      fails.push(`trade projects ${pointsLine(value)} — Ben only offers trades he is certain improve his team, and this one doesn't even project better in every window`);
+    }
+  } else if (out.kind === 'drop') {
+    value = moveValue(snapshot, { drop: [out.player] });
+  } else {
+    value = moveValue(snapshot, { add: [out.player], drop: out.drop ? [out.drop] : [] });
+    if (!out.value_note && value.this_week <= 0 && value.rest_of_season < 0) {
+      fails.push(`${out.name} projects ${pointsLine(value)} for this swap — a loss now and later. Name a better drop, or add value_note saying what the projection misses`);
+    }
+    if (out.drop) {
+      const table = swapTable(snapshot, out.player);
+      const net = (o) => o.rest_of_season - o.cover_lost;
+      const chosen = table.options.find((o) => o.drop === out.drop);
+      const best = table.options[0];
+      if (chosen && best && best.drop !== out.drop && net(best) - net(chosen) > BETTER_DROP_MARGIN) {
+        better = `dropping ${best.drop_name} instead: ${pointsLine(best)}`;
+        if (!out.value_note) {
+          fails.push(`dropping ${out.drop_name} projects ${pointsLine(chosen)}, but ${better} — use that drop, or add value_note saying why not`);
+        }
+      }
+    }
+    // A bid for a kicker or defense whose game comes after the next waiver
+    // run, in a league that reopens the pool after every run, buys nothing
+    // the free pickup wouldn't — except an earlier decision with less news.
+    const fa = snapshot.free_agency;
+    const team = index.byId.get(out.player)?.team
+      ?? Object.values(snapshot.available ?? {}).flat().find((x) => x.id === out.player)?.team;
+    const game = team ? snapshot.games?.[team] : null;
+    if (out.mode === 'waiver' && Number.isInteger(out.faab) && out.faab > 0 && ['K', 'DEF'].includes(out.pos) &&
+        fa?.reopens_after_waiver_run && fa.next_waiver_run && game?.kickoff && game.kickoff > fa.next_waiver_run) {
+      fails.push(`${out.name} plays ${game.kickoff}, after the ${fa.next_waiver_run} waiver run, and this league reopens free agency right after every run — add him then for $0 with the week's injury news, instead of bidding $${out.faab} now`);
+    }
+  }
+  return { value, line: pointsLine(value), better, fails };
 }
 
 // The one pure, exported piece of "the case": computed the same way for
@@ -826,6 +892,7 @@ async function validateAndBuildAction(action, i, snapshot, index, problems, opts
     id: isNonEmptyString(action.id) ? action.id : undefined,
     after: isNonEmptyString(action.after) ? action.after : undefined,
     if_not: isNonEmptyString(action.if_not) ? action.if_not : undefined,
+    value_note: action.value_note,
   };
 
   // ---- displaces: required on add/trade — docs/ACTIONS.md "The case". The
@@ -1268,8 +1335,28 @@ async function validateAndBuildAction(action, i, snapshot, index, problems, opts
   // "The case" — docs/ACTIONS.md "The case — why this move, in four lines".
   // Only computed for a genuinely open action: done/gone actions get no case,
   // the same reasoning that already exempts them from the world checks above.
+  if (out.value_note !== undefined && (!isNonEmptyString(out.value_note) || out.value_note.length > 200)) {
+    push(`(${kind}) value_note must be a non-empty string of at most 200 characters`);
+    bad = true;
+  }
+
+  // Points, not impressions — see scripts/value-core.mjs. Every add, drop and
+  // trade is scored against my best projected lineup, week by week, and the
+  // three ways a move has gone wrong on the record are refused outright.
+  let points = null;
+  if (!bad && live && snapshot.production && ['add', 'drop', 'trade'].includes(kind)) {
+    points = pointsFindings(out, snapshot, index);
+    for (const f of points.fails) if (worldFail(f)) bad = true;
+  }
+
   if (!bad && live) {
     out.case = buildCase(out, snapshot, index, baseline);
+    if (points) {
+      out.case.points = points.line;
+      out.case.value = points.value;
+      if (points.better) out.case.better_drop = points.better;
+      if (out.value_note) out.case.override = out.value_note;
+    }
   }
 
   return bad ? null : out;
@@ -1443,6 +1530,7 @@ function finalizeAction(action, source, report, week) {
     out.get_names = action.get_names;
   }
   if (action.message !== undefined) out.message = action.message;
+  if (action.value_note !== undefined) out.value_note = action.value_note;
   // displaces is `undefined` (never set) when the report predates the rule
   // and this is a compile — see resolveDisplaces above — vs. explicitly
   // `null` when the routine said the player doesn't start; that distinction
@@ -2249,7 +2337,7 @@ async function check(fileArg) {
         console.log(`  action[${r.index}] OK — ${label}`);
         // So the routine can see what the card will actually say before it
         // publishes — the case is computed here the same way compile() does.
-        for (const key of ['starts', 'need', 'cost', 'asks', 'later']) {
+        for (const key of ['starts', 'points', 'better_drop', 'override', 'need', 'cost', 'asks', 'later']) {
           if (a.case?.[key] !== undefined) console.log(`      ${key}: ${a.case[key]}`);
         }
       } else {
