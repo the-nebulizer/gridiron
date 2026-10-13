@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-10-13T12:20:02.710Z",
+  "compiled_at": "2026-10-13T22:30:10.913Z",
   "season": "2026",
   "week": 6,
   "games_have_started": true,
@@ -31,10 +31,10 @@
     "waivers": {
       "report": "2026-10-13-waivers.md",
       "week": 6,
-      "verdict": "Claim Nick Folk for $3 to fill the kicker slot Reichard's bye leaves empty this week; drop Stefon Diggs to make room.",
+      "verdict": "Claim Nick Folk for $3 to fill the kicker slot Reichard's bye leaves empty this week; drop Bryce Young to make room.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-10-13T12:19:54.141Z"
+      "written_at": "2026-10-13T22:30:05.496Z"
     },
     "lineup": {
       "report": "2026-10-10-lineup.md",
@@ -45,12 +45,12 @@
       "written_at": "2026-10-10T14:07:58.000Z"
     },
     "trades": {
-      "report": "2026-10-12-trades.md",
-      "week": 5,
-      "verdict": "Send Kirk Cousins for Alvin Kamara to amandaberry once Daniel Jones is on the roster. Kamara's role is unchanged — Etienne is out through Week 9 — but he's taken a knee and a back knock the last two weeks, so this is a buy with real, acknowledged injury risk, not a clean one.",
-      "next_check": "Waivers, Tue 7am",
-      "stale": true,
-      "written_at": "2026-10-12T12:12:17.000Z"
+      "report": "2026-10-13-trades.md",
+      "week": 6,
+      "verdict": "Hold — no offer this week. The Cousins-for-Kamara idea is withdrawn: it isn't certain to leave you better off.",
+      "next_check": "Trades, Mon 7am",
+      "stale": false,
+      "written_at": "2026-10-13T22:29:50.524Z"
     },
     "inactives": {
       "report": "2026-10-11-inactives.md",
@@ -72,8 +72,8 @@
       "name": "Nick Folk",
       "pos": "K",
       "team": "ATL",
-      "drop": "2449",
-      "drop_name": "Stefon Diggs",
+      "drop": "9228",
+      "drop_name": "Bryce Young",
       "mode": "waiver",
       "faab": 3,
       "displaces": "11792",
@@ -83,7 +83,7 @@
         "url": "https://www.atlantafalcons.com/news/atlanta-falcons-sign-kicker-nick-folk-free-agency"
       },
       "consumes": [
-        "2449"
+        "9228"
       ],
       "urgency": "now",
       "deadline_label": "waivers process Wednesday",
@@ -91,7 +91,7 @@
       "case": {
         "starts": "Starts over Will Reichard at K",
         "tradeoff": {
-          "net": "fixes_only",
+          "net": "mixed",
           "fixes": [
             {
               "week": 6,
@@ -99,56 +99,17 @@
               "kind": "hole"
             }
           ],
-          "opens": []
+          "opens": [
+            {
+              "week": 13,
+              "slot": "SUPER_FLEX",
+              "kind": "downgrade"
+            }
+          ]
         },
         "need": "K: you have 1 — your thinnest spot · fixes W6",
-        "cost": "$3 of $78 · 2 of 12 teams still have $100 · #19 most-added in Sleeper this week · drops Stefon Diggs (WR, bench)",
-        "later": "opens no holes"
-      }
-    },
-    {
-      "id": "trades:trade:9",
-      "source": "trades",
-      "report": "2026-10-12-trades.md",
-      "kind": "trade",
-      "week": 5,
-      "with": 9,
-      "with_owner": "amandaberry",
-      "give": [
-        "1166"
-      ],
-      "give_names": [
-        "Kirk Cousins"
-      ],
-      "get": [
-        "4035"
-      ],
-      "get_names": [
-        "Alvin Kamara"
-      ],
-      "displaces": null,
-      "displaces_name": null,
-      "evidence": {
-        "note": "Etienne (hamstring) went on IR Oct 1, out through the Week 8 bye, eligible back W9; Kamara has led the backfield since, scoring twice despite playing through knee and back dings.",
-        "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-10-01/saints-place-travis-etienne-hamstring-on-ir",
-        "as_of": "2026-10-11"
-      },
-      "consumes": [
-        "1166"
-      ],
-      "urgency": "this_week",
-      "why": "Etienne's out through W9, so Kamara is a clean lead-back claim off a 4-QB bench; Jones (today's $0 add) covers SUPER_FLEX once Cousins leaves.",
-      "case": {
-        "starts": "Alvin Kamara is depth (RB4)",
-        "need": "RB: you have 3 — not thin · gives QB depth (you have 4, start 2)",
-        "cost": "gives Kirk Cousins — 1 starter, 0 bench · no FAAB",
-        "asks": "amandaberry starts Alvin Kamara — one of 5 RBs they carry",
-        "tradeoff": {
-          "net": "neutral",
-          "fixes": [],
-          "opens": []
-        },
-        "later": "opens no holes · empties SUPERFLEX this week — set a starter there before kickoff"
+        "cost": "$3 of $78 · 2 of 12 teams still have $100 · #12 most-added in Sleeper this week · drops Bryce Young (QB, bench)",
+        "later": "opens a W13 SUPERFLEX downgrade"
       }
     }
   ]

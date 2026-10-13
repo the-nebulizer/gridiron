@@ -76,6 +76,10 @@ It commits, pushes `HEAD:main`, rebases once if main moved, and if it still can'
 
 A session with the Artifact tool that has just published reports should also refresh the Ask page (`npm run ask`, then publish `ask/index.html` to `config.json`'s `ask_url`) — the cloud routines can't do this and shouldn't try.
 
+## Trades: certain or nothing
+
+Ben's standing rule: **no trade offer goes on the card unless it is certain he is better off making it than not.** A neutral deal, a depth piece, or a buy with acknowledged injury risk is a hold. See `.claude/skills/trade/SKILL.md`.
+
 ## Sequencing
 
 Every routine reads `reports/actions.json` before writing. Open actions from the other routines are standing commitments this week, not suggestions to override. Conflicts over the same player get linked with `after` / `if_not` per `docs/ACTIONS.md`, and the compiler refuses to write `reports/actions.json` when a conflict is left unlinked.
