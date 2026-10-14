@@ -122,6 +122,7 @@ Reports in `reports/` and the dashboard's own copy are written for Ben, not for 
 - `scripts/stream.mjs` — the weekly kicker/defense question: who I hold, who they play, and every unrostered option with its opponent (`--pos K`, `--season`). The snapshot's `team_schedule` is what makes this answerable — opponent per remaining week, per NFL team, out of the same schedule fetch that gives byes
 - The snapshot's `available` block is the real free-agent pool by position — `trending` is Sleeper-wide noise and hides most of it
 - `ask/`, `scripts/ask-bundle.mjs`, `scripts/outlook-core.mjs` — the "Ask about this card" page Ben publishes as a claude.ai Artifact; see `docs/ASK.md`
+- `scripts/matchups.mjs` — the weekly matchup sheet for `/lineup`: my players grouped by NFL game, both sides' QBs by depth chart (the snapshot's `team_qbs`), my opponent's starters in each game, close calls, byes. Betting lines, defensive rankings and weather come from research, not from here
 - `scripts/league-activity.mjs` — what the other 11 managers have done, and who they dropped that's still claimable
 - `scripts/selftest.mjs` — `npm test`, offline. Run it after touching `actions.mjs`, `outlook.mjs` or `sync.mjs`; every case in it is a bug that shipped once
 - `data/` — gitignored cache (`players.json` refreshed when >24h old; `league/snapshot.json` per sync)

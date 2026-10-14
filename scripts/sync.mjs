@@ -86,6 +86,28 @@ function buildTeamSchedule(schedule, fromWeek) {
 }
 const teamSchedule = buildTeamSchedule(schedule, week);
 
+// Every NFL team's quarterbacks by depth chart, with injury tags. A matchup is
+// not only "who does my receiver play" but "who is throwing to him" — a
+// backup starting in Week 6 moves every pass-catcher and back on that team,
+// and every QB on that team's opponent shapes the game script. Rostered or
+// not, this is the one fact about other teams' QBs the lineup call needs, and
+// without it a report recalls the starter from memory. Depth 1-3 only.
+function buildTeamQbs(players) {
+  const out = {};
+  for (const [id, p] of Object.entries(players)) {
+    if (p.position !== 'QB' || !p.team || p.depth_chart_order == null || p.depth_chart_order > 3) continue;
+    (out[p.team] ??= []).push({
+      id,
+      name: p.full_name || [p.first_name, p.last_name].filter(Boolean).join(' ') || id,
+      depth: p.depth_chart_order,
+      injury_status: p.injury_status ?? null,
+    });
+  }
+  for (const list of Object.values(out)) list.sort((a, b) => a.depth - b.depth);
+  return Object.fromEntries(Object.entries(out).sort());
+}
+const teamQbs = buildTeamQbs(players);
+
 const txWeeks = week > 1 ? [week - 1, week] : [week];
 const transactionsRaw = (
   await Promise.all(txWeeks.map((w) => sleeper.getTransactions(config.league_id, w)))
@@ -360,6 +382,8 @@ const snapshot = {
   available: availableByPosition,
   // Opponent per remaining week, per NFL team — see buildTeamSchedule.
   team_schedule: teamSchedule,
+  // Each NFL team's QBs by depth chart — see buildTeamQbs.
+  team_qbs: teamQbs,
   free_agency: freeAgencyWindow(transactionsRaw, Date.now(), league.settings?.waiver_day_of_week),
   // Actual and projected points per player — see where it is built above.
   production,

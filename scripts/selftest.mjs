@@ -14,6 +14,7 @@ import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
 import { buildOutlook, SLOT_ELIGIBILITY, fillSlots } from './outlook.mjs';
 import { streamOptions, streamSeason, parseOpponent } from './stream.mjs';
+import { matchupSheet } from './matchups.mjs';
 import { lifecycleState, buildIndex, freeAgencyIsOpen, pointsFindings } from './actions.mjs';
 import { scoreLine, bestLineup, weekPoints, moveValue, swapTable, dropTable } from './value-core.mjs';
 
@@ -1237,6 +1238,42 @@ console.log('\noutlook — a bye-only week is only crunch when it actually costs
   const o = buildOutlook(base);
   check('a week already flagged by downgraded_slots is untouched by the bye-only tightening',
     o.crunch_weeks.includes(13), JSON.stringify(o.crunch_weeks));
+}
+
+// A start/sit call turns on the game around a player — who is throwing to
+// him, and whether his team will be ahead and running or behind and passing —
+// and every player on one NFL team shares that answer. The lineup routine had
+// only the opponent's name per kicker/defense, and nothing at all about which
+// quarterback each of my skill players depends on.
+console.log('\nthe matchup sheet groups my players by game, with both sides\' QBs');
+{
+  const snap = fixture({
+    week: 2,
+    // qb1 and wr1 on AAA host GGG; rb1 (DDD) is on bye; everyone else's
+    // team gets a game against a filler team so nothing collides.
+    team_schedule: {
+      AAA: { 2: 'GGG' }, GGG: { 2: '@AAA' }, DDD: { 2: 'BYE' },
+      BBB: { 2: 'Z1' }, EEE: { 2: 'Z2' }, HHH: { 2: 'Z3' }, JJJ: { 2: 'Z4' },
+      III: { 2: 'Z5' }, KKK: { 2: 'Z6' }, df1: { 2: 'Z7' }, CCC: { 2: 'Z8' },
+      MMM: { 2: 'AAA' },
+    },
+    team_qbs: {
+      AAA: [{ id: 'qb1', name: 'Quinn One', depth: 1, injury_status: null }],
+      GGG: [{ id: 'g1', name: 'Gee One', depth: 1, injury_status: 'Questionable' }, { id: 'g2', name: 'Gee Two', depth: 2, injury_status: null }],
+    },
+    production: {},
+  });
+  const sheet = matchupSheet(snap);
+  const game = sheet.games.find((g) => g.key === 'GGG@AAA');
+  check('two of my players on opposite sides of one game land in that one game',
+    game && game.home.mine.some((p) => p.id === 'qb1') && game.away.mine.some((p) => p.id === 'wr1'),
+    JSON.stringify(sheet.games.map((g) => g.key)));
+  check('a tagged depth-chart starter is flagged so the report confirms who throws',
+    game && /Gee One is Questionable/.test(game.away.qb_question ?? ''), JSON.stringify(game?.away));
+  check('a player whose team is on bye is listed as on bye, not dropped silently',
+    sheet.on_bye.some((p) => p.id === 'rb1'), JSON.stringify(sheet.on_bye));
+  check('a defense is placed by its own team code',
+    sheet.games.some((g) => [...g.home.mine, ...g.away.mine].some((p) => p.id === 'df1')));
 }
 
 // scripts/sync.mjs always does a live fetch at import time (no CLI guard, per
