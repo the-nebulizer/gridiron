@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-10-13T22:43:41.387Z",
+  "compiled_at": "2026-10-14T12:34:15.891Z",
   "season": "2026",
   "week": 6,
   "games_have_started": true,
@@ -29,37 +29,138 @@
   },
   "sources": {
     "waivers": {
-      "report": "2026-10-13-waivers.md",
+      "report": "2026-10-14-waivers.md",
       "week": 6,
-      "verdict": "Hold — no claim tonight. Free agency reopens after Wednesday's run; on Friday, after the injury news, add Nick Folk for $0 (Santos or Bass if he's gone) and drop Jakobi Meyers. Keep Young, Lamar, Diggs and Reichard.",
+      "verdict": "Hold — no claim tonight. Free agency reopens after Wednesday's run; on Friday, after the injury news, add Nick Folk for $0 (Santos or Bass if he's gone) and drop Jakobi Meyers.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-10-13T22:43:39.276Z"
+      "written_at": "2026-10-14T12:33:43.000Z"
     },
     "lineup": {
-      "report": "2026-10-10-lineup.md",
-      "week": 5,
-      "verdict": "Hold — Jakobi Meyers is in for Stefon Diggs and Chicago Bears is set at DEF, both now live in Sleeper. Nothing to change before kickoff; watch Ashton Jeanty Sunday morning.",
+      "report": "2026-10-14-lineup.md",
+      "week": 6,
+      "verdict": "Swap in Lamar Jackson, Tetairoa McMillan, Stefon Diggs and Tucker Kraft — three of your starters are on bye and scoring nothing, and Kraft has the better matchup. The kicker spot stays empty until Friday's waiver pickup.",
       "next_check": "Inactives, Sun 10am",
-      "stale": true,
-      "written_at": "2026-10-10T14:07:58.000Z"
+      "stale": false,
+      "written_at": "2026-10-14T12:33:43.000Z"
     },
     "trades": {
-      "report": "2026-10-13-trades.md",
+      "report": "2026-10-14-trades.md",
       "week": 6,
-      "verdict": "Hold — no offer this week. The Cousins-for-Kamara idea is withdrawn: it isn't certain to leave you better off.",
-      "next_check": "Trades, Mon 7am",
+      "verdict": "Hold — a full league-wide check found no offer certain to leave you better off. Your only real need, kicker and defense, is cheaper to fix on waivers than in a trade.",
+      "next_check": "Waivers, Tue 7am",
       "stale": false,
-      "written_at": "2026-10-13T22:30:26.000Z"
+      "written_at": "2026-10-14T12:33:43.000Z"
     },
     "inactives": {
-      "report": "2026-10-11-inactives.md",
-      "week": 5,
-      "verdict": "Hold — no starter is confirmed Out. Ashton Jeanty (ankle/foot) is the one game-time call, for the 1pm ET Raiders-Patriots kickoff; Las Vegas's official inactive list hasn't posted yet (due ~11:30am ET). If he sits, flip Tucker Kraft in at FLEX before kickoff.",
+      "report": "2026-10-14-inactives.md",
+      "week": 6,
+      "verdict": "Not actionable yet — no games are underway or about to start. This week's games begin Thursday night, and none of your starters play in it; the real check comes Sunday morning.",
       "next_check": "Trades, Mon 7am",
-      "stale": true,
-      "written_at": "2026-10-11T15:19:13.000Z"
+      "stale": false,
+      "written_at": "2026-10-14T12:33:43.000Z"
     }
   },
-  "actions": []
+  "actions": [
+    {
+      "id": "lineup:start:4881",
+      "source": "lineup",
+      "report": "2026-10-14-lineup.md",
+      "kind": "start",
+      "week": 6,
+      "player": "4881",
+      "name": "Lamar Jackson",
+      "pos": "QB",
+      "team": "BAL",
+      "slot": "QB",
+      "for": "3163",
+      "for_name": "Jared Goff",
+      "consumes": [
+        "3163",
+        "4881"
+      ],
+      "urgency": "before_kickoff",
+      "deadline_label": "before Sunday's kickoffs",
+      "why": "Goff is on bye; Lamar's ankle improved to Questionable and projects best of your QBs if he plays — pivot to Bryce Young if he isn't cleared.",
+      "case": {
+        "starts": "Lamar Jackson in at QB, Jared Goff to the bench",
+        "need": "Jared Goff: healthy, DET bye W6"
+      }
+    },
+    {
+      "id": "lineup:start:12526",
+      "source": "lineup",
+      "report": "2026-10-14-lineup.md",
+      "kind": "start",
+      "week": 6,
+      "player": "12526",
+      "name": "Tetairoa McMillan",
+      "pos": "WR",
+      "team": "CAR",
+      "slot": "WR",
+      "for": "11610",
+      "for_name": "Malik Washington",
+      "consumes": [
+        "11610",
+        "12526"
+      ],
+      "urgency": "before_kickoff",
+      "deadline_label": "before Sunday's kickoffs",
+      "why": "Washington is on bye and would score zero; McMillan projects 11.2, your best bench receiver.",
+      "case": {
+        "starts": "Tetairoa McMillan in at WR, Malik Washington to the bench",
+        "need": "Malik Washington: healthy, MIA bye W6"
+      }
+    },
+    {
+      "id": "lineup:start:2449",
+      "source": "lineup",
+      "report": "2026-10-14-lineup.md",
+      "kind": "start",
+      "week": 6,
+      "player": "2449",
+      "name": "Stefon Diggs",
+      "pos": "WR",
+      "team": "WAS",
+      "slot": "WR",
+      "for": "5947",
+      "for_name": "Jakobi Meyers",
+      "consumes": [
+        "5947",
+        "2449"
+      ],
+      "urgency": "before_kickoff",
+      "deadline_label": "before Sunday's kickoffs",
+      "why": "Diggs's hamstring improved to Questionable and projects 8.6 to Meyers's 7.3 — pivot back to Meyers if he isn't cleared.",
+      "case": {
+        "starts": "Stefon Diggs in at WR, Jakobi Meyers to the bench",
+        "need": "Jakobi Meyers: healthy, JAX bye W7"
+      }
+    },
+    {
+      "id": "lineup:start:9484",
+      "source": "lineup",
+      "report": "2026-10-14-lineup.md",
+      "kind": "start",
+      "week": 6,
+      "player": "9484",
+      "name": "Tucker Kraft",
+      "pos": "TE",
+      "team": "GB",
+      "slot": "TE",
+      "for": "7002",
+      "for_name": "Juwan Johnson",
+      "consumes": [
+        "7002",
+        "9484"
+      ],
+      "urgency": "before_kickoff",
+      "deadline_label": "before Sunday's kickoffs",
+      "why": "Kraft projects higher this week, 10.5 to Johnson's 8.8, on the better matchup.",
+      "case": {
+        "starts": "Tucker Kraft in at TE, Juwan Johnson to the bench",
+        "need": "Juwan Johnson: healthy, NO bye W8"
+      }
+    }
+  ]
 }
