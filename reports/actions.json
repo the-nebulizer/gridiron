@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-10-16T18:08:40.138Z",
+  "compiled_at": "2026-10-16T19:06:16.491Z",
   "season": "2026",
   "week": 6,
   "games_have_started": true,
@@ -31,10 +31,10 @@
     "waivers": {
       "report": "2026-10-16-waivers.md",
       "week": 6,
-      "verdict": "Hold — nothing clears the bar tonight. Lamar Jackson's bench move was a lineup decision, not a drop, so it doesn't open a roster spot or change the budget. Thursday's Diggs plan still stands for Monday night.",
+      "verdict": "Hold — nothing clears the bar tonight. Lamar Jackson going from Questionable to Out is an injury update, not a roster move — it doesn't open a spot or change the budget. Thursday's Diggs plan still stands for Monday night.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-10-16T18:08:10.742Z"
+      "written_at": "2026-10-16T19:05:44.834Z"
     },
     "lineup": {
       "report": "2026-10-16-lineup.md",
@@ -42,15 +42,15 @@
       "verdict": "Hold — Kirk Cousins at QB and Bryce Young at SUPER_FLEX already match the best-projected lineup; no further change needed before Sunday.",
       "next_check": "Inactives, Sun 10am",
       "stale": false,
-      "written_at": "2026-10-16T18:07:56.958Z"
+      "written_at": "2026-10-16T19:05:33.090Z"
     },
     "trades": {
       "report": "2026-10-16-trades.md",
       "week": 6,
-      "verdict": "Hold — benching Lamar Jackson this week was a lineup call, not a value signal; nothing across the league clears the bar tonight.",
+      "verdict": "Hold — Lamar Jackson's ankle turning into an official Out is an injury update, not a value signal; nothing across the league clears the bar tonight.",
       "next_check": "Waivers, Tue 7am",
       "stale": false,
-      "written_at": "2026-10-16T18:08:23.894Z"
+      "written_at": "2026-10-16T19:05:58.462Z"
     },
     "inactives": {
       "report": "2026-10-16-inactives.md",
@@ -58,7 +58,7 @@
       "verdict": "Not actionable yet — no games are underway or about to start. Most of Week 6 kicks off Sunday; the real check comes then.",
       "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-10-16T18:08:30.126Z"
+      "written_at": "2026-10-16T19:06:06.290Z"
     }
   },
   "actions": []

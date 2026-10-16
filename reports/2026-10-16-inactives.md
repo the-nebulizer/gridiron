@@ -9,6 +9,6 @@
 }
 ```
 
-> Refreshed Oct 16 after a roster change: started Kirk Cousins at QB, benched Lamar Jackson
+> Refreshed Oct 16 after a roster change: Lamar Jackson now Out
 
-This report runs on game days, and today isn't one for this roster — Week 6's games begin Sunday. The roster change worth knowing about already happened without waiting for today's games: Kirk Cousins is in at QB and Lamar Jackson is benched, a move the lineup report already made and confirmed matches the best-projected lineup, so there's no pivot left to make on that front. Stefon Diggs (Questionable, hamstring) is the one open question, and his game is Monday night, not Sunday — so Sunday's check won't settle him; the real call on Diggs comes Monday before that late kickoff. Check back Sunday morning for the rest of the roster.
+This report runs on game days, and today isn't one for this roster — Week 6's games begin Sunday. The injury news worth knowing about already happened without waiting for today's games: Lamar Jackson's ankle issue is now an official Out for Sunday at Cleveland, confirming the bench call the lineup report already made for Kirk Cousins over him — nothing left to pivot on there. Stefon Diggs (Questionable, hamstring) is the one open question left, and his game is Monday night, not Sunday — so Sunday's check won't settle him; the real call on Diggs comes Monday before that late kickoff. Check back Sunday morning for the rest of the roster.
