@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-10-18T15:17:25.005Z",
+  "compiled_at": "2026-10-19T12:13:09.859Z",
   "season": "2026",
   "week": 6,
   "games_have_started": true,
@@ -45,12 +45,12 @@
       "written_at": "2026-10-16T19:06:28.000Z"
     },
     "trades": {
-      "report": "2026-10-16-trades.md",
+      "report": "2026-10-19-trades.md",
       "week": 6,
-      "verdict": "Hold — Lamar Jackson's ankle turning into an official Out is an injury update, not a value signal; nothing across the league clears the bar tonight.",
+      "verdict": "Hold — no trade clears the certainty bar this week. The one deal worth a second look (Juwan Johnson for Bhayshul Tuten) actually projects better everywhere, but it opens a brand-new Week 11 TE hole, so it's a pass.",
       "next_check": "Waivers, Tue 7am",
       "stale": false,
-      "written_at": "2026-10-16T19:06:28.000Z"
+      "written_at": "2026-10-19T12:13:04.737Z"
     },
     "inactives": {
       "report": "2026-10-18-inactives.md",
@@ -58,7 +58,7 @@
       "verdict": "Hold — every starter in today's games is tracking active; nothing to flip before kickoff.",
       "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-10-18T15:17:18.044Z"
+      "written_at": "2026-10-18T15:17:28.000Z"
     }
   },
   "actions": []
