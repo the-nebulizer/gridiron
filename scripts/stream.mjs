@@ -53,11 +53,15 @@ export function streamOptions(snapshot, { week, position = 'DEF' } = {}) {
 
   // A defense's "team" is its own code; a kicker's is the team he plays for.
   const teamOf = (p) => (position === 'DEF' ? p.id : p.team);
+  // What this position has scored per game against that opponent this season
+  // (league scoring, rank 1 = most) — a fact about the opponent, from the
+  // snapshot's defense_vs_position. It informs the call; it does not order it.
+  const vsOf = (game) => (game ? snapshot.defense_vs_position?.[game.opp]?.[position] ?? null : null);
   const held = mine.map((p) => {
     const game = parseOpponent(sched[teamOf(p)]?.[wk]);
     return {
       id: p.id, name: p.name, team: teamOf(p), bye_week: p.bye_week ?? null,
-      starting: starterIds.has(p.id), opponent: game, playable: game !== null,
+      starting: starterIds.has(p.id), opponent: game, playable: game !== null, vs: vsOf(game),
     };
   });
 
@@ -65,7 +69,7 @@ export function streamOptions(snapshot, { week, position = 'DEF' } = {}) {
     const game = parseOpponent(sched[teamOf(p)]?.[wk]);
     return {
       id: p.id, name: p.name, team: teamOf(p), bye_week: p.bye_week ?? null,
-      net_adds: p.net_adds ?? 0, opponent: game, playable: game !== null,
+      net_adds: p.net_adds ?? 0, opponent: game, playable: game !== null, vs: vsOf(game),
     };
   }).sort((a, b) => String(a.name).localeCompare(String(b.name)));
 
@@ -147,19 +151,21 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
       console.log(JSON.stringify(r, null, 2));
     } else {
       console.log(`\nWeek ${r.week} — ${r.position}\n`);
+      const vsText = (v) => (v ? `${r.position}s score ${String(v.avg).padStart(4)}/g vs them (${v.rank}/${v.of})` : '');
       for (const h of r.held) {
-        console.log(`  hold:  ${h.name} (${h.team}) ${describeOpponent(h.opponent)}${h.starting ? ' — starting' : ' — benched'}${h.playable ? '' : '  <-- cannot play'}`);
+        console.log(`  hold:  ${h.name} (${h.team}) ${describeOpponent(h.opponent)}${h.starting ? ' — starting' : ' — benched'}${h.playable ? '' : '  <-- cannot play'}${h.vs ? `  · ${vsText(h.vs)}` : ''}`);
       }
       if (!r.held.length) console.log('  hold:  nothing rostered at this position');
       if (r.must_add) console.log('\n  Nothing I hold can play this week. The slot is empty unless I add one.');
       console.log(`\n  Unrostered and playable (${r.playable_candidates.length}), alphabetical — the order is NOT a ranking:`);
       for (const c of r.playable_candidates) {
-        console.log(`    ${String(c.team).padEnd(4)} ${c.name.padEnd(24)} ${describeOpponent(c.opponent).padEnd(8)} bye W${String(c.bye_week ?? '?').padEnd(3)} ${c.net_adds >= 0 ? '+' : ''}${c.net_adds} net adds`);
+        console.log(`    ${String(c.team).padEnd(4)} ${c.name.padEnd(24)} ${describeOpponent(c.opponent).padEnd(8)} bye W${String(c.bye_week ?? '?').padEnd(3)} ${`${c.net_adds >= 0 ? '+' : ''}${c.net_adds} net adds`.padEnd(18)} ${vsText(c.vs)}`);
       }
       if (r.on_bye_candidates.length) {
         console.log(`\n  Unrostered but on bye this week, so not an option: ${r.on_bye_candidates.map((c) => c.team).join(', ')}`);
       }
-      console.log('\nMatchup quality is not in here — it is the report\'s call, from news and rankings.');
+      console.log('\nThe "score vs them" column is what this position has scored per game against that opponent this');
+      console.log('season (rank 1 = most). It is one input, not a ranking — the call is the report\'s, with news.');
     }
   }
 }

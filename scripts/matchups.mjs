@@ -15,7 +15,8 @@
 // depth chart with injury tags, which bench players are close enough to a
 // starter for the matchup to decide it, and — from the snapshot's
 // defense_vs_position — what the defense each player faces has allowed his
-// position this season in league scoring, with a QB-by-QB table. Betting
+// position this season in league scoring, and a calls table for every
+// position where I have a choice, with usage (snaps, targets, carries). Betting
 // lines and weather are not in Sleeper's API and are not invented here; the
 // report looks them up and says where they came from.
 //
@@ -26,7 +27,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parseOpponent } from './stream.mjs';
-import { projectedLineup, weekPoints, matchupAdjusted } from './value-core.mjs';
+import { projectedLineup, weekPoints, matchupAdjusted, CURRENT_WEEK_OUT } from './value-core.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -70,6 +71,7 @@ export function matchupSheet(snapshot, { week } = {}) {
       // What the defense he faces allows his position, and his opponent-
       // adjusted estimate. Null for K/DEF, a bye, or no games yet.
       vs_defense: matchupAdjusted(snapshot, p, wk),
+      usage: snapshot.production?.[p.id]?.usage ?? null,
     };
   });
   const theirs = (opp?.starters ?? []).filter(Boolean).map((p) => ({
@@ -128,15 +130,27 @@ export function matchupSheet(snapshot, { week } = {}) {
   for (const g of list) {
     g.research = weight(g) <= 1;
   }
-  // Every quarterback I could start, side by side with who he faces. In
-  // superflex the QB slots are where most of a week's points are, so the call
-  // between two or three of them is never made on projection alone (Ben's
-  // rule, 2026-10-21): the lineup report quotes this table.
-  const qbCalls = mine
-    .filter((p) => p.position === 'QB')
-    .map((p) => ({ id: p.id, name: p.name, team: p.team, injury_status: p.injury_status, proj: p.proj, projected_slot: p.projected_slot, vs_defense: p.vs_defense }))
-    .sort((a, b) => b.proj - a.proj);
-  return { week: wk, opponent_owner: opp?.owner ?? null, games: list, on_bye: onBye, qb_calls: qbCalls };
+  // Every position where I have a real choice this week, side by side: who
+  // each player faces, what that defense allows the position, his opponent-
+  // adjusted estimate and how much he is being used. The call between two
+  // players is never made on projection alone (Ben's rule, 2026-10-21 — first
+  // for quarterbacks, then for every slot with an option); the lineup report
+  // quotes this. A position is a call when a healthy player there who plays
+  // this week sits on the bench; a bench player who could also take a flex
+  // slot brings that flex starter into his group.
+  const onByeIds = new Set(onBye.map((p) => p.id));
+  const available = (p) => !onByeIds.has(p.id) && !CURRENT_WEEK_OUT.test(p.injury_status ?? '');
+  const calls = [];
+  for (const pos of ['QB', 'RB', 'WR', 'TE', 'K', 'DEF']) {
+    const benched = mine.filter((p) => p.position === pos && !p.projected_slot && available(p));
+    if (!benched.length) continue;
+    const rows = mine.filter((p) => p.position === pos && (p.projected_slot || available(p)));
+    const flexSlots = new Set(proj.lineup.filter((x) => x.id && x.slot !== pos && canFill(x.slot, pos)).map((x) => x.id));
+    // A quarterback in SUPER_FLEX is never sat for a TE or WR, so he is no rival.
+    const rivals = mine.filter((p) => flexSlots.has(p.id) && p.position !== pos && (pos === 'QB' || p.position !== 'QB'));
+    calls.push({ position: pos, players: [...rows, ...rivals].sort((a, b) => b.proj - a.proj) });
+  }
+  return { week: wk, opponent_owner: opp?.owner ?? null, games: list, on_bye: onBye, calls };
 }
 
 // ---- CLI ----
@@ -167,7 +181,10 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     const ord = (n) => `${n}${[, 'st', 'nd', 'rd'][n % 100 > 10 && n % 100 < 14 ? 0 : n % 10] ?? 'th'}`;
     const fmtVs = (p) => {
       const v = p.vs_defense;
-      return v ? ` — ${v.opponent} allows ${v.allows}/g to ${p.position}s, ${ord(v.rank)} most of ${v.of}` : '';
+      if (!v) return '';
+      return p.position === 'DEF'
+        ? ` — defenses score ${v.allows}/g vs ${v.opponent}, ${ord(v.rank)} most of ${v.of}`
+        : ` — ${v.opponent} allows ${v.allows}/g to ${p.position}s, ${ord(v.rank)} most of ${v.of}`;
     };
     const fmtMine = (p) => {
       const tag = p.projected_slot ? p.projected_slot : p.close_call_with.length ? `bench, close to ${p.close_call_with.join('/')}` : 'bench';
@@ -182,17 +199,23 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
       }
     }
     if (sheet.on_bye.length) console.log(`\n  On bye (score zero): ${sheet.on_bye.map((p) => `${p.name} ${p.position}`).join(', ')}`);
-    if (sheet.qb_calls.length) {
-      console.log('\n  QB calls — who each one faces (the report must weigh this, not only the projection):');
-      console.log('    qb                    proj  slot        opp   allows to QBs   rank   season ratio  adj. estimate');
-      for (const q of sheet.qb_calls) {
-        const v = q.vs_defense;
-        const slot = q.injury_status && /^(out|doubtful|ir|pup|sus)$/i.test(q.injury_status) ? q.injury_status : (q.projected_slot ?? 'bench');
-        console.log(`    ${q.name.padEnd(20)} ${String(q.proj).padStart(5)}  ${slot.padEnd(10)}  ` +
-          (v ? `${(v.home ? '' : '@') + v.opponent}`.padEnd(5) + `  ${String(v.allows).padStart(6)}/g      ${String(v.rank).padStart(2)}/${v.of}   ${v.ratio.toFixed(2).padStart(5)}x (${v.games}g)   ${v.estimate}` : 'no game or no games yet'));
+    if (sheet.calls.length) {
+      console.log('\n  Calls — every position with a choice, by who each player faces (the report weighs all of it):');
+      console.log('    player                pos  proj  slot        opp   allows/g  rank   ratio  adj.  | snap% L3  tgt L3  att L3  rz L3');
+      for (const c of sheet.calls) {
+        console.log(`    ${c.position}`);
+        for (const p of c.players) {
+          const v = p.vs_defense;
+          const u = p.usage?.last3;
+          const slot = p.projected_slot ?? 'bench';
+          const m = v ? `${(v.home ? '' : '@') + v.opponent}`.padEnd(5) + ` ${String(v.allows).padStart(7)}  ${String(v.rank).padStart(2)}/${v.of}  ${v.ratio.toFixed(2).padStart(5)}  ${String(v.estimate).padStart(4)}` : 'no matchup data'.padEnd(37);
+          const use = u ? `  | ${String(u.snap_pct ?? '-').padStart(7)}  ${String(u.tgt).padStart(6)}  ${String(u.att).padStart(6)}  ${String(u.rz).padStart(5)}` : '';
+          console.log(`      ${p.name.padEnd(20)} ${p.position.padEnd(4)} ${String(p.proj).padStart(5)}  ${slot.padEnd(10)}  ${m}${use}`);
+        }
       }
-      console.log('    ratio = his points over what his past opponents allow QBs; adj. estimate = ratio x this opponent.');
-      console.log('    Rough: five or six games a side. When it and the projection disagree, that is a close call to research, not a verdict.');
+      console.log('    allows/g, rank: what that opponent gives up to the position (rank 1 = most); for DEF, what defenses score against that offense.');
+      console.log('    ratio: his points over what his past opponents allow the position; adj. = ratio x this opponent. L3 = last three games.');
+      console.log('    Rough: five or six games a side. When the projection and adj. disagree, that is a close call to research, not a verdict.');
     }
     console.log(`\n  * = a game the lineup turns on (a projected starter or a close call). Research each one once:`);
     console.log('    game total and spread (each team\'s implied points), who is throwing on both sides, whether the');

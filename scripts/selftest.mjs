@@ -1307,7 +1307,12 @@ console.log('\nwho a quarterback plays is computed, ranked and on the sheet');
     d.AAA?.QB.avg === 3 && d.AAA.games === 2, JSON.stringify(d.AAA)); // 6 from qb, 0 from qc (gp 0)
   check('a player whose current team had no game that week is skipped, not misfiled',
     !Object.values(d).some((t) => t.QB.avg >= 54), JSON.stringify(d));
-  check('a team-code (defense) stat line is not counted as an offensive player', !('EEE' in d));
+  check('a stat line with no known player is not counted', !('EEE' in d));
+  {
+    const dd = defenseAllowed(schedule, [{ AAA: { gp: 1, pass_td: 1 } }], { ...players, AAA: { position: 'DEF', team: 'AAA' } }, scoring);
+    check('a DEF line lands on the offense it played: what defenses score against BBB',
+      dd.BBB?.DEF.avg === 6 && dd.AAA?.DEF.avg === 0, JSON.stringify({ AAA: dd.AAA?.DEF, BBB: dd.BBB?.DEF }));
+  }
   check('rank 1 is the defense that allows the most',
     d.BBB.QB.rank === 1 && d.AAA.QB.rank === 4 && d.AAA.QB.of === 4 && !('XXX' in d), JSON.stringify(Object.fromEntries(Object.entries(d).map(([k, v]) => [k, v.QB.rank]))));
 
@@ -1336,9 +1341,18 @@ console.log('\nwho a quarterback plays is computed, ranked and on the sheet');
     defense_vs_position: { GGG: { games: 1, QB: { avg: 15, rank: 30, of: 32 }, RB: { avg: 1, rank: 1, of: 32 }, WR: { avg: 1, rank: 1, of: 32 }, TE: { avg: 1, rank: 1, of: 32 } } },
   });
   const sheet = matchupSheet(snap);
-  check('the matchup sheet lists every rostered QB in its QB calls table',
-    Array.isArray(sheet.qb_calls) && sheet.qb_calls.length >= 1 && sheet.qb_calls.every((q) => q.name),
-    JSON.stringify(sheet.qb_calls));
+  // Every position where a healthy player who plays this week sits (by the
+  // projected lineup) is a call; a position where everyone starts is not.
+  const playing = sheet.games.flatMap((g) => [...g.home.mine, ...g.away.mine]);
+  const benchedPositions = new Set(playing
+    .filter((p) => !p.projected_slot && !/^(out|ir|doubtful|pup)$/i.test(p.injury_status ?? ''))
+    .map((p) => p.position));
+  check('the calls table has a group for every position with a playing bench option, and no other',
+    Array.isArray(sheet.calls) && sheet.calls.length === benchedPositions.size &&
+      sheet.calls.every((c) => benchedPositions.has(c.position) && c.players.length >= 1),
+    JSON.stringify({ calls: sheet.calls.map((c) => c.position), benchedPositions: [...benchedPositions] }));
+  check('a player on bye is never offered as an option in the calls table',
+    !sheet.calls.some((c) => c.players.some((p) => sheet.on_bye.some((b) => b.id === p.id))));
 }
 
 // scripts/sync.mjs always does a live fetch at import time (no CLI guard, per

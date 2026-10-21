@@ -276,9 +276,39 @@ for (const id of productionIds) {
     pts,
     proj,
   };
+  const use = usageOf(weekStats, id, players[id]?.position);
+  if (use) production[id].usage = use;
 }
 
-// What each defense has allowed to QB/RB/WR/TE so far, in league scoring —
+// How much a skill player is actually used, season and last three games:
+// share of his team's offensive snaps, targets, carries, and red-zone looks
+// (targets + carries inside the 20). Points say what happened; this says
+// whether it is likely to keep happening — a tight end on 90% of snaps with
+// six targets is a different bet from one on 45% who scored once. It was the
+// first thing missing when Ben asked what a close TE call hadn't considered.
+function usageOf(weekStats, id, position) {
+  if (!['QB', 'RB', 'WR', 'TE'].includes(position)) return null;
+  const games = [];
+  weekStats.forEach((s) => {
+    const l = s?.[id];
+    if (!(l?.gp > 0)) return;
+    games.push({
+      snap: l.tm_off_snp > 0 ? (l.off_snp ?? 0) / l.tm_off_snp : null,
+      tgt: l.rec_tgt ?? 0,
+      att: l.rush_att ?? 0,
+      rz: (l.rec_rz_tgt ?? 0) + (l.rush_rz_att ?? 0),
+    });
+  });
+  if (!games.length) return null;
+  const avg = (list, k, scale = 1) => {
+    const v = list.map((g) => g[k]).filter((x) => typeof x === 'number');
+    return v.length ? r1((v.reduce((a, b) => a + b, 0) / v.length) * scale) : null;
+  };
+  const summary = (list) => ({ snap_pct: avg(list, 'snap', 100), tgt: avg(list, 'tgt'), att: avg(list, 'att'), rz: avg(list, 'rz') });
+  return { season: summary(games), last3: summary(games.slice(-3)) };
+}
+
+// What each defense has allowed to each position so far, in league scoring —
 // the matchup half of a start/sit call. See defenseAllowed in value-core.mjs.
 const defenseVsPosition = defenseAllowed(
   schedule.filter((g) => g.week < week),
@@ -402,8 +432,9 @@ const snapshot = {
   free_agency: freeAgencyWindow(transactionsRaw, Date.now(), league.settings?.waiver_day_of_week),
   // Actual and projected points per player — see where it is built above.
   production,
-  // Fantasy points allowed per game by each NFL defense to QB/RB/WR/TE, this
+  // Fantasy points allowed per game by each NFL team to each position this
   // season, league scoring, rank 1 = allows the most — see defenseAllowed.
+  // For DEF it is read the other way: what defenses score against that offense.
   defense_vs_position: defenseVsPosition,
 };
 

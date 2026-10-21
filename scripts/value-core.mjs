@@ -257,7 +257,7 @@ export function projectedLineup(snapshot, week = snapshot.week) {
   };
 }
 
-// Fantasy points each NFL defense has allowed to each offensive position this
+// Fantasy points each NFL team has allowed to each position this
 // season, in THIS league's scoring, with a rank (1 = allows the most, i.e. the
 // easiest matchup). A projection prices the opponent in as one number; this
 // is the number behind it, so a start/sit call between two quarterbacks can
@@ -272,7 +272,10 @@ export function projectedLineup(snapshot, week = snapshot.week) {
 //   schedule   — [{week, home, away, status}], the full season
 //   weekStats  — weekStats[i] is the stat map for week i + 1
 //   playerInfo — id -> {position, team}
-export const ALLOWED_POSITIONS = ['QB', 'RB', 'WR', 'TE'];
+// K counts kickers' points against that defense; DEF counts what defenses
+// scored against that team's OFFENSE (a DEF stat line is keyed by its own
+// team code, so it lands on the team it played) — the streaming question.
+export const ALLOWED_POSITIONS = ['QB', 'RB', 'WR', 'TE', 'K', 'DEF'];
 export function defenseAllowed(schedule, weekStats, playerInfo, scoring) {
   const opponent = new Map(); // `${week}:${team}` -> opponent
   for (const g of schedule ?? []) {
