@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-10-21T01:19:06.759Z",
+  "compiled_at": "2026-10-21T12:21:28.298Z",
   "season": "2026",
   "week": 7,
   "games_have_started": true,
@@ -21,7 +21,7 @@
       "2449",
       "4881",
       "7002",
-      "7042"
+      "CLE"
     ],
     "reserve": [
       "9753"
@@ -31,26 +31,26 @@
     "waivers": {
       "report": "2026-10-21-waivers.md",
       "week": 7,
-      "verdict": "Hold — nothing on the wire clears the bar tonight. Tanner McKee inheriting the Eagles' starting job is the week's biggest QB story, but you already have four and none of them are thin; it's not your add.",
+      "verdict": "Hold — the Cleveland Browns claim already processed for $2 and closes your Week 10 defense bye; nothing else on the wire clears the bar tonight.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-10-21T01:18:37.190Z"
+      "written_at": "2026-10-21T12:20:52.641Z"
     },
     "lineup": {
       "report": "2026-10-21-lineup.md",
       "week": 7,
-      "verdict": "Hold — Jared Goff at QB, Malik Washington at WR, and Will Reichard at K are the right starts; no change needed before kickoff.",
+      "verdict": "Hold — Jared Goff at QB, Malik Washington at WR, Will Reichard at K, and Chicago Bears at defense are the right starts; no change needed before kickoff.",
       "next_check": "Inactives, Sun 10am",
       "stale": false,
-      "written_at": "2026-10-21T01:18:19.038Z"
+      "written_at": "2026-10-21T12:21:06.077Z"
     },
     "trades": {
       "report": "2026-10-21-trades.md",
       "week": 7,
-      "verdict": "Hold — no trade clears the certainty bar. The roster change was a lineup swap, not a transaction, so your surplus and need are exactly what they were Monday, and nothing league-wide opened up a better deal.",
+      "verdict": "Hold — no trade clears the certainty bar. Tonight's move was a $2 waiver claim, not a transaction that frees up a trade asset, so your surplus and need are exactly what they were Monday.",
       "next_check": "Waivers, Tue 7am",
       "stale": false,
-      "written_at": "2026-10-21T01:18:54.286Z"
+      "written_at": "2026-10-21T12:21:18.065Z"
     },
     "inactives": {
       "report": "2026-10-21-inactives.md",
@@ -58,7 +58,7 @@
       "verdict": "Not actionable yet — the earliest Week 7 game is Thursday night; no inactive lists exist to check today.",
       "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-10-21T01:19:01.202Z"
+      "written_at": "2026-10-21T12:21:22.417Z"
     }
   },
   "actions": []
