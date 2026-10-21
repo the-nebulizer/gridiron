@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-10-21T12:21:28.298Z",
+  "compiled_at": "2026-10-21T21:14:41.086Z",
   "season": "2026",
   "week": 7,
   "games_have_started": true,
@@ -14,14 +14,14 @@
       "12527",
       "9228",
       "11792",
-      "CHI"
+      "CLE"
     ],
     "bench": [
       "1166",
       "2449",
       "4881",
       "7002",
-      "CLE"
+      "CHI"
     ],
     "reserve": [
       "9753"
@@ -31,26 +31,26 @@
     "waivers": {
       "report": "2026-10-21-waivers.md",
       "week": 7,
-      "verdict": "Hold — the Cleveland Browns claim already processed for $2 and closes your Week 10 defense bye; nothing else on the wire clears the bar tonight.",
+      "verdict": "Hold — nothing on the wire clears the bar tonight. Tonight's defense swap is a lineup call, covered in the lineup report, not a waiver move.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-10-21T12:20:52.641Z"
+      "written_at": "2026-10-21T21:14:00.541Z"
     },
     "lineup": {
       "report": "2026-10-21-lineup.md",
       "week": 7,
-      "verdict": "Hold — Jared Goff at QB, Malik Washington at WR, Will Reichard at K, and Chicago Bears at defense are the right starts; no change needed before kickoff.",
+      "verdict": "Flip defense back to Chicago before Thursday's kickoff — the matchup-adjusted read still favors the Bears over Cleveland by about a point, same as this morning, and nothing new has surfaced to change that.",
       "next_check": "Inactives, Sun 10am",
       "stale": false,
-      "written_at": "2026-10-21T12:21:06.077Z"
+      "written_at": "2026-10-21T21:13:44.309Z"
     },
     "trades": {
       "report": "2026-10-21-trades.md",
       "week": 7,
-      "verdict": "Hold — no trade clears the certainty bar. Tonight's move was a $2 waiver claim, not a transaction that frees up a trade asset, so your surplus and need are exactly what they were Monday.",
-      "next_check": "Waivers, Tue 7am",
+      "verdict": "Hold — no trade clears the certainty bar. Tonight's move was a defense/defense lineup swap, not a transaction, so your surplus and need are exactly what they were this morning.",
+      "next_check": "Trade hunt, Mon 7am",
       "stale": false,
-      "written_at": "2026-10-21T12:21:18.065Z"
+      "written_at": "2026-10-21T21:14:22.053Z"
     },
     "inactives": {
       "report": "2026-10-21-inactives.md",
@@ -58,8 +58,34 @@
       "verdict": "Not actionable yet — the earliest Week 7 game is Thursday night; no inactive lists exist to check today.",
       "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-10-21T12:21:22.417Z"
+      "written_at": "2026-10-21T21:14:30.081Z"
     }
   },
-  "actions": []
+  "actions": [
+    {
+      "id": "lineup:start:CHI",
+      "source": "lineup",
+      "report": "2026-10-21-lineup.md",
+      "kind": "start",
+      "week": 7,
+      "player": "CHI",
+      "name": "Chicago Bears",
+      "pos": "DEF",
+      "team": "CHI",
+      "slot": "DEF",
+      "for": "CLE",
+      "for_name": "Cleveland Browns",
+      "consumes": [
+        "CLE",
+        "CHI"
+      ],
+      "urgency": "before_kickoff",
+      "deadline_label": "before Thursday night's kickoff",
+      "why": "Raw projection favors Cleveland, but New England has allowed more to opposing defenses than Tennessee has; Chicago's adjusted estimate is still ahead.",
+      "case": {
+        "starts": "Chicago Bears in at DEF, Cleveland Browns to the bench",
+        "need": "Cleveland Browns: healthy, CLE bye W11"
+      }
+    }
+  ]
 }
