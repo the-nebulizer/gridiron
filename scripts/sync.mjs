@@ -8,7 +8,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as sleeper from './sleeper.mjs';
 import { buildOutlook } from './outlook.mjs';
-import { scoreLine } from './value-core.mjs';
+import { scoreLine, defenseAllowed } from './value-core.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const config = JSON.parse(await readFile(path.join(root, 'config.json'), 'utf8'));
@@ -70,11 +70,11 @@ const games = buildGames(schedule, week);
 // snapshot could not answer. Stored as a compact string per week: "DAL" at
 // home, "@DAL" away, "BYE" for the off week, so a bye is stated rather than
 // inferred from a missing key.
-function buildTeamSchedule(schedule, fromWeek) {
+function buildTeamSchedule(schedule, fromWeek, toWeek = Infinity) {
   const out = {};
   const weeks = new Set();
   for (const g of schedule) {
-    if (g.week < fromWeek || g.status === 'canceled') continue;
+    if (g.week < fromWeek || g.week > toWeek || g.status === 'canceled') continue;
     weeks.add(g.week);
     (out[g.home] ??= {})[g.week] = g.away;
     (out[g.away] ??= {})[g.week] = `@${g.home}`;
@@ -85,6 +85,10 @@ function buildTeamSchedule(schedule, fromWeek) {
   return out;
 }
 const teamSchedule = buildTeamSchedule(schedule, week);
+// The same, for the weeks already played: who each team has faced. A
+// player's points mean more next to the defenses they came against — see
+// matchupAdjusted in value-core.mjs.
+const teamSchedulePlayed = buildTeamSchedule(schedule, 1, week - 1);
 
 // Every NFL team's quarterbacks by depth chart, with injury tags. A matchup is
 // not only "who does my receiver play" but "who is throwing to him" — a
@@ -274,6 +278,15 @@ for (const id of productionIds) {
   };
 }
 
+// What each defense has allowed to QB/RB/WR/TE so far, in league scoring —
+// the matchup half of a start/sit call. See defenseAllowed in value-core.mjs.
+const defenseVsPosition = defenseAllowed(
+  schedule.filter((g) => g.week < week),
+  weekStats,
+  Object.fromEntries(Object.entries(players).map(([id, p]) => [id, { position: p.position, team: p.team }])),
+  league.scoring_settings,
+);
+
 // When can a free agent next be added for $0? Read off the league's own log,
 // not assumed: every week this season, as soon as the Wednesday run cleared,
 // Sleeper reopened the pool first-come-first-serve until kickoff. A $3 bid on
@@ -382,11 +395,16 @@ const snapshot = {
   available: availableByPosition,
   // Opponent per remaining week, per NFL team — see buildTeamSchedule.
   team_schedule: teamSchedule,
+  // Opponent per week already played, same format.
+  team_schedule_played: teamSchedulePlayed,
   // Each NFL team's QBs by depth chart — see buildTeamQbs.
   team_qbs: teamQbs,
   free_agency: freeAgencyWindow(transactionsRaw, Date.now(), league.settings?.waiver_day_of_week),
   // Actual and projected points per player — see where it is built above.
   production,
+  // Fantasy points allowed per game by each NFL defense to QB/RB/WR/TE, this
+  // season, league scoring, rank 1 = allows the most — see defenseAllowed.
+  defense_vs_position: defenseVsPosition,
 };
 
 // CLAUDE.md, docs/LEAGUE.md, docs/ACTIONS.md and the waivers/trade skills all

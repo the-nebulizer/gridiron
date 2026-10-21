@@ -16,7 +16,7 @@ import { buildOutlook, SLOT_ELIGIBILITY, fillSlots } from './outlook.mjs';
 import { streamOptions, streamSeason, parseOpponent } from './stream.mjs';
 import { matchupSheet } from './matchups.mjs';
 import { lifecycleState, buildIndex, freeAgencyIsOpen, pointsFindings } from './actions.mjs';
-import { scoreLine, bestLineup, weekPoints, moveValue, swapTable, dropTable } from './value-core.mjs';
+import { scoreLine, bestLineup, weekPoints, moveValue, swapTable, dropTable, defenseAllowed, matchupAdjusted } from './value-core.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const verbose = process.argv.includes('-v');
@@ -1274,6 +1274,71 @@ console.log('\nthe matchup sheet groups my players by game, with both sides\' QB
     sheet.on_bye.some((p) => p.id === 'rb1'), JSON.stringify(sheet.on_bye));
   check('a defense is placed by its own team code',
     sheet.games.some((g) => [...g.home.mine, ...g.away.mine].some((p) => p.id === 'df1')));
+}
+
+// A QB call went out on projections alone (2026-10-21): Goff over Cousins,
+// with Goff facing the 5th-stingiest pass defense and his big games having
+// come against the 3rd- and 4th-most generous. Ben's rule since: every QB
+// call names who each one plays and what that defense allows.
+console.log('\nwho a quarterback plays is computed, ranked and on the sheet');
+{
+  const scoring = { pass_td: 6, pass_yd: 0.04 };
+  const schedule = [
+    { week: 1, home: 'AAA', away: 'BBB', status: 'complete' },
+    { week: 1, home: 'CCC', away: 'DDD', status: 'complete' },
+    { week: 2, home: 'AAA', away: 'CCC', status: 'complete' },
+    { week: 2, home: 'BBB', away: 'DDD', status: 'complete' },
+    { week: 3, home: 'XXX', away: 'YYY', status: 'canceled' },
+  ];
+  const players = {
+    qa: { position: 'QB', team: 'AAA' }, qb: { position: 'QB', team: 'BBB' },
+    qc: { position: 'QB', team: 'CCC' }, qd: { position: 'QB', team: 'DDD' },
+    traded: { position: 'QB', team: 'EEE' }, wr: { position: 'WR', team: 'AAA' },
+  };
+  const weekStats = [
+    { qa: { gp: 1, pass_td: 4 }, qb: { gp: 1, pass_td: 1 }, qc: { gp: 1, pass_td: 2 }, qd: { gp: 1, pass_td: 2 },
+      traded: { gp: 1, pass_td: 9 }, wr: { gp: 1, pass_td: 0 }, AAA: { gp: 1, pass_td: 9 } },
+    { qa: { gp: 1, pass_td: 2 }, qb: { gp: 1, pass_td: 3 }, qc: { gp: 0, pass_td: 9 }, qd: { gp: 1, pass_td: 1 } },
+  ];
+  const d = defenseAllowed(schedule, weekStats, players, scoring);
+  check('points a QB scores are credited to the defense he played, in league scoring',
+    d.BBB?.QB.avg === 15 && d.BBB.games === 2, JSON.stringify(d.BBB)); // 24 from qa, 6 from qd
+  check('a defense\'s allowed average is per game it played, scoreless games included',
+    d.AAA?.QB.avg === 3 && d.AAA.games === 2, JSON.stringify(d.AAA)); // 6 from qb, 0 from qc (gp 0)
+  check('a player whose current team had no game that week is skipped, not misfiled',
+    !Object.values(d).some((t) => t.QB.avg >= 54), JSON.stringify(d));
+  check('a team-code (defense) stat line is not counted as an offensive player', !('EEE' in d));
+  check('rank 1 is the defense that allows the most',
+    d.BBB.QB.rank === 1 && d.AAA.QB.rank === 4 && d.AAA.QB.of === 4 && !('XXX' in d), JSON.stringify(Object.fromEntries(Object.entries(d).map(([k, v]) => [k, v.QB.rank]))));
+
+  const snap = {
+    week: 3, defense_vs_position: d,
+    team_schedule: { AAA: { 3: 'BBB' }, CCC: { 3: '@DDD' }, DDD: { 3: 'BYE' } },
+    team_schedule_played: { AAA: { 1: 'BBB', 2: 'CCC' } },
+    production: { qa: { pts: { 1: 24, 2: 12 } } },
+  };
+  const m = matchupAdjusted(snap, { id: 'qa', position: 'QB', team: 'AAA' });
+  // qa scored 36 against BBB (W1) and CCC (W2); applied to BBB this week.
+  const expectedRatio = 36 / (d.BBB.QB.avg + d.CCC.QB.avg);
+  check('the adjusted estimate is his ratio over past opponents times this opponent',
+    m && m.opponent === 'BBB' && m.home === true && Math.abs(m.estimate - Math.round(expectedRatio * d.BBB.QB.avg * 10) / 10) < 1e-9,
+    JSON.stringify(m));
+  check('no estimate for a team on bye', matchupAdjusted(snap, { id: 'qd', position: 'QB', team: 'DDD' }) === null);
+  check('no estimate for a kicker or defense', matchupAdjusted(snap, { id: 'k', position: 'K', team: 'AAA' }) === null);
+  check('no estimate with no games to compare', matchupAdjusted(snap, { id: 'qc', position: 'QB', team: 'CCC' }) === null);
+}
+{
+  const snap = fixture({
+    week: 2,
+    team_schedule: { AAA: { 2: 'GGG' }, GGG: { 2: '@AAA' } },
+    team_qbs: {},
+    production: {},
+    defense_vs_position: { GGG: { games: 1, QB: { avg: 15, rank: 30, of: 32 }, RB: { avg: 1, rank: 1, of: 32 }, WR: { avg: 1, rank: 1, of: 32 }, TE: { avg: 1, rank: 1, of: 32 } } },
+  });
+  const sheet = matchupSheet(snap);
+  check('the matchup sheet lists every rostered QB in its QB calls table',
+    Array.isArray(sheet.qb_calls) && sheet.qb_calls.length >= 1 && sheet.qb_calls.every((q) => q.name),
+    JSON.stringify(sheet.qb_calls));
 }
 
 // scripts/sync.mjs always does a live fetch at import time (no CLI guard, per

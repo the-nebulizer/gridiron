@@ -256,3 +256,90 @@ export function projectedLineup(snapshot, week = snapshot.week) {
     bench: roster.filter((p) => !used.has(p.id)).map((p) => ({ id: p.id, name: p.name, pos: p.position, pts: r1(pts(p)), status: p.injury_status ?? null })),
   };
 }
+
+// Fantasy points each NFL defense has allowed to each offensive position this
+// season, in THIS league's scoring, with a rank (1 = allows the most, i.e. the
+// easiest matchup). A projection prices the opponent in as one number; this
+// is the number behind it, so a start/sit call between two quarterbacks can
+// say who each one faces and how that defense has actually played — Ben's
+// rule, 2026-10-21, after a QB call was made off projections alone.
+//
+// Attribution uses each player's CURRENT team (Sleeper's weekly stat lines
+// carry no team), so a player traded mid-season credits his earlier games to
+// his new team's opponents. A line from a week his current team had no game
+// is the tell for that and is skipped rather than misfiled.
+//
+//   schedule   — [{week, home, away, status}], the full season
+//   weekStats  — weekStats[i] is the stat map for week i + 1
+//   playerInfo — id -> {position, team}
+export const ALLOWED_POSITIONS = ['QB', 'RB', 'WR', 'TE'];
+export function defenseAllowed(schedule, weekStats, playerInfo, scoring) {
+  const opponent = new Map(); // `${week}:${team}` -> opponent
+  for (const g of schedule ?? []) {
+    if (g.status === 'canceled') continue;
+    opponent.set(`${g.week}:${g.home}`, g.away);
+    opponent.set(`${g.week}:${g.away}`, g.home);
+  }
+  const totals = {}; // def -> {weeks: Set(week), QB: n, ...}
+  const entry = (d) => (totals[d] ??= { weeks: new Set(), ...Object.fromEntries(ALLOWED_POSITIONS.map((p) => [p, 0])) });
+  (weekStats ?? []).forEach((stats, i) => {
+    const week = i + 1;
+    if (!stats) return;
+    // A game counts for the defense whether or not anyone scored on it.
+    for (const key of opponent.keys()) {
+      const [w, team] = key.split(':');
+      if (Number(w) === week) entry(team).weeks.add(week);
+    }
+    for (const [id, line] of Object.entries(stats)) {
+      if (!(line?.gp > 0)) continue;
+      const info = playerInfo?.[id];
+      if (!info || !ALLOWED_POSITIONS.includes(info.position) || !info.team) continue;
+      const def = opponent.get(`${week}:${info.team}`);
+      if (!def) continue;
+      entry(def)[info.position] += scoreLine(line, scoring);
+    }
+  });
+  const out = {};
+  for (const [def, t] of Object.entries(totals)) {
+    out[def] = { games: t.weeks.size };
+    for (const pos of ALLOWED_POSITIONS) out[def][pos] = { avg: r1(t[pos] / (t.weeks.size || 1)), rank: null };
+  }
+  const n = Object.keys(out).length;
+  for (const pos of ALLOWED_POSITIONS) {
+    Object.keys(out)
+      .sort((a, b) => out[b][pos].avg - out[a][pos].avg || a.localeCompare(b))
+      .forEach((def, i) => { out[def][pos].rank = i + 1; out[def][pos].of = n; });
+  }
+  return Object.fromEntries(Object.entries(out).sort());
+}
+
+// A rough opponent-adjusted read for one player in one week: how he has
+// scored relative to what his past opponents allow his position, applied to
+// what this week's opponent allows. Goff's 27.8 average on 2026-10-21 came
+// largely against the 3rd- and 4th-most generous pass defenses; against Green
+// Bay (28th of 32) it read 19.0, where the projection said 22.6. Small
+// samples and the player's own games sit inside the defense averages, so this
+// is a second opinion beside the projection, never a replacement for it.
+// Returns null when there is nothing to compare (no games, no opponent).
+export function matchupAdjusted(snapshot, player, week = snapshot.week) {
+  const dvp = snapshot.defense_vs_position;
+  const pos = player?.position;
+  const team = player?.team;
+  if (!dvp || !ALLOWED_POSITIONS.includes(pos) || !team) return null;
+  const raw = snapshot.team_schedule?.[team]?.[week];
+  if (!raw || raw === 'BYE') return null;
+  const opp = raw.replace(/^@/, '');
+  const pts = snapshot.production?.[player.id]?.pts ?? {};
+  let scored = 0, expected = 0, games = 0;
+  for (const [w, p] of Object.entries(pts)) {
+    const faced = snapshot.team_schedule_played?.[team]?.[w];
+    if (!faced || faced === 'BYE') continue;
+    const allowed = dvp[faced.replace(/^@/, '')]?.[pos]?.avg;
+    if (typeof allowed !== 'number' || allowed <= 0) continue;
+    scored += p; expected += allowed; games++;
+  }
+  const vs = dvp[opp]?.[pos];
+  if (!games || !vs) return null;
+  const ratio = scored / expected;
+  return { opponent: opp, home: !raw.startsWith('@'), allows: vs.avg, rank: vs.rank, of: vs.of, ratio: Math.round(ratio * 100) / 100, games, estimate: r1(ratio * vs.avg) };
+}
