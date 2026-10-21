@@ -1,27 +1,27 @@
 {
-  "compiled_at": "2026-10-20T12:24:13.797Z",
+  "compiled_at": "2026-10-21T01:19:06.759Z",
   "season": "2026",
   "week": 7,
   "games_have_started": true,
   "roster": {
     "starters": [
-      "1166",
+      "3163",
       "8228",
       "11584",
-      "2449",
       "12526",
+      "11610",
       "9484",
       "12527",
       "9228",
-      "7042",
+      "11792",
       "CHI"
     ],
     "bench": [
-      "11610",
-      "11792",
-      "3163",
+      "1166",
+      "2449",
       "4881",
-      "7002"
+      "7002",
+      "7042"
     ],
     "reserve": [
       "9753"
@@ -29,36 +29,36 @@
   },
   "sources": {
     "waivers": {
-      "report": "2026-10-20-waivers.md",
+      "report": "2026-10-21-waivers.md",
       "week": 7,
-      "verdict": "Hold — no add clears the bar tonight. Reichard already covers Bass's bye at kicker and Chicago plays this week, so nothing needs a waiver claim; the real forward problem is Chicago's Week 10 bye at DEF, which is a streaming call to make when it's close, not a claim to make four weeks early.",
+      "verdict": "Hold — nothing on the wire clears the bar tonight. Tanner McKee inheriting the Eagles' starting job is the week's biggest QB story, but you already have four and none of them are thin; it's not your add.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-10-20T12:24:08.012Z"
+      "written_at": "2026-10-21T01:18:37.190Z"
     },
     "lineup": {
-      "report": "2026-10-16-lineup.md",
-      "week": 6,
-      "verdict": "Hold — Kirk Cousins at QB and Bryce Young at SUPER_FLEX already match the best-projected lineup; no further change needed before Sunday.",
+      "report": "2026-10-21-lineup.md",
+      "week": 7,
+      "verdict": "Hold — Jared Goff at QB, Malik Washington at WR, and Will Reichard at K are the right starts; no change needed before kickoff.",
       "next_check": "Inactives, Sun 10am",
-      "stale": true,
-      "written_at": "2026-10-16T19:06:28.000Z"
+      "stale": false,
+      "written_at": "2026-10-21T01:18:19.038Z"
     },
     "trades": {
-      "report": "2026-10-19-trades.md",
-      "week": 6,
-      "verdict": "Hold — no trade clears the certainty bar this week. The one deal worth a second look (Juwan Johnson for Bhayshul Tuten) actually projects better everywhere, but it opens a brand-new Week 11 TE hole, so it's a pass.",
+      "report": "2026-10-21-trades.md",
+      "week": 7,
+      "verdict": "Hold — no trade clears the certainty bar. The roster change was a lineup swap, not a transaction, so your surplus and need are exactly what they were Monday, and nothing league-wide opened up a better deal.",
       "next_check": "Waivers, Tue 7am",
-      "stale": true,
-      "written_at": "2026-10-19T12:13:13.000Z"
+      "stale": false,
+      "written_at": "2026-10-21T01:18:54.286Z"
     },
     "inactives": {
-      "report": "2026-10-18-inactives.md",
-      "week": 6,
-      "verdict": "Hold — every starter in today's games is tracking active; nothing to flip before kickoff.",
+      "report": "2026-10-21-inactives.md",
+      "week": 7,
+      "verdict": "Not actionable yet — the earliest Week 7 game is Thursday night; no inactive lists exist to check today.",
       "next_check": "Trades, Mon 7am",
-      "stale": true,
-      "written_at": "2026-10-18T15:17:28.000Z"
+      "stale": false,
+      "written_at": "2026-10-21T01:19:01.202Z"
     }
   },
   "actions": []
