@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-10-21T21:14:41.086Z",
+  "compiled_at": "2026-10-22T12:20:13.036Z",
   "season": "2026",
   "week": 7,
   "games_have_started": true,
@@ -34,15 +34,15 @@
       "verdict": "Hold — nothing on the wire clears the bar tonight. Tonight's defense swap is a lineup call, covered in the lineup report, not a waiver move.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-10-21T21:14:00.541Z"
+      "written_at": "2026-10-21T21:14:54.000Z"
     },
     "lineup": {
-      "report": "2026-10-21-lineup.md",
+      "report": "2026-10-22-lineup.md",
       "week": 7,
-      "verdict": "Flip defense back to Chicago before Thursday's kickoff — the matchup-adjusted read still favors the Bears over Cleveland by about a point, same as this morning, and nothing new has surfaced to change that.",
+      "verdict": "Flip defense to Chicago before tonight's 8:15pm ET kickoff — still the stronger matchup-adjusted play, and yesterday's call hasn't been made yet.",
       "next_check": "Inactives, Sun 10am",
       "stale": false,
-      "written_at": "2026-10-21T21:13:44.309Z"
+      "written_at": "2026-10-22T12:20:07.170Z"
     },
     "trades": {
       "report": "2026-10-21-trades.md",
@@ -50,7 +50,7 @@
       "verdict": "Hold — no trade clears the certainty bar. Tonight's move was a defense/defense lineup swap, not a transaction, so your surplus and need are exactly what they were this morning.",
       "next_check": "Trade hunt, Mon 7am",
       "stale": false,
-      "written_at": "2026-10-21T21:14:22.053Z"
+      "written_at": "2026-10-21T21:14:54.000Z"
     },
     "inactives": {
       "report": "2026-10-21-inactives.md",
@@ -58,14 +58,14 @@
       "verdict": "Not actionable yet — the earliest Week 7 game is Thursday night; no inactive lists exist to check today.",
       "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-10-21T21:14:30.081Z"
+      "written_at": "2026-10-21T21:14:54.000Z"
     }
   },
   "actions": [
     {
       "id": "lineup:start:CHI",
       "source": "lineup",
-      "report": "2026-10-21-lineup.md",
+      "report": "2026-10-22-lineup.md",
       "kind": "start",
       "week": 7,
       "player": "CHI",
@@ -80,8 +80,8 @@
         "CHI"
       ],
       "urgency": "before_kickoff",
-      "deadline_label": "before Thursday night's kickoff",
-      "why": "Raw projection favors Cleveland, but New England has allowed more to opposing defenses than Tennessee has; Chicago's adjusted estimate is still ahead.",
+      "deadline_label": "before tonight's 8:15pm ET kickoff",
+      "why": "Chicago's matchup-adjusted estimate (10.3) still tops Cleveland's (9.2) against a Patriots offense defenses score well against; Bears are home favorites in a competitive 49.5-50.5 total.",
       "case": {
         "starts": "Chicago Bears in at DEF, Cleveland Browns to the bench",
         "need": "Cleveland Browns: healthy, CLE bye W11"
