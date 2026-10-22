@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-10-22T12:20:13.036Z",
+  "compiled_at": "2026-10-22T19:19:15.154Z",
   "season": "2026",
   "week": 7,
   "games_have_started": true,
@@ -29,36 +29,36 @@
   },
   "sources": {
     "waivers": {
-      "report": "2026-10-21-waivers.md",
+      "report": "2026-10-22-waivers.md",
       "week": 7,
-      "verdict": "Hold — nothing on the wire clears the bar tonight. Tonight's defense swap is a lineup call, covered in the lineup report, not a waiver move.",
+      "verdict": "Hold — nothing on the wire clears the bar. Zach Charbonnet's tag moved from PUP to Questionable, which is news about a bench-room decision down the road, not a waiver move tonight.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-10-21T21:14:54.000Z"
+      "written_at": "2026-10-22T19:18:40.316Z"
     },
     "lineup": {
       "report": "2026-10-22-lineup.md",
       "week": 7,
-      "verdict": "Flip defense to Chicago before tonight's 8:15pm ET kickoff — still the stronger matchup-adjusted play, and yesterday's call hasn't been made yet.",
+      "verdict": "Flip defense to Chicago before tonight's 8:15pm ET kickoff — still the stronger matchup-adjusted play, and that move hasn't been made in Sleeper yet.",
       "next_check": "Inactives, Sun 10am",
       "stale": false,
-      "written_at": "2026-10-22T12:20:07.170Z"
+      "written_at": "2026-10-22T19:18:23.304Z"
     },
     "trades": {
-      "report": "2026-10-21-trades.md",
+      "report": "2026-10-22-trades.md",
       "week": 7,
-      "verdict": "Hold — no trade clears the certainty bar. Tonight's move was a defense/defense lineup swap, not a transaction, so your surplus and need are exactly what they were this morning.",
+      "verdict": "Hold — no offer clears the certainty bar. Charbonnet's tag change is a roster-room question, not a trade asset yet; he has zero games played this season and no established trade value.",
       "next_check": "Trade hunt, Mon 7am",
       "stale": false,
-      "written_at": "2026-10-21T21:14:54.000Z"
+      "written_at": "2026-10-22T19:19:00.480Z"
     },
     "inactives": {
-      "report": "2026-10-21-inactives.md",
+      "report": "2026-10-22-inactives.md",
       "week": 7,
-      "verdict": "Not actionable yet — the earliest Week 7 game is Thursday night; no inactive lists exist to check today.",
+      "verdict": "Not actionable yet — tonight's Chicago-New England kickoff is hours away and no inactive lists exist to check today. The one live item (the defense flip) is a lineup call, not an inactives one.",
       "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-10-21T21:14:54.000Z"
+      "written_at": "2026-10-22T19:19:08.468Z"
     }
   },
   "actions": [

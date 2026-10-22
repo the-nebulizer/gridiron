@@ -1,6 +1,6 @@
 {
-  "fingerprint": "949a9e62efb284b338a297c20ce50fb305183a1318a3bcc2b366c9c414a6ba65",
-  "updated_at": "2026-10-21T21:08:54.806Z",
+  "fingerprint": "4d0fe91213eca0275a5c0a34fec8268b72bdcb09a62ed7a598497d0224257fe7",
+  "updated_at": "2026-10-22T19:10:40.619Z",
   "roster": {
     "starters": [
       "3163",
@@ -24,8 +24,6 @@
     "reserve": [
       "9753"
     ],
-    "hurt": [
-      "9753:PUP"
-    ]
+    "hurt": []
   }
 }
