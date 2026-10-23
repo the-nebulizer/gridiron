@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-10-22T19:19:15.154Z",
+  "compiled_at": "2026-10-23T03:15:53.228Z",
   "season": "2026",
   "week": 7,
   "games_have_started": true,
@@ -23,69 +23,41 @@
       "7002",
       "CHI"
     ],
-    "reserve": [
-      "9753"
-    ]
+    "reserve": []
   },
   "sources": {
     "waivers": {
-      "report": "2026-10-22-waivers.md",
+      "report": "2026-10-23-waivers.md",
       "week": 7,
-      "verdict": "Hold — nothing on the wire clears the bar. Zach Charbonnet's tag moved from PUP to Questionable, which is news about a bench-room decision down the road, not a waiver move tonight.",
+      "verdict": "Hold — nothing on the wire clears the bar. Dropping Charbonnet opens your IR slot, not a bench spot, so no add changes tonight.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-10-22T19:18:40.316Z"
+      "written_at": "2026-10-23T03:15:04.272Z"
     },
     "lineup": {
-      "report": "2026-10-22-lineup.md",
+      "report": "2026-10-23-lineup.md",
       "week": 7,
-      "verdict": "Flip defense to Chicago before tonight's 8:15pm ET kickoff — still the stronger matchup-adjusted play, and that move hasn't been made in Sleeper yet.",
+      "verdict": "No change needed right now — Thursday's recommended flip to Chicago never got made in Sleeper, and Chicago already kicked off, so Cleveland stays at DEF by default. Still a fine matchup Sunday at Tennessee.",
       "next_check": "Inactives, Sun 10am",
       "stale": false,
-      "written_at": "2026-10-22T19:18:23.304Z"
+      "written_at": "2026-10-23T03:15:25.448Z"
     },
     "trades": {
-      "report": "2026-10-22-trades.md",
+      "report": "2026-10-23-trades.md",
       "week": 7,
-      "verdict": "Hold — no offer clears the certainty bar. Charbonnet's tag change is a roster-room question, not a trade asset yet; he has zero games played this season and no established trade value.",
-      "next_check": "Trade hunt, Mon 7am",
+      "verdict": "Hold — no offer clears the certainty bar. Dropping Charbonnet takes him off the table entirely; nothing else in the league changed since Thursday's hunt.",
+      "next_check": "Waivers, Tue 7am",
       "stale": false,
-      "written_at": "2026-10-22T19:19:00.480Z"
+      "written_at": "2026-10-23T03:15:40.424Z"
     },
     "inactives": {
-      "report": "2026-10-22-inactives.md",
+      "report": "2026-10-23-inactives.md",
       "week": 7,
-      "verdict": "Not actionable yet — tonight's Chicago-New England kickoff is hours away and no inactive lists exist to check today. The one live item (the defense flip) is a lineup call, not an inactives one.",
+      "verdict": "Not actionable yet — Thursday's Bears-Patriots game didn't involve any of your starters, and the rest of the Week 7 slate doesn't kick off until Sunday.",
       "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-10-22T19:19:08.468Z"
+      "written_at": "2026-10-23T03:15:47.364Z"
     }
   },
-  "actions": [
-    {
-      "id": "lineup:start:CHI",
-      "source": "lineup",
-      "report": "2026-10-22-lineup.md",
-      "kind": "start",
-      "week": 7,
-      "player": "CHI",
-      "name": "Chicago Bears",
-      "pos": "DEF",
-      "team": "CHI",
-      "slot": "DEF",
-      "for": "CLE",
-      "for_name": "Cleveland Browns",
-      "consumes": [
-        "CLE",
-        "CHI"
-      ],
-      "urgency": "before_kickoff",
-      "deadline_label": "before tonight's 8:15pm ET kickoff",
-      "why": "Chicago's matchup-adjusted estimate (10.3) still tops Cleveland's (9.2) against a Patriots offense defenses score well against; Bears are home favorites in a competitive 49.5-50.5 total.",
-      "case": {
-        "starts": "Chicago Bears in at DEF, Cleveland Browns to the bench",
-        "need": "Cleveland Browns: healthy, CLE bye W11"
-      }
-    }
-  ]
+  "actions": []
 }

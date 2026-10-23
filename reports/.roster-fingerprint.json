@@ -1,6 +1,6 @@
 {
-  "fingerprint": "4d0fe91213eca0275a5c0a34fec8268b72bdcb09a62ed7a598497d0224257fe7",
-  "updated_at": "2026-10-22T19:10:40.619Z",
+  "fingerprint": "0194e159a4f88baf7ef437d3f69d387f16966a56d847754fa17f378ee3be9d29",
+  "updated_at": "2026-10-23T03:08:55.871Z",
   "roster": {
     "starters": [
       "3163",
@@ -21,9 +21,7 @@
       "7002",
       "CHI"
     ],
-    "reserve": [
-      "9753"
-    ],
+    "reserve": [],
     "hurt": []
   }
 }
