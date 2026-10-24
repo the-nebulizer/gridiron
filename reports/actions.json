@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-10-23T03:15:53.228Z",
+  "compiled_at": "2026-10-24T20:15:49.872Z",
   "season": "2026",
   "week": 7,
   "games_have_started": true,
@@ -27,37 +27,64 @@
   },
   "sources": {
     "waivers": {
-      "report": "2026-10-23-waivers.md",
+      "report": "2026-10-24-waivers.md",
       "week": 7,
-      "verdict": "Hold — nothing on the wire clears the bar. Dropping Charbonnet opens your IR slot, not a bench spot, so no add changes tonight.",
+      "verdict": "Lamar Jackson is officially Out — move him to IR now. It costs nothing and opens your one empty bench spot. Nothing on the wire clears the bar for that spot tonight.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-10-23T03:15:04.272Z"
+      "written_at": "2026-10-24T20:14:50.441Z"
     },
     "lineup": {
-      "report": "2026-10-23-lineup.md",
+      "report": "2026-10-24-lineup.md",
       "week": 7,
-      "verdict": "No change needed right now — Thursday's recommended flip to Chicago never got made in Sleeper, and Chicago already kicked off, so Cleveland stays at DEF by default. Still a fine matchup Sunday at Tennessee.",
+      "verdict": "No changes. Jackson's Out closes Thursday's close call — Bryce Young stays at SUPER_FLEX. Rest of the lineup holds as set.",
       "next_check": "Inactives, Sun 10am",
       "stale": false,
-      "written_at": "2026-10-23T03:15:25.448Z"
+      "written_at": "2026-10-24T20:15:20.249Z"
     },
     "trades": {
-      "report": "2026-10-23-trades.md",
+      "report": "2026-10-24-trades.md",
       "week": 7,
-      "verdict": "Hold — no offer clears the certainty bar. Dropping Charbonnet takes him off the table entirely; nothing else in the league changed since Thursday's hunt.",
+      "verdict": "Hold — no offer clears the certainty bar. Jackson turning Out is a reason to IR him (see today's waivers report), not shop him while his value is down.",
       "next_check": "Waivers, Tue 7am",
       "stale": false,
-      "written_at": "2026-10-23T03:15:40.424Z"
+      "written_at": "2026-10-24T20:15:35.653Z"
     },
     "inactives": {
-      "report": "2026-10-23-inactives.md",
+      "report": "2026-10-24-inactives.md",
       "week": 7,
-      "verdict": "Not actionable yet — Thursday's Bears-Patriots game didn't involve any of your starters, and the rest of the Week 7 slate doesn't kick off until Sunday.",
+      "verdict": "Not actionable yet — Jackson's Out designation is already handled in today's lineup and waivers reports, and the rest of the Week 7 slate doesn't kick off until Sunday.",
       "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-10-23T03:15:47.364Z"
+      "written_at": "2026-10-24T20:15:43.313Z"
     }
   },
-  "actions": []
+  "actions": [
+    {
+      "id": "waivers:ir:4881",
+      "source": "waivers",
+      "report": "2026-10-24-waivers.md",
+      "kind": "ir",
+      "week": 7,
+      "player": "4881",
+      "name": "Lamar Jackson",
+      "pos": "QB",
+      "team": "BAL",
+      "consumes": [
+        "4881"
+      ],
+      "urgency": "now",
+      "deadline_label": "no deadline, no cost",
+      "why": "Jackson is Out and IR-eligible; moving him frees your last bench slot for free while he's sidelined.",
+      "case": {
+        "need": "QB: you have 4 — not thin",
+        "tradeoff": {
+          "net": "neutral",
+          "fixes": [],
+          "opens": []
+        },
+        "later": "opens no holes"
+      }
+    }
+  ]
 }
