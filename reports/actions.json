@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-10-25T15:14:22.632Z",
+  "compiled_at": "2026-10-26T12:06:28.895Z",
   "season": "2026",
   "week": 7,
   "games_have_started": true,
@@ -43,12 +43,12 @@
       "written_at": "2026-10-24T20:15:59.000Z"
     },
     "trades": {
-      "report": "2026-10-24-trades.md",
+      "report": "2026-10-26-trades.md",
       "week": 7,
-      "verdict": "Hold — no offer clears the certainty bar. Jackson turning Out is a reason to IR him (see today's waivers report), not shop him while his value is down.",
+      "verdict": "No trade worth pursuing this week — hold. Every package built around Kirk Cousins (my one real sell-high asset) helps the next month but costs points in the playoffs, so it doesn't clear the certainty bar.",
       "next_check": "Waivers, Tue 7am",
       "stale": false,
-      "written_at": "2026-10-24T20:15:59.000Z"
+      "written_at": "2026-10-26T12:06:23.254Z"
     },
     "inactives": {
       "report": "2026-10-25-inactives.md",
@@ -56,7 +56,7 @@
       "verdict": "Hold — every starter is active; no pivot needed.",
       "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-10-25T15:14:17.604Z"
+      "written_at": "2026-10-25T15:14:25.000Z"
     }
   },
   "actions": [
