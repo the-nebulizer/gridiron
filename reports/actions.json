@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-10-28T11:44:34.031Z",
+  "compiled_at": "2026-10-28T12:29:25.195Z",
   "season": "2026",
   "week": 8,
   "games_have_started": true,
@@ -32,15 +32,15 @@
       "verdict": "Wednesday's run is done: Strange and Jacksonville both went elsewhere for $0, and no FAAB was spent. Denver is in for Chicago and starts this week. Lamar stays on the bench unless he's ruled out Friday, then he goes back on IR. Nothing else on the wire clears the bar.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-10-28T11:44:32.226Z"
+      "written_at": "2026-10-28T12:29:16.743Z"
     },
     "lineup": {
-      "report": "2026-10-24-lineup.md",
-      "week": 7,
-      "verdict": "No changes. Jackson's Out closes Thursday's close call — Bryce Young stays at SUPER_FLEX. Rest of the lineup holds as set.",
+      "report": "2026-10-28-lineup.md",
+      "week": 8,
+      "verdict": "No lineup changes. Denver Broncos is already in at DEF after Wednesday's swap. Hold Goff at QB and Young at SUPER_FLEX — the one thing to watch is whether Lamar Jackson is active Sunday, which is Sunday morning's call, not today's.",
       "next_check": "Inactives, Sun 10am",
-      "stale": true,
-      "written_at": "2026-10-24T20:15:59.000Z"
+      "stale": false,
+      "written_at": "2026-10-28T12:29:07.543Z"
     },
     "trades": {
       "report": "2026-10-28-trades.md",
@@ -48,15 +48,15 @@
       "verdict": "Decline sweeneyb's Keenan Allen-for-Cousins offer. Send annaf23 Cousins and Juwan Johnson for Brock Bowers as a best-and-final offer: it projects better in every window, even if Lamar never returns.",
       "next_check": "Waivers, Tue 7am",
       "stale": false,
-      "written_at": "2026-10-28T11:44:06.000Z"
+      "written_at": "2026-10-28T12:29:17.615Z"
     },
     "inactives": {
-      "report": "2026-10-25-inactives.md",
-      "week": 7,
-      "verdict": "Hold — every starter is active; no pivot needed.",
+      "report": "2026-10-28-inactives.md",
+      "week": 8,
+      "verdict": "Not actionable. Today is Wednesday — Week 8's slate doesn't start until Thursday night, so there are no inactive lists to check yet.",
       "next_check": "Trades, Mon 7am",
-      "stale": true,
-      "written_at": "2026-10-25T15:14:25.000Z"
+      "stale": false,
+      "written_at": "2026-10-28T12:29:13.819Z"
     }
   },
   "actions": [
@@ -108,16 +108,16 @@
           "opens": []
         },
         "later": "opens no holes · frees 1 bench slot",
-        "points": "+4.6 this week · +43.6 rest of season · +14 playoffs",
+        "points": "+5.3 this week · +44.3 rest of season · +14 playoffs",
         "value": {
-          "this_week": 4.6,
-          "next_3": 15.6,
-          "rest_of_season": 43.6,
+          "this_week": 5.3,
+          "next_3": 16.3,
+          "rest_of_season": 44.3,
           "playoffs": 14,
           "by_week": [
             {
               "week": 8,
-              "delta": 4.6
+              "delta": 5.3
             },
             {
               "week": 9,
