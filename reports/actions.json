@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-10-27T12:34:02.055Z",
+  "compiled_at": "2026-10-28T07:13:28.728Z",
   "season": "2026",
   "week": 8,
   "games_have_started": true,
@@ -19,11 +19,12 @@
     "bench": [
       "1166",
       "2449",
-      "4881",
       "7002",
       "CHI"
     ],
-    "reserve": []
+    "reserve": [
+      "4881"
+    ]
   },
   "sources": {
     "waivers": {
@@ -32,7 +33,7 @@
       "verdict": "Move Lamar Jackson to IR for free. Add Brenton Strange over Juwan Johnson at backup TE for $2 — a clear upgrade. Jacksonville's defense is worth grabbing over Chicago's, but for $0 after Wednesday's run, not a bid tonight. Nothing else on the wire clears the bar.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-10-27T12:33:56.422Z"
+      "written_at": "2026-10-27T12:34:05.000Z"
     },
     "lineup": {
       "report": "2026-10-24-lineup.md",
@@ -43,12 +44,12 @@
       "written_at": "2026-10-24T20:15:59.000Z"
     },
     "trades": {
-      "report": "2026-10-26-trades.md",
-      "week": 7,
-      "verdict": "No trade worth pursuing this week — hold. Every package built around Kirk Cousins (my one real sell-high asset) helps the next month but costs points in the playoffs, so it doesn't clear the certainty bar.",
+      "report": "2026-10-28-trades.md",
+      "week": 8,
+      "verdict": "Decline sweeneyb's Keenan Allen-for-Cousins offer. Send annaf23 Cousins for Brock Bowers instead: it projects better in every window, still comes out ahead if Lamar never returns, and costs about 2 points if Bowers got hurt.",
       "next_check": "Waivers, Tue 7am",
-      "stale": true,
-      "written_at": "2026-10-26T12:06:32.000Z"
+      "stale": false,
+      "written_at": "2026-10-28T07:13:25.358Z"
     },
     "inactives": {
       "report": "2026-10-25-inactives.md",
@@ -66,25 +67,15 @@
       "report": "2026-10-27-waivers.md",
       "kind": "ir",
       "week": 8,
+      "state": "done",
       "player": "4881",
       "name": "Lamar Jackson",
       "pos": "QB",
       "team": "BAL",
-      "consumes": [
-        "4881"
-      ],
+      "consumes": [],
       "urgency": "now",
       "deadline_label": "no deadline, no cost",
-      "why": "Jackson is Out and IR-eligible; moving him frees your last bench slot for nothing.",
-      "case": {
-        "need": "QB: you have 4 — not thin",
-        "tradeoff": {
-          "net": "neutral",
-          "fixes": [],
-          "opens": []
-        },
-        "later": "opens no holes"
-      }
+      "why": "Jackson is Out and IR-eligible; moving him frees your last bench slot for nothing."
     },
     {
       "id": "waivers:add:9480",
@@ -92,6 +83,7 @@
       "report": "2026-10-27-waivers.md",
       "kind": "add",
       "week": 8,
+      "state": "gone",
       "player": "9480",
       "name": "Brenton Strange",
       "pos": "TE",
@@ -100,51 +92,98 @@
       "drop_name": "Juwan Johnson",
       "mode": "waiver",
       "faab": 2,
-      "displaces": null,
-      "displaces_name": null,
-      "evidence": null,
-      "consumes": [
-        "7002"
-      ],
+      "consumes": [],
       "urgency": "by_tuesday",
       "deadline_label": "claims lock tonight, process Wednesday",
-      "why": "Strange is playing nearly every snap with rising targets; Johnson's role has shrunk to single-digit snaps and one catch over his last three games.",
+      "why": "Strange is playing nearly every snap with rising targets; Johnson's role has shrunk to single-digit snaps and one catch over his last three games."
+    },
+    {
+      "id": "trades:trade:7",
+      "source": "trades",
+      "report": "2026-10-28-trades.md",
+      "kind": "trade",
+      "week": 8,
+      "with": 7,
+      "with_owner": "annaf23",
+      "give": [
+        "1166"
+      ],
+      "give_names": [
+        "Kirk Cousins"
+      ],
+      "get": [
+        "11604"
+      ],
+      "get_names": [
+        "Brock Bowers"
+      ],
+      "message": "Cousins for Bowers? You're starting Watson and McKee in a superflex with 6-pt pass TDs. Cousins is averaging 24 a game and would start for you every week, and you still have LaPorta at TE.",
+      "displaces": "9484",
+      "displaces_name": "Tucker Kraft",
+      "evidence": {
+        "note": "Bowers was limited in practice Oct 21 (hamstring/calf), then played Week 7. He has played 84% of snaps over his last three games. His September knee scope cost him Weeks 1-2 only.",
+        "url": "https://x.com/ryanmcfadden_/status/2113052234737156469",
+        "as_of": "2026-10-21"
+      },
+      "consumes": [
+        "1166"
+      ],
+      "urgency": "this_week",
+      "deadline_label": "trade deadline Week 11",
+      "why": "Bowers starts over Kraft (14 a week vs 9). Cousins sits on my bench but would start at QB for them over McKee. Worst case if Bowers got hurt: about 2-3 points of lost QB cover.",
       "case": {
-        "starts": "Bench — TE3 behind Tucker Kraft",
+        "starts": "Brock Bowers starts over Tucker Kraft at TE",
+        "need": "TE: you have 2 — not thin · gives QB depth (you have 3, start 2)",
+        "cost": "gives Kirk Cousins — 0 starters, 1 bench · no FAAB",
+        "asks": "annaf23 starts Brock Bowers — one of 2 TEs they carry · asks them to bench a starter for bench pieces",
         "tradeoff": {
           "net": "neutral",
           "fixes": [],
           "opens": []
         },
-        "need": "TE: you have 2 — not thin · fixes nothing on the calendar",
-        "cost": "$2 of $76 · 1 of 12 teams still have $100 · #13 most-added in Sleeper this week · drops Juwan Johnson (TE, bench, 7.8/g in 7 games)",
         "later": "opens no holes",
-        "points": "0 this week · +1.7 rest of season · +0.5 playoffs",
+        "points": "+4.6 this week · +42.4 rest of season · +11 playoffs",
         "value": {
-          "this_week": 0,
-          "next_3": 1,
-          "rest_of_season": 1.7,
-          "playoffs": 0.5,
+          "this_week": 4.6,
+          "next_3": 15.7,
+          "rest_of_season": 42.4,
+          "playoffs": 11,
           "by_week": [
             {
+              "week": 8,
+              "delta": 4.6
+            },
+            {
+              "week": 9,
+              "delta": 5.4
+            },
+            {
               "week": 10,
-              "delta": 1
+              "delta": 5.7
             },
             {
               "week": 11,
-              "delta": -0.3
+              "delta": 4.4
             },
             {
-              "week": 13,
-              "delta": 0.3
+              "week": 12,
+              "delta": 5.1
             },
             {
               "week": 14,
-              "delta": 0.2
+              "delta": 6.2
+            },
+            {
+              "week": 15,
+              "delta": 3.2
+            },
+            {
+              "week": 16,
+              "delta": 5.8
             },
             {
               "week": 17,
-              "delta": 0.5
+              "delta": 2
             }
           ]
         }
