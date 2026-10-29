@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-10-28T12:29:25.195Z",
+  "compiled_at": "2026-10-29T12:15:32.682Z",
   "season": "2026",
   "week": 8,
   "games_have_started": true,
@@ -32,15 +32,15 @@
       "verdict": "Wednesday's run is done: Strange and Jacksonville both went elsewhere for $0, and no FAAB was spent. Denver is in for Chicago and starts this week. Lamar stays on the bench unless he's ruled out Friday, then he goes back on IR. Nothing else on the wire clears the bar.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-10-28T12:29:16.743Z"
+      "written_at": "2026-10-28T12:29:37.000Z"
     },
     "lineup": {
-      "report": "2026-10-28-lineup.md",
+      "report": "2026-10-29-lineup.md",
       "week": 8,
-      "verdict": "No lineup changes. Denver Broncos is already in at DEF after Wednesday's swap. Hold Goff at QB and Young at SUPER_FLEX — the one thing to watch is whether Lamar Jackson is active Sunday, which is Sunday morning's call, not today's.",
+      "verdict": "Swap in Cleveland over Denver at DEF — the matchup number flips in Cleveland's favor this week despite Denver's higher raw projection. Everything else holds.",
       "next_check": "Inactives, Sun 10am",
       "stale": false,
-      "written_at": "2026-10-28T12:29:07.543Z"
+      "written_at": "2026-10-29T12:15:27.162Z"
     },
     "trades": {
       "report": "2026-10-28-trades.md",
@@ -48,7 +48,7 @@
       "verdict": "Decline sweeneyb's Keenan Allen-for-Cousins offer. Send annaf23 Cousins and Juwan Johnson for Brock Bowers as a best-and-final offer: it projects better in every window, even if Lamar never returns.",
       "next_check": "Waivers, Tue 7am",
       "stale": false,
-      "written_at": "2026-10-28T12:29:17.615Z"
+      "written_at": "2026-10-28T12:29:37.000Z"
     },
     "inactives": {
       "report": "2026-10-28-inactives.md",
@@ -56,10 +56,35 @@
       "verdict": "Not actionable. Today is Wednesday — Week 8's slate doesn't start until Thursday night, so there are no inactive lists to check yet.",
       "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-10-28T12:29:13.819Z"
+      "written_at": "2026-10-28T12:29:37.000Z"
     }
   },
   "actions": [
+    {
+      "id": "lineup:start:CLE",
+      "source": "lineup",
+      "report": "2026-10-29-lineup.md",
+      "kind": "start",
+      "week": 8,
+      "player": "CLE",
+      "name": "Cleveland Browns",
+      "pos": "DEF",
+      "team": "CLE",
+      "slot": "DEF",
+      "for": "DEN",
+      "for_name": "Denver Broncos",
+      "consumes": [
+        "DEN",
+        "CLE"
+      ],
+      "urgency": "before_kickoff",
+      "deadline_label": "before Sunday's early kickoffs (both games are Sun Nov 1)",
+      "why": "KC is the toughest matchup in the league for a defense (27th-most allowed); PIT is only middling (12th) — that flips Cleveland ahead on matchup despite Denver's higher raw number.",
+      "case": {
+        "starts": "Cleveland Browns in at DEF, Denver Broncos to the bench",
+        "need": "Denver Broncos: healthy, DEN bye W10"
+      }
+    },
     {
       "id": "trades:trade:7",
       "source": "trades",
@@ -101,23 +126,23 @@
         "starts": "Brock Bowers starts over Tucker Kraft at TE",
         "need": "TE: you have 2 — not thin · gives QB depth (you have 4, start 2) · gives TE depth (you have 2, start 1)",
         "cost": "gives Kirk Cousins, Juwan Johnson — 0 starters, 2 bench · no FAAB",
-        "asks": "annaf23 starts Brock Bowers — one of 2 TEs they carry · asks them to bench a starter for bench pieces",
+        "asks": "annaf23 starts Brock Bowers, Questionable — one of 2 TEs they carry · asks them to bench a starter for bench pieces",
         "tradeoff": {
           "net": "neutral",
           "fixes": [],
           "opens": []
         },
         "later": "opens no holes · frees 1 bench slot",
-        "points": "+5.3 this week · +44.3 rest of season · +14 playoffs",
+        "points": "+5.5 this week · +44.5 rest of season · +14 playoffs",
         "value": {
-          "this_week": 5.3,
-          "next_3": 16.3,
-          "rest_of_season": 44.3,
+          "this_week": 5.5,
+          "next_3": 16.5,
+          "rest_of_season": 44.5,
           "playoffs": 14,
           "by_week": [
             {
               "week": 8,
-              "delta": 5.3
+              "delta": 5.5
             },
             {
               "week": 9,
