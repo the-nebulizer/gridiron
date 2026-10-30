@@ -6,6 +6,7 @@
 import { readFile, writeFile, mkdir, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { execFileSync } from 'node:child_process';
 import * as sleeper from './sleeper.mjs';
 import { buildOutlook } from './outlook.mjs';
 import { scoreLine, defenseAllowed } from './value-core.mjs';
@@ -534,3 +535,20 @@ const freeAdds = snapshot.trending.adds.filter((t) => !t.rostered_in_league).sli
 console.log(`\nTop trending adds NOT rostered in this league:`);
 for (const t of freeAdds) console.log(`  ${t.name} (${t.position ?? '?'} ${t.team ?? '-'}) +${t.add_count} adds, net ${t.net_adds >= 0 ? '+' : ''}${t.net_adds}`);
 console.log(`\nSnapshot written to data/league/snapshot.json`);
+
+// The data is fresh; the advice may not be. The routines publish to main, so a
+// checkout that hasn't pulled is answering without the newest lineup or trade
+// call — on 2026-10-29 a chat session two commits behind contradicted the
+// published lineup report twice. Best-effort: no git or no network says so
+// and moves on rather than failing the sync.
+try {
+  const git = (...a) => execFileSync('git', a, { cwd: root, encoding: 'utf8', timeout: 20000, stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+  git('fetch', '--quiet', 'origin', 'main');
+  const missing = git('diff', '--name-only', '--diff-filter=AM', 'HEAD...origin/main', '--', 'reports/').split('\n').filter((f) => f.endsWith('.md'));
+  if (missing.length) {
+    console.log(`\n!! STALE REPORTS: main has ${missing.length} report(s) this checkout does not — ${missing.map((f) => path.basename(f)).join(', ')}.`);
+    console.log('!! Pull them (git pull --ff-only origin main, or read them with git show origin/main:<file>) before advising: they may already have made this call.');
+  }
+} catch {
+  console.log('\n(Could not compare reports with origin/main — make sure the newest reports are read before advising.)');
+}

@@ -16,7 +16,7 @@ import { buildOutlook, SLOT_ELIGIBILITY, fillSlots } from './outlook.mjs';
 import { streamOptions, streamSeason, parseOpponent } from './stream.mjs';
 import { matchupSheet } from './matchups.mjs';
 import { lifecycleState, buildIndex, freeAgencyIsOpen, pointsFindings } from './actions.mjs';
-import { scoreLine, bestLineup, weekPoints, moveValue, swapTable, dropTable, defenseAllowed, matchupAdjusted } from './value-core.mjs';
+import { scoreLine, bestLineup, weekPoints, moveValue, swapTable, dropTable, defenseAllowed, matchupAdjusted, lineupWithMatchups } from './value-core.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const verbose = process.argv.includes('-v');
@@ -1331,6 +1331,28 @@ console.log('\nwho a quarterback plays is computed, ranked and on the sheet');
   check('no estimate for a team on bye', matchupAdjusted(snap, { id: 'qd', position: 'QB', team: 'DDD' }) === null);
   check('no estimate for a kicker or defense', matchupAdjusted(snap, { id: 'k', position: 'K', team: 'AAA' }) === null);
   check('no estimate with no games to compare', matchupAdjusted(snap, { id: 'qc', position: 'QB', team: 'CCC' }) === null);
+}
+{
+  // 2026-10-29: chat answered start/sit from the projection-only lineup while the
+  // matchup picked the bench QB. The lineup view must carry the matchup and flag it.
+  const qb = (id, team) => ({ id, name: id, position: 'QB', team, injury_status: null });
+  const base = () => ({
+    week: 3, my_roster_id: 1,
+    league: { roster_positions: ['QB', 'BN'] },
+    teams: [{ roster_id: 1, starters: [qb('proj', 'AAA')], bench: [qb('match', 'CCC')], reserve: [] }],
+    production: { proj: { pts: { 1: 20 }, proj: { 3: 20 } }, match: { pts: { 1: 20 }, proj: { 3: 18 } } },
+    team_schedule: { AAA: { 3: 'TUF' }, CCC: { 3: '@EZY' } },
+    team_schedule_played: { AAA: { 1: 'MID' }, CCC: { 1: 'MID' } },
+    defense_vs_position: { TUF: { QB: { avg: 10, rank: 3, of: 3 } }, MID: { QB: { avg: 20, rank: 2, of: 3 } }, EZY: { QB: { avg: 30, rank: 1, of: 3 } } },
+    games: {},
+  });
+  const out = lineupWithMatchups(base());
+  check('the lineup view puts each player\'s matchup beside his projection',
+    out.lineup[0].name === 'proj' && out.lineup[0].matchup?.estimate === 10 && out.bench[0].matchup?.estimate === 30, JSON.stringify(out));
+  check('a slot where the matchup picks the bench player is flagged',
+    out.disagreements.length === 1 && out.disagreements[0].bench === 'match' && out.disagreements[0].slot === 'QB', JSON.stringify(out.disagreements));
+  const lockedSnap = base(); lockedSnap.games = { AAA: { status: 'in_game' } };
+  check('a slot whose starter is already playing is not flagged', lineupWithMatchups(lockedSnap).disagreements.length === 0);
 }
 {
   const snap = fixture({

@@ -5,12 +5,13 @@
 //   node scripts/value.mjs --add <id>            # every possible drop for that add, best first
 //   node scripts/value.mjs --add <id> --drop <id># one move, week by week
 //   node scripts/value.mjs --trade --give <id,..> --get <id,..>
-//   node scripts/value.mjs --lineup [week]       # best lineup by projection (injury tags applied this week)
+//   node scripts/value.mjs --lineup [week]       # best lineup by projection, each player's matchup beside it,
+//                                                # and every slot where the matchup picks someone else
 //   --json                                       # machine-readable
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { dropTable, swapTable, moveValue, projectedLineup } from './value-core.mjs';
+import { dropTable, swapTable, moveValue, lineupWithMatchups } from './value-core.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const snapshot = JSON.parse(await readFile(path.join(root, 'data/league/snapshot.json'), 'utf8'));
@@ -33,12 +34,22 @@ function weeksLine(v) {
 
 if (args.includes('--lineup')) {
   const w = Number(opt('--lineup')) || snapshot.week;
-  const out = projectedLineup(snapshot, w);
+  const out = lineupWithMatchups(snapshot, w);
   if (json) { console.log(JSON.stringify(out, null, 2)); process.exit(0); }
+  const vs = (x) => (x.matchup ? `${pad(`${x.matchup.home ? '' : '@'}${x.matchup.opponent}`, 5)} ${lpad(x.matchup.allows, 5)} ${lpad(`${x.matchup.rank}/${x.matchup.of}`, 6)} ${lpad(x.matchup.estimate, 5)}` : `${pad('', 5)} ${lpad('', 5)} ${lpad('', 6)} ${lpad('-', 5)}`);
   console.log(`Best lineup by projection, Week ${w} — ${out.total} pts (injury tags applied for the current week only)`);
-  for (const x of out.lineup) console.log(`  ${pad(x.slot, 11)} ${pad(x.name ?? 'EMPTY', 24)} ${lpad(x.pts, 5)}`);
+  console.log('A projection is not a start/sit answer on its own: every slot with a choice is decided on the matchup too (CLAUDE.md; /lineup 4a).');
+  console.log(`  ${pad('slot', 11)} ${pad('player', 24)} ${lpad('proj', 5)}  ${pad('opp', 5)} ${lpad('allows', 5)} ${lpad('rank', 6)} ${lpad('adj', 5)}`);
+  for (const x of out.lineup) console.log(`  ${pad(x.slot, 11)} ${pad(x.name ?? 'EMPTY', 24)} ${lpad(x.pts, 5)}  ${vs(x)}${x.locked ? '  locked' : ''}`);
   console.log('  bench:');
-  for (const b of out.bench) console.log(`    ${pad(`${b.name} (${b.pos})`, 30)} ${lpad(b.pts, 5)}${b.status ? `  ${b.status}` : ''}`);
+  for (const b of out.bench) console.log(`  ${pad('', 11)} ${pad(`${b.name} (${b.pos})`, 24)} ${lpad(b.pts, 5)}  ${vs(b)}${b.status ? `  ${b.status}` : ''}${b.locked ? '  locked' : ''}`);
+  if (out.disagreements.length) {
+    console.log('\n  MATCHUP DISAGREES — the projection starts one player, the matchup-adjusted estimate the other. Decide these on research, never on the projection:');
+    for (const d of out.disagreements) console.log(`    ${pad(d.slot, 11)} ${d.starter} (proj ${d.starter_pts}, adj ${d.starter_adj})  vs  ${d.bench} (proj ${d.bench_pts}, adj ${d.bench_adj})`);
+  } else {
+    console.log('\n  Projection and matchup agree on every unlocked slot.');
+  }
+  console.log('\n  allows = what this opponent gives up to the position per game (rank 1 = most); adj = the player scored against what his past opponents allowed, applied to this one. node scripts/matchups.mjs adds usage and the full Calls table.');
 } else if (args.includes('--trade')) {
   const v = moveValue(snapshot, { add: ids(opt('--get')), drop: ids(opt('--give')) });
   if (json) { console.log(JSON.stringify(v, null, 2)); process.exit(0); }

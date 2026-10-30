@@ -1,11 +1,11 @@
 {
-  "compiled_at": "2026-10-29T12:15:32.682Z",
+  "compiled_at": "2026-10-30T00:36:10.024Z",
   "season": "2026",
   "week": 8,
   "games_have_started": true,
   "roster": {
     "starters": [
-      "3163",
+      "4881",
       "8228",
       "11584",
       "12526",
@@ -19,7 +19,7 @@
     "bench": [
       "11610",
       "1166",
-      "4881",
+      "3163",
       "7002",
       "CLE"
     ],
@@ -29,10 +29,10 @@
     "waivers": {
       "report": "2026-10-28-waivers.md",
       "week": 8,
-      "verdict": "Wednesday's run is done: Strange and Jacksonville both went elsewhere for $0, and no FAAB was spent. Denver is in for Chicago and starts this week. Lamar stays on the bench unless he's ruled out Friday, then he goes back on IR. Nothing else on the wire clears the bar.",
+      "verdict": "Wednesday's run is done: Strange and Jacksonville both went elsewhere for $0, and no FAAB was spent. Denver is in for Chicago, though Cleveland starts this week on the matchup. Lamar stays on the bench unless he's ruled out Friday, then he goes back on IR. Nothing else on the wire clears the bar.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-10-28T12:29:37.000Z"
+      "written_at": "2026-10-30T00:36:09.835Z"
     },
     "lineup": {
       "report": "2026-10-29-lineup.md",
@@ -40,7 +40,7 @@
       "verdict": "Swap in Cleveland over Denver at DEF — the matchup number flips in Cleveland's favor this week despite Denver's higher raw projection. Everything else holds.",
       "next_check": "Inactives, Sun 10am",
       "stale": false,
-      "written_at": "2026-10-29T12:15:27.162Z"
+      "written_at": "2026-10-30T00:36:09.835Z"
     },
     "trades": {
       "report": "2026-10-28-trades.md",
@@ -126,27 +126,27 @@
         "starts": "Brock Bowers starts over Tucker Kraft at TE",
         "need": "TE: you have 2 — not thin · gives QB depth (you have 4, start 2) · gives TE depth (you have 2, start 1)",
         "cost": "gives Kirk Cousins, Juwan Johnson — 0 starters, 2 bench · no FAAB",
-        "asks": "annaf23 starts Brock Bowers, Questionable — one of 2 TEs they carry · asks them to bench a starter for bench pieces",
+        "asks": "annaf23 starts Brock Bowers — one of 2 TEs they carry · asks them to bench a starter for bench pieces",
         "tradeoff": {
           "net": "neutral",
           "fixes": [],
           "opens": []
         },
         "later": "opens no holes · frees 1 bench slot",
-        "points": "+5.5 this week · +44.5 rest of season · +14 playoffs",
+        "points": "+5.4 this week · +44.1 rest of season · +14 playoffs",
         "value": {
-          "this_week": 5.5,
-          "next_3": 16.5,
-          "rest_of_season": 44.5,
+          "this_week": 5.4,
+          "next_3": 16.1,
+          "rest_of_season": 44.1,
           "playoffs": 14,
           "by_week": [
             {
               "week": 8,
-              "delta": 5.5
+              "delta": 5.4
             },
             {
               "week": 9,
-              "delta": 5.4
+              "delta": 5.1
             },
             {
               "week": 10,

@@ -85,7 +85,7 @@ Every sync also pulls this season's box scores and Sleeper's weekly projections 
 node scripts/value.mjs                      # the drop order, with averages and cover value
 node scripts/value.mjs --add <id>           # every possible drop for that add, best first
 node scripts/value.mjs --trade --give <ids> --get <ids>
-node scripts/value.mjs --lineup             # best lineup by projection, injury tags applied
+node scripts/value.mjs --lineup             # best lineup by projection, each player's matchup beside it, and every slot where they disagree
 ```
 
 No routine describes a player's production, names a drop, or ranks a start from memory; it quotes these numbers, and says what the projection misses when it overrules them (`value_note`, which the card shows). The compiler refuses the patterns that shipped on 2026-10-13: a drop far worse than the best one, a swap that loses points now and later, a kicker bid the night before free agency reopens, and a trade that doesn't project better in every window. Projections are a baseline, not truth: news still matters, and close numbers mean close calls — say so.
@@ -93,6 +93,14 @@ No routine describes a player's production, names a drop, or ranks a start from 
 ## Trades: certain or nothing
 
 Ben's standing rule: **no trade offer goes on the card unless it is certain he is better off making it than not.** A neutral deal, a depth piece, or a buy with acknowledged injury risk is a hold. See `.claude/skills/trade/SKILL.md`.
+
+## Answering in conversation (same rules, no shortcuts)
+
+A question Ben asks in chat — "is my roster ok?", "who do I start?", "which defense?" — is held to exactly the rules a routine is. On 2026-10-28/29 a chat session answered three start/sit questions from projections alone, told Ben the matchup check hadn't been done when the Thursday lineup report had done it, and contradicted that report twice (Denver over Cleveland; Cousins over Goff), because its checkout was two commits behind `main` and it never read the report. So, before any lineup, waiver or trade answer in conversation:
+
+1. **Read what's already been decided.** Sync, and if the sync prints `STALE REPORTS`, pull (`git pull --ff-only origin main`) before saying anything. Then read the newest report of the kind being asked about and `reports/actions.json`. If the answer would differ from a published call, say so explicitly — "the Thursday report said X because Y; I'd now say Z because W" — never silently.
+2. **Start/sit from the matchup, not the projection.** `value.mjs --lineup` prints both and flags every slot where they disagree; a flagged slot is decided on research, and the answer names each option's opponent, what that opponent allows, the adjusted estimate and recent usage (`matchups.mjs` Calls). An answer that quotes only projections is incomplete.
+3. **Leave the record consistent.** If the conversation changes a call that's on the card, republish the report it came from so the dashboard and the Sunday routine don't act on the old one.
 
 ## Sequencing
 

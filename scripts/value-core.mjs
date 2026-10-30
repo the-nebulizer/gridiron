@@ -257,6 +257,38 @@ export function projectedLineup(snapshot, week = snapshot.week) {
   };
 }
 
+// The projected lineup with every player's matchup beside his projection, and
+// every slot where the two pick different players. A projection-only lineup
+// answered two start/sit questions in chat on 2026-10-29 (Goff over Cousins
+// against the league's toughest QB defense; Denver over Cleveland against the
+// stingiest offense for a DEF) while the published lineup report had already
+// called both the other way on matchup — so the one tool everyone reaches for
+// carries the matchup itself instead of relying on a second command.
+// `locked` = his game has already started (snapshot.games), so the slot is set.
+export function lineupWithMatchups(snapshot, week = snapshot.week) {
+  const out = projectedLineup(snapshot, week);
+  const byId = new Map(activeRoster(snapshot).map((p) => [p.id, p]));
+  const locked = (p) => week === snapshot.week && ['in_game', 'complete'].includes(snapshot.games?.[p?.team]?.status);
+  const enrich = (row) => {
+    const p = byId.get(row.id);
+    const m = p ? matchupAdjusted(snapshot, p, week) : null;
+    return { ...row, pos: p?.position ?? row.pos ?? null, locked: locked(p), matchup: m };
+  };
+  const lineup = out.lineup.map(enrich);
+  const bench = out.bench.map(enrich);
+  const disagreements = [];
+  for (const b of bench) {
+    if (b.locked || !b.matchup || b.pts <= 0) continue;
+    for (const s of lineup) {
+      if (s.locked || !s.matchup || !SLOT_ELIGIBILITY[s.slot]?.includes(b.pos)) continue;
+      if (b.matchup.estimate > s.matchup.estimate) {
+        disagreements.push({ slot: s.slot, starter: s.name, starter_pts: s.pts, starter_adj: s.matchup.estimate, bench: b.name, bench_pts: b.pts, bench_adj: b.matchup.estimate });
+      }
+    }
+  }
+  return { ...out, lineup, bench, disagreements };
+}
+
 // Fantasy points each NFL team has allowed to each position this
 // season, in THIS league's scoring, with a rank (1 = allows the most, i.e. the
 // easiest matchup). A projection prices the opponent in as one number; this
