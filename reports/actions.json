@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-10-30T00:36:10.024Z",
+  "compiled_at": "2026-10-30T01:16:27.460Z",
   "season": "2026",
   "week": 8,
   "games_have_started": true,
@@ -27,43 +27,43 @@
   },
   "sources": {
     "waivers": {
-      "report": "2026-10-28-waivers.md",
+      "report": "2026-10-30-waivers.md",
       "week": 8,
-      "verdict": "Wednesday's run is done: Strange and Jacksonville both went elsewhere for $0, and no FAAB was spent. Denver is in for Chicago, though Cleveland starts this week on the matchup. Lamar stays on the bench unless he's ruled out Friday, then he goes back on IR. Nothing else on the wire clears the bar.",
+      "verdict": "Hold. Lamar Jackson is correctly in for Goff at QB already; nothing on the wire is worth a bid.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-10-30T00:36:09.835Z"
+      "written_at": "2026-10-30T01:15:36.011Z"
     },
     "lineup": {
-      "report": "2026-10-29-lineup.md",
+      "report": "2026-10-30-lineup.md",
       "week": 8,
-      "verdict": "Swap in Cleveland over Denver at DEF — the matchup number flips in Cleveland's favor this week despite Denver's higher raw projection. Everything else holds.",
+      "verdict": "Swap in Cleveland over Denver at DEF — still unmade from Thursday's call. Everything else, including the Jackson-for-Goff swap you already made, holds.",
       "next_check": "Inactives, Sun 10am",
       "stale": false,
-      "written_at": "2026-10-30T00:36:09.835Z"
+      "written_at": "2026-10-30T01:15:57.487Z"
     },
     "trades": {
-      "report": "2026-10-28-trades.md",
+      "report": "2026-10-30-trades.md",
       "week": 8,
-      "verdict": "Decline sweeneyb's Keenan Allen-for-Cousins offer. Send annaf23 Cousins and Juwan Johnson for Brock Bowers as a best-and-final offer: it projects better in every window, even if Lamar never returns.",
+      "verdict": "Keep the Cousins + Johnson for Bowers offer live with annaf23 — still projects better in every window. A fresh hunt across all 12 rosters found nothing else that clears the certainty bar.",
       "next_check": "Waivers, Tue 7am",
       "stale": false,
-      "written_at": "2026-10-28T12:29:37.000Z"
+      "written_at": "2026-10-30T01:16:14.015Z"
     },
     "inactives": {
-      "report": "2026-10-28-inactives.md",
+      "report": "2026-10-30-inactives.md",
       "week": 8,
-      "verdict": "Not actionable. Today is Wednesday — Week 8's slate doesn't start until Thursday night, so there are no inactive lists to check yet.",
+      "verdict": "Not actionable. Thursday's game is already locked, and Sunday's slate — where Jackson's and Diggs's final word lands — hasn't kicked off yet.",
       "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-10-28T12:29:37.000Z"
+      "written_at": "2026-10-30T01:16:20.043Z"
     }
   },
   "actions": [
     {
       "id": "lineup:start:CLE",
       "source": "lineup",
-      "report": "2026-10-29-lineup.md",
+      "report": "2026-10-30-lineup.md",
       "kind": "start",
       "week": 8,
       "player": "CLE",
@@ -78,8 +78,8 @@
         "CLE"
       ],
       "urgency": "before_kickoff",
-      "deadline_label": "before Sunday's early kickoffs (both games are Sun Nov 1)",
-      "why": "KC is the toughest matchup in the league for a defense (27th-most allowed); PIT is only middling (12th) — that flips Cleveland ahead on matchup despite Denver's higher raw number.",
+      "deadline_label": "before Sunday's kickoffs (both games are Sun Nov 1)",
+      "why": "KC is the toughest matchup in the league for a defense (27th-most allowed); PIT is middling (12th) — matchup still favors Cleveland over Denver's higher raw number.",
       "case": {
         "starts": "Cleveland Browns in at DEF, Denver Broncos to the bench",
         "need": "Denver Broncos: healthy, DEN bye W10"
@@ -88,7 +88,7 @@
     {
       "id": "trades:trade:7",
       "source": "trades",
-      "report": "2026-10-28-trades.md",
+      "report": "2026-10-30-trades.md",
       "kind": "trade",
       "week": 8,
       "with": 7,
@@ -120,8 +120,7 @@
         "7002"
       ],
       "urgency": "this_week",
-      "deadline_label": "trade deadline Week 11",
-      "why": "Bowers starts over Kraft (14 a week vs 9). Cousins sits on my bench but would start at QB for them over McKee. Johnson becomes my third TE once Bowers arrives.",
+      "why": "Bowers starts over Kraft at TE; Cousins sits on my bench, Johnson becomes my TE3 once Bowers arrives.",
       "case": {
         "starts": "Brock Bowers starts over Tucker Kraft at TE",
         "need": "TE: you have 2 — not thin · gives QB depth (you have 4, start 2) · gives TE depth (you have 2, start 1)",
