@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-11-01T15:15:09.124Z",
+  "compiled_at": "2026-11-01T19:14:55.005Z",
   "season": "2026",
   "week": 8,
   "games_have_started": true,
@@ -27,68 +27,43 @@
   },
   "sources": {
     "waivers": {
-      "report": "2026-10-30-waivers.md",
+      "report": "2026-11-01-waivers.md",
       "week": 8,
-      "verdict": "Hold. Lamar Jackson is correctly in for Goff at QB already; nothing on the wire is worth a bid.",
+      "verdict": "Hold. Jackson's Out status is a one-week loss that's already locked in, not a roster need — nothing on the wire is worth a bid.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-10-30T01:16:38.000Z"
+      "written_at": "2026-11-01T19:14:30.473Z"
     },
     "lineup": {
-      "report": "2026-10-30-lineup.md",
+      "report": "2026-11-01-lineup.md",
       "week": 8,
-      "verdict": "Swap in Cleveland over Denver at DEF — still unmade from Thursday's call. Everything else, including the Jackson-for-Goff swap you already made, holds.",
-      "next_check": "Inactives, Sun 10am",
+      "verdict": "Nothing left to decide — Jackson's zero at QB and the unmade Cleveland-over-Denver swap are both locked in by kickoff. Hold everything else.",
+      "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-10-30T01:16:38.000Z"
+      "written_at": "2026-11-01T19:14:20.029Z"
     },
     "trades": {
-      "report": "2026-10-30-trades.md",
+      "report": "2026-11-01-trades.md",
       "week": 8,
-      "verdict": "Keep the Cousins + Johnson for Bowers offer live with annaf23 — still projects better in every window. A fresh hunt across all 12 rosters found nothing else that clears the certainty bar.",
+      "verdict": "Keep the Cousins + Johnson for Bowers offer live with annaf23 — still projects better in every window, and Jackson's one-week zero doesn't change that math. A fresh hunt across all 12 rosters found nothing else that clears the certainty bar.",
       "next_check": "Waivers, Tue 7am",
       "stale": false,
-      "written_at": "2026-10-30T01:16:38.000Z"
+      "written_at": "2026-11-01T19:14:46.945Z"
     },
     "inactives": {
       "report": "2026-11-01-inactives.md",
       "week": 8,
-      "verdict": "Hold — no starter is Out, Doubtful, or inactive. Jackson cleared his ankle (full practice, no tag) and Diggs is good to go back from his bye.",
+      "verdict": "Jackson was ruled Out after Baltimore's game had already kicked off — the QB slot is locked and scores zero this week; nothing left to do.",
       "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-11-01T15:15:03.605Z"
+      "written_at": "2026-11-01T19:14:06.173Z"
     }
   },
   "actions": [
     {
-      "id": "lineup:start:CLE",
-      "source": "lineup",
-      "report": "2026-10-30-lineup.md",
-      "kind": "start",
-      "week": 8,
-      "player": "CLE",
-      "name": "Cleveland Browns",
-      "pos": "DEF",
-      "team": "CLE",
-      "slot": "DEF",
-      "for": "DEN",
-      "for_name": "Denver Broncos",
-      "consumes": [
-        "DEN",
-        "CLE"
-      ],
-      "urgency": "before_kickoff",
-      "deadline_label": "before Sunday's kickoffs (both games are Sun Nov 1)",
-      "why": "KC is the toughest matchup in the league for a defense (27th-most allowed); PIT is middling (12th) — matchup still favors Cleveland over Denver's higher raw number.",
-      "case": {
-        "starts": "Cleveland Browns in at DEF, Denver Broncos to the bench",
-        "need": "Denver Broncos: healthy, DEN bye W10"
-      }
-    },
-    {
       "id": "trades:trade:7",
       "source": "trades",
-      "report": "2026-10-30-trades.md",
+      "report": "2026-11-01-trades.md",
       "kind": "trade",
       "week": 8,
       "with": 7,
@@ -132,16 +107,16 @@
           "opens": []
         },
         "later": "opens no holes · frees 1 bench slot",
-        "points": "+5.4 this week · +44.1 rest of season · +14 playoffs",
+        "points": "+3.8 this week · +42.5 rest of season · +14 playoffs",
         "value": {
-          "this_week": 5.4,
-          "next_3": 16.1,
-          "rest_of_season": 44.1,
+          "this_week": 3.8,
+          "next_3": 14.5,
+          "rest_of_season": 42.5,
           "playoffs": 14,
           "by_week": [
             {
               "week": 8,
-              "delta": 5.4
+              "delta": 3.8
             },
             {
               "week": 9,

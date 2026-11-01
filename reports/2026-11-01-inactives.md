@@ -1,31 +1,32 @@
-# Week 8 inactives — everybody's trending active, no pivot needed
+# Week 8 inactives — Jackson ruled Out, but it's already too late to fix
 
 ```actions
 {
   "week": 8,
-  "verdict": "Hold — no starter is Out, Doubtful, or inactive. Jackson cleared his ankle (full practice, no tag) and Diggs is good to go back from his bye.",
+  "verdict": "Jackson was ruled Out after Baltimore's game had already kicked off — the QB slot is locked and scores zero this week; nothing left to do.",
   "next_check": "Trades, Mon 7am",
   "actions": []
 }
 ```
 
-Read off a fresh sync at 11:13am ET. The early slate kicks off at 1:00pm ET, and official inactives for those games post around 11:30am ET — about 15 minutes after this check — so treat this as the last word before that list drops, not a repeat of Friday's designations.
+> Refreshed Nov 1 after a roster change: Lamar Jackson ruled Out
 
-## Starters checked
+## What changed since this morning's check
 
-- **Lamar Jackson (QB, BAL @ BUF)** — ACTIVE, expected to play. He's been out since a Week 4 ankle sprain, but the Ravens had him at full practice Friday with no injury designation, and the coaching staff has said flatly he's playing if he's full. No pivot needed.
-- **Jaylen Warren (RB, PIT vs CLE)** — ACTIVE, no injury news found this week. Snapshot shows no tag.
-- **Bucky Irving (RB, TB vs ATL)** — ACTIVE, no injury news found this week. Snapshot shows no tag.
-- **Tetairoa McMillan (WR, CAR)** and **Tucker Kraft (TE, GB)** — already played Thursday (Oct 29); locked in, nothing to decide.
-- **Stefon Diggs (WR, WAS vs PHI)** — ACTIVE, back from his bye week. Reporting has him playing tonight; Washington-Philadelphia looks like the late/primetime game on the slate, so his official word won't post until closer to that kickoff — well after the 1:00pm games lock. Nothing suggests he sits.
-- **Ashton Jeanty (RB, LV @ NYJ)** — ACTIVE, no current injury news (his training-camp ankle issue cleared in September and hasn't resurfaced).
-- **Bryce Young (QB, CAR)** — already played Thursday with McMillan; locked in.
-- **Will Reichard (K, MIN @ DET)** and **Denver Broncos (DEF, DEN vs KC)** — no injury concerns.
+This morning's check (11:13am ET, before the early games) had Jackson cleared — full practice Friday, no tag, expected to play — with no pivot needed. Somewhere between then and kickoff, Baltimore ruled him Out. By the time this catch ran, Baltimore at Buffalo was already underway, which means his slot locked at his own kickoff — Sleeper won't let the QB spot be touched now, whatever the bench says. He scores zero this week. There was nothing to act on; the window to make a swap closed before this routine could flag it.
 
-## One thing already on the card, not new today
+## The named fallback was also already gone
 
-Thursday's lineup report flagged Cleveland's matchup as better than Denver's at DEF this week (KC is the toughest matchup in the league for a defense; Pittsburgh is middling) and that swap is still sitting unmade — it's a matchup call, not an injury pivot, so it's not reissued here, but it's still open and still locks at kickoff like everything else today.
+Thursday's lineup report had named Kirk Cousins as the Sunday pivot if Jackson turned. That's moot too: Cousins's own game (Las Vegas at the Jets) is part of the same 1:00pm ET slate and had also already kicked off by the time Jackson's Out tag showed up here. Jared Goff's game (Detroit) is in the same slate and locked too. Every quarterback on this roster who could have replaced Jackson was already locked into his own game before this was caught — there was no legal swap left to make, to either backup.
+
+## The standing DEF swap is dead for the same reason
+
+Thursday's call to start Cleveland over Denver at DEF was still unmade heading into today. Cleveland's game (at Pittsburgh) is also in that same early slate and has already kicked off, which locks him to the bench — he can't be moved into the lineup now. Denver stays the starter by default, against the toughest matchup in the league this week for a defense. That's a real cost, but there's no action to take on it anymore; it's locked exactly like the QB slot.
+
+## Everything else holds
+
+Diggs (back from bye, no tag) and the rest of the starting lineup are unaffected and mostly already locked in from Thursday and today's early games — nothing there needs a second look.
 
 ## Bottom line
 
-No bench pivot to make before kickoff. If anything changes once the 11:30am inactive lists post, it'll show up in next week's check or whenever the roster watcher catches it — nothing here needs Ben to act right now.
+A real loss this week — zero points at QB, stuck with the worse defense matchup — but both are already beyond fixing by the time this check ran. Nothing for Ben to do right now. Next up: Monday's trade check.
