@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-10-30T01:16:27.460Z",
+  "compiled_at": "2026-11-01T15:15:09.124Z",
   "season": "2026",
   "week": 8,
   "games_have_started": true,
@@ -32,7 +32,7 @@
       "verdict": "Hold. Lamar Jackson is correctly in for Goff at QB already; nothing on the wire is worth a bid.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-10-30T01:15:36.011Z"
+      "written_at": "2026-10-30T01:16:38.000Z"
     },
     "lineup": {
       "report": "2026-10-30-lineup.md",
@@ -40,7 +40,7 @@
       "verdict": "Swap in Cleveland over Denver at DEF — still unmade from Thursday's call. Everything else, including the Jackson-for-Goff swap you already made, holds.",
       "next_check": "Inactives, Sun 10am",
       "stale": false,
-      "written_at": "2026-10-30T01:15:57.487Z"
+      "written_at": "2026-10-30T01:16:38.000Z"
     },
     "trades": {
       "report": "2026-10-30-trades.md",
@@ -48,15 +48,15 @@
       "verdict": "Keep the Cousins + Johnson for Bowers offer live with annaf23 — still projects better in every window. A fresh hunt across all 12 rosters found nothing else that clears the certainty bar.",
       "next_check": "Waivers, Tue 7am",
       "stale": false,
-      "written_at": "2026-10-30T01:16:14.015Z"
+      "written_at": "2026-10-30T01:16:38.000Z"
     },
     "inactives": {
-      "report": "2026-10-30-inactives.md",
+      "report": "2026-11-01-inactives.md",
       "week": 8,
-      "verdict": "Not actionable. Thursday's game is already locked, and Sunday's slate — where Jackson's and Diggs's final word lands — hasn't kicked off yet.",
+      "verdict": "Hold — no starter is Out, Doubtful, or inactive. Jackson cleared his ankle (full practice, no tag) and Diggs is good to go back from his bye.",
       "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-10-30T01:16:20.043Z"
+      "written_at": "2026-11-01T15:15:03.605Z"
     }
   },
   "actions": [
