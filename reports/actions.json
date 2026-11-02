@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-11-01T19:14:55.005Z",
+  "compiled_at": "2026-11-02T12:04:32.544Z",
   "season": "2026",
   "week": 8,
   "games_have_started": true,
@@ -32,7 +32,7 @@
       "verdict": "Hold. Jackson's Out status is a one-week loss that's already locked in, not a roster need — nothing on the wire is worth a bid.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-11-01T19:14:30.473Z"
+      "written_at": "2026-11-01T19:15:03.000Z"
     },
     "lineup": {
       "report": "2026-11-01-lineup.md",
@@ -40,15 +40,15 @@
       "verdict": "Nothing left to decide — Jackson's zero at QB and the unmade Cleveland-over-Denver swap are both locked in by kickoff. Hold everything else.",
       "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-11-01T19:14:20.029Z"
+      "written_at": "2026-11-01T19:15:03.000Z"
     },
     "trades": {
-      "report": "2026-11-01-trades.md",
+      "report": "2026-11-02-trades.md",
       "week": 8,
-      "verdict": "Keep the Cousins + Johnson for Bowers offer live with annaf23 — still projects better in every window, and Jackson's one-week zero doesn't change that math. A fresh hunt across all 12 rosters found nothing else that clears the certainty bar.",
+      "verdict": "Keep the Cousins + Johnson for Bowers offer live with annaf23 — still projects better in every window. A fresh scan of all 12 rosters this morning found no second idea that clears the certainty bar.",
       "next_check": "Waivers, Tue 7am",
       "stale": false,
-      "written_at": "2026-11-01T19:14:46.945Z"
+      "written_at": "2026-11-02T12:04:26.623Z"
     },
     "inactives": {
       "report": "2026-11-01-inactives.md",
@@ -56,14 +56,14 @@
       "verdict": "Jackson was ruled Out after Baltimore's game had already kicked off — the QB slot is locked and scores zero this week; nothing left to do.",
       "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-11-01T19:14:06.173Z"
+      "written_at": "2026-11-01T19:15:03.000Z"
     }
   },
   "actions": [
     {
       "id": "trades:trade:7",
       "source": "trades",
-      "report": "2026-11-01-trades.md",
+      "report": "2026-11-02-trades.md",
       "kind": "trade",
       "week": 8,
       "with": 7,
@@ -107,11 +107,11 @@
           "opens": []
         },
         "later": "opens no holes · frees 1 bench slot",
-        "points": "+3.8 this week · +42.5 rest of season · +14 playoffs",
+        "points": "+3.8 this week · +42.8 rest of season · +14 playoffs",
         "value": {
           "this_week": 3.8,
-          "next_3": 14.5,
-          "rest_of_season": 42.5,
+          "next_3": 14.8,
+          "rest_of_season": 42.8,
           "playoffs": 14,
           "by_week": [
             {
@@ -120,7 +120,7 @@
             },
             {
               "week": 9,
-              "delta": 5.1
+              "delta": 5.4
             },
             {
               "week": 10,
