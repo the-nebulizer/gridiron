@@ -1,71 +1,72 @@
 {
-  "compiled_at": "2026-11-03T12:25:17.818Z",
+  "compiled_at": "2026-11-03T15:20:19.666Z",
   "season": "2026",
   "week": 9,
   "games_have_started": true,
   "roster": {
     "starters": [
-      "4881",
-      "8228",
+      "3163",
+      "12527",
       "11584",
       "12526",
       "2449",
       "9484",
-      "12527",
-      "9228",
+      "11610",
+      "1166",
       "11792",
       "DEN"
     ],
     "bench": [
-      "11610",
-      "1166",
-      "3163",
       "7002",
+      "8228",
+      "9228",
       "CLE"
     ],
-    "reserve": []
+    "reserve": [
+      "4881"
+    ]
   },
   "sources": {
     "waivers": {
       "report": "2026-11-03-waivers.md",
       "week": 9,
-      "verdict": "Hold. Nothing on the wire clears the bar this week. Jackson's IR eligibility opens a genuinely free bench spot, but taking it now would stack with the open Bowers trade and leave only two active quarterbacks against a lineup that starts two — worth doing once that trade resolves, not before.",
+      "verdict": "Hold. Jackson's IR move is done and the bench spot it opened is sitting empty, but nothing on the wire — Singletary, a streaming defense, a kicker — is worth spending it on this week.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-11-03T12:25:12.872Z"
+      "written_at": "2026-11-03T15:19:09.305Z"
     },
     "lineup": {
-      "report": "2026-11-01-lineup.md",
-      "week": 8,
-      "verdict": "Nothing left to decide — Jackson's zero at QB and the unmade Cleveland-over-Denver swap are both locked in by kickoff. Hold everything else.",
-      "next_check": "Trades, Mon 7am",
-      "stale": true,
-      "written_at": "2026-11-01T19:15:03.000Z"
+      "report": "2026-11-03-lineup.md",
+      "week": 9,
+      "verdict": "Hold the lineup as set. Goff at QB and Cousins at SUPER_FLEX are already the right matchup calls, and Kraft stays over Johnson at TE on usage. Nothing to change before Thursday.",
+      "next_check": "Inactives, Sun 10am",
+      "stale": false,
+      "written_at": "2026-11-03T15:18:51.965Z"
     },
     "trades": {
-      "report": "2026-11-02-trades.md",
-      "week": 8,
-      "verdict": "Keep the Cousins + Johnson for Bowers offer live with annaf23 — still projects better in every window. A fresh scan of all 12 rosters this morning found no second idea that clears the certainty bar.",
+      "report": "2026-11-03-trades.md",
+      "week": 9,
+      "verdict": "Keep the Cousins + Johnson for Bowers offer live with annaf23 — still projects better in every window. A fresh scan of all 12 rosters this morning, after Jackson's move to IR, still finds no second idea that clears the certainty bar.",
       "next_check": "Waivers, Tue 7am",
-      "stale": true,
-      "written_at": "2026-11-02T12:04:35.000Z"
+      "stale": false,
+      "written_at": "2026-11-03T15:20:13.613Z"
     },
     "inactives": {
-      "report": "2026-11-01-inactives.md",
-      "week": 8,
-      "verdict": "Jackson was ruled Out after Baltimore's game had already kicked off — the QB slot is locked and scores zero this week; nothing left to do.",
+      "report": "2026-11-03-inactives.md",
+      "week": 9,
+      "verdict": "Not actionable — Week 9's earliest game (Baltimore-Jacksonville, Thursday) is still two days out, so there are no inactive lists yet and nothing to check.",
       "next_check": "Trades, Mon 7am",
-      "stale": true,
-      "written_at": "2026-11-01T19:15:03.000Z"
+      "stale": false,
+      "written_at": "2026-11-03T15:19:59.169Z"
     }
   },
   "actions": [
     {
       "id": "trades:trade:7",
       "source": "trades",
-      "report": "2026-11-02-trades.md",
+      "report": "2026-11-03-trades.md",
       "kind": "trade",
-      "week": 8,
+      "week": 9,
       "with": 7,
       "with_owner": "annaf23",
       "give": [
@@ -98,25 +99,25 @@
       "why": "Bowers starts over Kraft at TE; Cousins sits on my bench, Johnson becomes my TE3 once Bowers arrives.",
       "case": {
         "starts": "Brock Bowers starts over Tucker Kraft at TE",
-        "need": "TE: you have 2 — not thin · gives QB depth (you have 4, start 2) · gives TE depth (you have 2, start 1)",
-        "cost": "gives Kirk Cousins, Juwan Johnson — 0 starters, 2 bench · no FAAB",
-        "asks": "annaf23 starts Brock Bowers — one of 2 TEs they carry · asks them to bench a starter for bench pieces",
+        "need": "TE: you have 2 — not thin · gives QB depth (you have 3, start 2) · gives TE depth (you have 2, start 1)",
+        "cost": "gives Kirk Cousins, Juwan Johnson — 1 starter, 1 bench · no FAAB",
+        "asks": "annaf23 starts Brock Bowers — one of 2 TEs they carry",
         "tradeoff": {
           "net": "neutral",
           "fixes": [],
           "opens": []
         },
-        "later": "opens no holes · frees 1 bench slot",
-        "points": "+4.1 this week · +37.7 rest of season · +14 playoffs",
+        "later": "opens no holes · frees 1 bench slot · empties SUPERFLEX this week — set a starter there before kickoff",
+        "points": "+4.6 this week · +35.2 rest of season · +11 playoffs",
         "value": {
-          "this_week": 4.1,
-          "next_3": 14.1,
-          "rest_of_season": 37.7,
-          "playoffs": 14,
+          "this_week": 4.6,
+          "next_3": 14.6,
+          "rest_of_season": 35.2,
+          "playoffs": 11,
           "by_week": [
             {
               "week": 9,
-              "delta": 4.1
+              "delta": 4.6
             },
             {
               "week": 10,
@@ -148,7 +149,7 @@
             },
             {
               "week": 17,
-              "delta": 5
+              "delta": 2
             }
           ]
         }
