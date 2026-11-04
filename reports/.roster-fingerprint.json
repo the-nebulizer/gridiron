@@ -1,6 +1,6 @@
 {
-  "fingerprint": "ec258250b51e890c0e368bd8c2da8c70add8e6cf6c5d3c98d32909345575120b",
-  "updated_at": "2026-11-03T15:11:54.576Z",
+  "fingerprint": "666ca3698fe56a1f0d8fbd46c0340ef6988144c330f18d27a5209b8fd1051128",
+  "updated_at": "2026-11-04T12:11:36.292Z",
   "roster": {
     "starters": [
       "3163",
@@ -15,10 +15,11 @@
       "DEN"
     ],
     "bench": [
+      "4993",
       "7002",
       "8228",
       "9228",
-      "CLE"
+      "HOU"
     ],
     "reserve": [
       "4881"
