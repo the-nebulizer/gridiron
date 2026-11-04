@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-11-04T01:55:07.723Z",
+  "compiled_at": "2026-11-04T03:30:49.673Z",
   "season": "2026",
   "week": 9,
   "games_have_started": true,
@@ -33,7 +33,7 @@
       "verdict": "Claim Mike Gesicki for $12 with no drop. Houston's defense is the next add, after the waiver run, with Cleveland as the drop.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-11-04T01:55:02.659Z"
+      "written_at": "2026-11-04T01:55:23.000Z"
     },
     "lineup": {
       "report": "2026-11-03-lineup.md",
@@ -44,12 +44,12 @@
       "written_at": "2026-11-03T15:20:30.000Z"
     },
     "trades": {
-      "report": "2026-11-03-trades.md",
+      "report": "2026-11-04-trades.md",
       "week": 9,
-      "verdict": "Keep the Cousins + Johnson for Bowers offer live with annaf23 — still projects better in every window. A fresh scan of all 12 rosters this morning, after Jackson's move to IR, still finds no second idea that clears the certainty bar.",
-      "next_check": "Waivers, Tue 7am",
+      "verdict": "Hold. The Bowers offer is withdrawn; with Lamar on IR you're keeping Cousins as your third quarterback. If annaf23 reopens it, it gets re-priced before it goes anywhere.",
+      "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-11-03T15:20:30.000Z"
+      "written_at": "2026-11-04T03:30:49.169Z"
     },
     "inactives": {
       "report": "2026-11-03-inactives.md",
@@ -101,100 +101,6 @@
           "rest_of_season": 0,
           "playoffs": 0,
           "by_week": []
-        }
-      }
-    },
-    {
-      "id": "trades:trade:7",
-      "source": "trades",
-      "report": "2026-11-03-trades.md",
-      "kind": "trade",
-      "week": 9,
-      "with": 7,
-      "with_owner": "annaf23",
-      "give": [
-        "1166",
-        "7002"
-      ],
-      "give_names": [
-        "Kirk Cousins",
-        "Juwan Johnson"
-      ],
-      "get": [
-        "11604"
-      ],
-      "get_names": [
-        "Brock Bowers"
-      ],
-      "message": "Cousins and Juwan Johnson for Bowers, best and final. You're starting Watson and McKee in a superflex with 6-pt pass TDs. Cousins is averaging 24 a game and would start for you every week, and you'd have LaPorta and Johnson at TE.",
-      "displaces": "9484",
-      "displaces_name": "Tucker Kraft",
-      "evidence": {
-        "note": "Bowers was limited in practice Oct 21 (hamstring/calf), then played Week 7. He has played 84% of snaps over his last three games. His September knee scope cost him Weeks 1-2 only.",
-        "url": "https://x.com/ryanmcfadden_/status/2113052234737156469",
-        "as_of": "2026-10-21"
-      },
-      "consumes": [
-        "1166",
-        "7002"
-      ],
-      "urgency": "this_week",
-      "why": "Bowers starts over Kraft at TE; Cousins sits on my bench, Johnson becomes my TE3 once Bowers arrives.",
-      "case": {
-        "starts": "Brock Bowers starts over Tucker Kraft at TE",
-        "need": "TE: you have 2 — not thin · gives QB depth (you have 3, start 2) · gives TE depth (you have 2, start 1)",
-        "cost": "gives Kirk Cousins, Juwan Johnson — 1 starter, 1 bench · no FAAB",
-        "asks": "annaf23 starts Brock Bowers — one of 2 TEs they carry",
-        "tradeoff": {
-          "net": "neutral",
-          "fixes": [],
-          "opens": []
-        },
-        "later": "opens no holes · frees 1 bench slot · empties SUPERFLEX this week — set a starter there before kickoff",
-        "points": "+5 this week · +35.6 rest of season · +11 playoffs",
-        "value": {
-          "this_week": 5,
-          "next_3": 15,
-          "rest_of_season": 35.6,
-          "playoffs": 11,
-          "by_week": [
-            {
-              "week": 9,
-              "delta": 5
-            },
-            {
-              "week": 10,
-              "delta": 5.6
-            },
-            {
-              "week": 11,
-              "delta": 4.4
-            },
-            {
-              "week": 12,
-              "delta": 5.1
-            },
-            {
-              "week": 13,
-              "delta": -1.7
-            },
-            {
-              "week": 14,
-              "delta": 6.2
-            },
-            {
-              "week": 15,
-              "delta": 3.2
-            },
-            {
-              "week": 16,
-              "delta": 5.8
-            },
-            {
-              "week": 17,
-              "delta": 2
-            }
-          ]
         }
       }
     }
