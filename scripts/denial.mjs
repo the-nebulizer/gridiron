@@ -58,6 +58,7 @@ if (isMain) {
   for (const r of rows) {
     console.log(`\n  ${r.verdict.padEnd(21)} ${r.name} (${r.pos} ${r.team}) — ${r.reason}`);
     console.log(`    me: ${r.own ? `${sg(r.own.this_week)} now / ${sg(r.own.rest_of_season)} ROS (drop ${r.own.drop})` : 'n/a'} · bidding so far: ${r.demand.claimants.join(', ') || 'nobody'}`);
+    if (r.cuff_for.length) console.log(`    handcuff to: ${r.cuff_for.map((c) => `${c.player} ${c.status} (${c.mine ? 'mine' : `${c.owner}, ${c.relation}`})`).join('; ')}`);
     for (const t of (r.threats.length ? r.threats : r.buyers).slice(0, 4)) {
       console.log(`    ${r.threats.length ? 'threat' : 'buyer '} ${pad(t.owner, 14)} ${pad(t.relation, 19)} $${t.faab} left · ${sg(t.this_week)} now, ${sg(t.rest_of_season)} ROS, ${sg(t.playoffs)} playoffs${t.partner ? ' · TRADE PARTNER' : ''}`);
     }

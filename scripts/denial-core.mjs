@@ -26,6 +26,7 @@ export const RIVAL_ROS_GAIN = 8;             // rest-of-season points that move 
 export const RIVAL_PLAYOFF_GAIN = 3;         // ...and that show up in W15-17
 export const CHIP_ROS_GAIN = 5;              // a buyer needs to actually start him to pay for him
 export const OWN_MERIT_GAIN = 3;             // above this he is a normal add, not a denial case
+export const HANDCUFF_MIN_STARTER = 7;        // the injured player has to be a real starter for his backup to matter
 export const HOT_NET_ADDS = 300000;          // Sleeper-wide net adds that count as the market wanting him
 export const HOT_CLAIMANTS = 2;              // distinct managers in this league who went after him
 
@@ -211,6 +212,30 @@ export function denialRow(snapshot, player, { partners = [], cache = new Map() }
     }
   }
 
+  // Handcuff: the same NFL team's player at his position is hurt. A projection
+  // prices him assuming the starter plays, so his lineup value is understated
+  // exactly when it matters, and the injured starter's owner is the one who
+  // needs him. (2026-11-05: Singletary sat behind a Questionable Skattebo,
+  // Tracy was on IR, Skattebo's owner had dropped and re-bid him, and the
+  // report only asked whether he was a handcuff to someone *I* roster.)
+  const hurt = /^(questionable|doubtful|out|ir|pup|sus|cov)$/i;
+  // Only a back or quarterback is a handcuff (a second receiver is not the
+  // injured receiver's replacement), and only the next man up: the healthiest
+  // same-team, same-position player with the best projection. If a rostered
+  // teammate is ahead of him, he is not the one the starter's owner needs.
+  const projOf = (p) => snapshot.production?.[p.id]?.proj?.[snapshot.week] ?? 0;
+  const mates = [...snapshot.teams.flatMap((t) => [...t.starters, ...t.bench]), ...candidatePool(snapshot)]
+    .filter((p) => p && p.team === player.team && p.position === player.position && !hurt.test(p.injury_status ?? ''));
+  const isHandcuff = ['RB', 'QB'].includes(player.position) && mates.every((p) => p.id === player.id || projOf(p) <= projOf(player));
+  const cuff_for = snapshot.teams.flatMap((t) =>
+    [...t.starters, ...t.bench, ...t.reserve].filter(Boolean)
+      .filter((p) => isHandcuff && p.team === player.team && p.position === player.position && p.id !== player.id && hurt.test(p.injury_status ?? '') && (snapshot.production?.[p.id]?.proj?.[snapshot.week] ?? 0) >= HANDCUFF_MIN_STARTER)
+      .map((p) => {
+        const r = rel.byTeam.get(t.roster_id);
+        return { player: p.name, status: p.injury_status, owner: t.owner, mine: t.roster_id === snapshot.my_roster_id, relation: r?.tag ?? 'me' };
+      }));
+  const cuffMatters = cuff_for.filter((c) => !c.mine && ['opponent this week', 'direct rival', 'on the bubble'].includes(c.relation));
+
   // Revealed demand. A projection model sees lineups, not what a manager
   // thinks a player is worth; a hot player nobody's lineup needs on paper is
   // exactly the Singletary case. Never let "the model sees no gain" close it.
@@ -220,6 +245,13 @@ export function denialRow(snapshot, player, { partners = [], cache = new Map() }
   // counts are noise, so only an in-league scramble (two managers) counts there.
   const streamed = ['K', 'DEF'].includes(player.position);
   const hot = (!streamed && netAdds >= HOT_NET_ADDS) || demand.claimants.length >= HOT_CLAIMANTS;
+  const cuffText = cuff_for.map((c) => `${c.player} (${c.status}, ${c.mine ? 'mine' : c.owner})`).join(', ');
+  if (cuff_for.length && ['NO', 'WATCH'].includes(verdict)) {
+    verdict = cuffMatters.length ? 'BLOCK_CANDIDATE' : 'CONTESTED_CHECK';
+    reason = `he is the backup to ${cuffText}; a projection assumes the starter plays, so it understates him`
+      + (cuffMatters.length ? ` — ${cuffMatters.map((c) => c.owner).join(', ')} matters to my season and needs the handcuff` : ' — whoever owns the starter needs him; find out how long the starter is out')
+      + (cuff_for.some((c) => c.mine) ? '; that is my own starter, so he is insurance' : '');
+  }
   if (hot && ['NO', 'WATCH', 'TRADE_CHIP_CANDIDATE'].includes(verdict)) {
     reason = `${netAdds >= HOT_NET_ADDS ? `${netAdds.toLocaleString('en-US')} net adds league-wide` : ''}${demand.claimants.length ? `${netAdds >= HOT_NET_ADDS ? ', ' : ''}${demand.claimants.join(' and ')} went after him in this league` : ''} — the market wants him and the lineup model can't say why. Find the reason (role or injury news) and name whose need it is before passing`;
     verdict = 'CONTESTED_CHECK';
@@ -228,7 +260,7 @@ export function denialRow(snapshot, player, { partners = [], cache = new Map() }
   return {
     id: player.id, name: player.name, pos: player.position, team: player.team,
     market: { net_adds: netAdds },
-    demand, own, teams, threats, buyers, price: { bids_on_him: demand.bids, market: bidMarket(snapshot), ceiling, bidders_who_can_pay: likely.map((t) => ({ owner: t.owner, faab: t.faab })) },
+    demand, own, cuff_for, teams, threats, buyers, price: { bids_on_him: demand.bids, market: bidMarket(snapshot), ceiling, bidders_who_can_pay: likely.map((t) => ({ owner: t.owner, faab: t.faab })) },
     verdict, reason,
   };
 }

@@ -2881,6 +2881,20 @@ console.log('\ndenial — block / trade-chip / contested');
   const scramble = build({ pool: ['meh', 'hotalt'], tx: ['a', 'b'].map((w) => ({ status: 'failed', type: 'waiver', by: [w], adds: [{ id: 'meh' }], drops: [], faab_bid: 0 })) });
   check('two managers going after a player in this league is contested even with no add count', denialRow(scramble, P2('meh')).verdict === 'CONTESTED_CHECK');
 
+  // 3b. Handcuffs: the backup to a hurt starter on a team that matters. A projection assumes the starter plays.
+  const cuffSnap = build({ pool: ['hot', 'meh'] });
+  const hurtStarter = { ...P2('rr1'), team: 'NYX', injury_status: 'Questionable' };
+  cuffSnap.teams[1] = { ...cuffSnap.teams[1], starters: [P2('rq'), hurtStarter] };
+  const cuffHot = { ...P2('hot'), team: 'NYX' };
+  cuffSnap.available = { RB: [cuffHot, P2('meh')], K: [P2('kick')] };
+  const cuff = denialRow(cuffSnap, cuffHot);
+  check('the backup to a Questionable starter owned by a direct rival is flagged as his handcuff', cuff.cuff_for.length === 1 && cuff.cuff_for[0].owner === 'rival', JSON.stringify(cuff.cuff_for));
+  const cuffNoise = denialRow(cuffSnap, { ...P2('meh'), position: 'WR', team: 'NYX' });
+  check('a receiver is never called a handcuff to a back', cuffNoise.cuff_for.length === 0);
+  const cuffAhead = build({ pool: ['hot', 'meh'] });
+  cuffAhead.teams[1] = { ...cuffAhead.teams[1], starters: [P2('rq'), hurtStarter], bench: [{ ...P2('hotalt'), team: 'NYX' }] };
+  check('only the next man up is the handcuff — not a back behind a healthy teammate who projects better', denialRow(cuffAhead, { ...P2('meh'), team: 'NYX' }).cuff_for.length === 0);
+
   // 4. The compiler: a bid that adds nothing to my lineup must say why, and the model must agree.
   const idx = buildIndex(claimed);
   const bid = { kind: 'add', player: 'hot', name: 'HOT', pos: 'RB', mode: 'waiver', faab: 10 };
