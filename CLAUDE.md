@@ -90,6 +90,17 @@ node scripts/value.mjs --lineup             # best lineup by projection, each pl
 
 No routine describes a player's production, names a drop, or ranks a start from memory; it quotes these numbers, and says what the projection misses when it overrules them (`value_note`, which the card shows). The compiler refuses the patterns that shipped on 2026-10-13: a drop far worse than the best one, a swap that loses points now and later, a kicker bid the night before free agency reopens, and a trade that doesn't project better in every window. Projections are a baseline, not truth: news still matters, and close numbers mean close calls — say so.
 
+## Blocking and trade chips: never pass on a contested player on lineup value alone
+
+A player who adds nothing to Ben's lineup can still matter: a rival who would start him gains points against Ben, and a hot player is a trade piece (2026-11-05: four reports passed on Devin Singletary as "not a need", then annaf23 — the team the Bowers offer was with — won him for $15 after a second manager also bid). So every waiver run and every "should I bid for X" answer runs:
+
+```
+node scripts/denial.mjs                  # block / trade-chip / contested, every candidate, evidence only
+node scripts/denial.mjs --player <id>    # one player, team by team
+```
+
+It scores each unrostered player against the other 11 lineups, net of the free alternative every team has, tagged by what the team means to Ben's season. It supplies evidence and the cost side (FAAB ceilings, the drop); the report makes the call and says it. A waiver bid that adds nothing to Ben's lineup must carry `purpose: "block"` or `"trade_chip"` and the compiler checks it against the same model. See `.claude/skills/waivers/SKILL.md` 3a.
+
 ## Trades: certain or nothing
 
 Ben's standing rule: **no trade offer goes on the card unless it is certain he is better off making it than not.** A neutral deal, a depth piece, or a buy with acknowledged injury risk is a hold. See `.claude/skills/trade/SKILL.md`.
@@ -132,6 +143,7 @@ Reports in `reports/` and the dashboard's own copy are written for Ben, not for 
 - The snapshot's `available` block is the real free-agent pool by position — `trending` is Sleeper-wide noise and hides most of it
 - `ask/`, `scripts/ask-bundle.mjs`, `scripts/outlook-core.mjs` — the "Ask about this card" page Ben publishes as a claude.ai Artifact; see `docs/ASK.md`
 - `scripts/matchups.mjs` — the weekly matchup sheet for `/lineup`: my players grouped by NFL game, both sides' QBs by depth chart (the snapshot's `team_qbs`), my opponent's starters in each game, close calls, byes, what each player's opposing defense allows his position (`defense_vs_position`, league scoring, ranked), and a Calls table for every position with a choice: opponent-adjusted estimate and last-three-game usage (`production[id].usage`). Betting lines and weather come from research, not from here
+- `scripts/denial.mjs` / `scripts/denial-core.mjs` — who else gains from a free agent, who is bidding, and whether he is a block, a trade chip, or a contested case the lineup model can't explain
 - `scripts/league-activity.mjs` — what the other 11 managers have done, and who they dropped that's still claimable
 - `scripts/selftest.mjs` — `npm test`, offline. Run it after touching `actions.mjs`, `outlook.mjs` or `sync.mjs`; every case in it is a bug that shipped once
 - `data/` — gitignored cache (`players.json` refreshed when >24h old; `league/snapshot.json` per sync)

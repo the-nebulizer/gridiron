@@ -65,6 +65,7 @@ Common fields:
 | `after` | string | Optional. Id of an action that must be **done** before this one makes sense. The card nests this under it as "Then". |
 | `if_not` | string | Optional. Id of an action this one is the **fallback** for: do this only if that one is declined, dismissed, or no longer possible. The card nests this under it as "if declined" (parent is a trade) / "if that misses" (parent is an add) / "if that falls through" (parent is any other kind — a `start`, `drop`, `ir` or `activate`, all legal). |
 | `value_note` | string | Optional, `add` only, ≤200 chars. The one sentence that overrules the points model: what the projection misses (a return date, keeper value, Ben's stated preference). Required by `--check` when the chosen drop is more than 5 projected points (rest of season, net of cover) worse than the best drop, or when the swap loses points both this week and after. Rendered on the card as "Why anyway". |
+| `purpose` | enum | Optional, `add` only: `"block"` (keep a rival from getting him) or `"trade_chip"` (hold him to sell). Required when a waiver bid above $0 adds nothing to my own lineup this week or rest of season. `--check` runs `scripts/denial-core.mjs` and refuses a `block` with no rival who matters gaining, or a `trade_chip` with no team that would start him — unless the player is `CONTESTED_CHECK` (the market is bidding on him) and `value_note` gives the reason. |
 
 Per-kind fields and validation (all checked against `data/league/snapshot.json`):
 
@@ -131,7 +132,7 @@ Every `add`, `drop` and `trade` is scored by `scripts/value-core.mjs`: the best 
 - `value` — the same numbers as data, with `by_week`.
 - The cost line's drop now carries what that player has done: "drops Bryce Young (QB, bench, 27.7/g in 4 games)".
 
-`--check` refuses, with the alternative in the message: (1) a drop more than 5 points worse than the best one, without `value_note`; (2) an add that loses points this week and over the rest of the season, without `value_note`; (3) a waiver bid above $0 on a kicker or defense whose game comes after the next waiver run when the league reopens free agency after each run (`snapshot.free_agency`); (4) any trade that does not project better this week, rest of season, and in the playoffs — Ben's standing rule is that an offer goes out only when he is certain to be better off, and there is no override for it.
+`--check` refuses, with the alternative in the message: (1) a drop more than 5 points worse than the best one, without `value_note`; (2) an add that loses points this week and over the rest of the season, without `value_note`; (3) a waiver bid above $0 on a kicker or defense whose game comes after the next waiver run when the league reopens free agency after each run (`snapshot.free_agency`); (4) any trade that does not project better this week, rest of season, and in the playoffs — Ben's standing rule is that an offer goes out only when he is certain to be better off, and there is no override for it. (5) a waiver bid above $0 that adds nothing to my lineup, without `purpose`; and a `purpose` that `scripts/denial-core.mjs` cannot support.
 
 ### Evidence — the claim a move rests on
 

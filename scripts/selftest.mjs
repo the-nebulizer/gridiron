@@ -16,6 +16,7 @@ import { buildOutlook, SLOT_ELIGIBILITY, fillSlots } from './outlook.mjs';
 import { streamOptions, streamSeason, parseOpponent } from './stream.mjs';
 import { matchupSheet } from './matchups.mjs';
 import { lifecycleState, buildIndex, freeAgencyIsOpen, pointsFindings } from './actions.mjs';
+import { denialRow } from './denial-core.mjs';
 import { scoreLine, bestLineup, weekPoints, moveValue, swapTable, dropTable, defenseAllowed, matchupAdjusted, lineupWithMatchups } from './value-core.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -2824,6 +2825,74 @@ console.log('\npoints — every add, drop and trade is scored against the best l
   check('a trade that projects worse is refused under the certainty rule', bad.fails.length === 1, bad.line);
   const good = pointsFindings({ kind: 'trade', give: ['wb'], get: ['xq'] }, snap, index);
   check('a trade that projects better now, later and in the playoffs passes', good.fails.length === 0, good.line);
+}
+
+// ---- denial: should I bid just to keep someone from getting him? ------------
+// Born 2026-11-05 (Singletary). The model has to see who else gains, ignore
+// the gain any free agent would give (a team with an empty slot "gains" from
+// everyone), and never let "he adds nothing to my lineup" close a contested
+// player.
+
+console.log('\ndenial — block / trade-chip / contested');
+
+{
+  const pl = (id, pos, bye = 99) => ({ id, name: id.toUpperCase(), position: pos, team: id.toUpperCase(), bye_week: bye, injury_status: null });
+  const flat = (v) => Object.fromEntries(Array.from({ length: 17 }, (_, i) => [i + 1, v]));
+  const mk = (id, pos, v) => ({ gp: 6, avg: v, proj: flat(v), p: pl(id, pos) });
+  const defs = { mq: mk('mq', 'QB', 20), mr1: mk('mr1', 'RB', 15), mr2: mk('mr2', 'RB', 14),
+    rq: mk('rq', 'QB', 20), rr1: mk('rr1', 'RB', 15), // direct rival: one RB short
+    oq: mk('oq', 'QB', 20), or1: mk('or1', 'RB', 15), // out-of-it: one RB short
+    pq: mk('pq', 'QB', 20), pr1: mk('pr1', 'RB', 15), pr2: mk('pr2', 'RB', 12), // opponent: full
+    hot: mk('hot', 'RB', 11), hotalt: mk('hotalt', 'RB', 10.8), kick: mk('kick', 'K', 8), meh: mk('meh', 'RB', 3), };
+  const production = Object.fromEntries(Object.entries(defs).map(([k, v]) => [k, { gp: v.gp, avg: v.avg, proj: v.proj }]));
+  const P2 = (k) => defs[k].p;
+  const build = ({ pool, tx = [], trending = [] }) => ({
+    week: 6, my_roster_id: 1,
+    league: { roster_positions: ['QB', 'RB', 'RB', 'BN', 'BN'], playoff_week_start: 15, playoff_teams: 1 },
+    teams: [
+      { roster_id: 1, owner: 'me', division: 1, record: '4-2', fpts: 600, faab_remaining: 50, starters: [P2('mq'), P2('mr1'), P2('mr2')], bench: [], reserve: [] },
+      { roster_id: 2, owner: 'rival', division: 1, record: '5-1', fpts: 650, faab_remaining: 40, starters: [P2('rq'), P2('rr1')], bench: [], reserve: [] },
+      { roster_id: 3, owner: 'oot', division: 2, record: '0-6', fpts: 300, faab_remaining: 90, starters: [P2('oq'), P2('or1')], bench: [], reserve: [] },
+      { roster_id: 4, owner: 'opp', division: 2, record: '3-3', fpts: 500, faab_remaining: 30, starters: [P2('pq'), P2('pr1'), P2('pr2')], bench: [], reserve: [] },
+    ],
+    matchup: { opponent: { roster_id: 4, owner: 'opp' } },
+    available: { RB: pool.map(P2), K: [P2('kick')] },
+    trending: { adds: trending, drops: [] },
+    transactions: tx,
+    production,
+  });
+
+  // 1. A direct rival one RB short, a candidate far better than the alternative, and the rival has bid -> block.
+  const claimed = build({ pool: ['hot', 'meh'], tx: [{ status: 'failed', type: 'waiver', by: ['rival'], adds: [{ id: 'hot' }], drops: [], faab_bid: 0 }] });
+  const r1 = denialRow(claimed, P2('hot'));
+  check('a rival who would start him and has bid on him makes it a block candidate', r1.verdict === 'BLOCK_CANDIDATE' && r1.threats.some((t) => t.owner === 'rival'), `${r1.verdict} ${r1.reason}`);
+  check('the out-of-it team is a buyer, never a threat', r1.buyers.some((t) => t.owner === 'oot') && !r1.threats.some((t) => t.owner === 'oot'));
+  check('nobody having bid yet downgrades a block to WATCH', denialRow(build({ pool: ['hot', 'meh'] }), P2('hot')).verdict === 'WATCH');
+
+  // 2. A near-identical free alternative removes the threat: the rival can claim him for nothing.
+  const twin = denialRow(build({ pool: ['hot', 'hotalt'] }), P2('hot'));
+  check('a rival short at RB is no threat when a nearly-as-good free agent exists', twin.threats.length === 0, `${twin.verdict}`);
+
+  // 3. Hot on the market, nobody gains on paper -> never plain NO.
+  const hotMarket = denialRow(build({ pool: ['meh', 'hotalt'], trending: [{ ...P2('meh'), net_adds: 900000, add_count: 900000, rostered_in_league: false }] }), P2('meh'));
+  check('a league-wide add frenzy with no lineup gain is CONTESTED_CHECK, not NO', hotMarket.verdict === 'CONTESTED_CHECK', hotMarket.verdict);
+  const kickerFrenzy = denialRow(build({ pool: ['meh'], trending: [{ ...P2('kick'), net_adds: 900000, add_count: 900000, rostered_in_league: false }] }), P2('kick'));
+  check('a kicker with a league-wide add count is not a contested case (streamed at $0)', kickerFrenzy.verdict !== 'CONTESTED_CHECK', kickerFrenzy.verdict);
+  const scramble = build({ pool: ['meh', 'hotalt'], tx: ['a', 'b'].map((w) => ({ status: 'failed', type: 'waiver', by: [w], adds: [{ id: 'meh' }], drops: [], faab_bid: 0 })) });
+  check('two managers going after a player in this league is contested even with no add count', denialRow(scramble, P2('meh')).verdict === 'CONTESTED_CHECK');
+
+  // 4. The compiler: a bid that adds nothing to my lineup must say why, and the model must agree.
+  const idx = buildIndex(claimed);
+  const bid = { kind: 'add', player: 'hot', name: 'HOT', pos: 'RB', mode: 'waiver', faab: 10 };
+  const bare = pointsFindings(bid, claimed, idx);
+  check('a bid for a player who adds nothing to my lineup is refused without a purpose', bare.fails.some((f) => /block or a trade-chip/.test(f)), bare.fails.join(' | '));
+  const withBlock = pointsFindings({ ...bid, purpose: 'block' }, claimed, idx);
+  check('...and accepted as a block when a rival who matters would start him', withBlock.fails.length === 0, withBlock.fails.join(' | '));
+  const noSupport = pointsFindings({ ...bid, player: 'meh', name: 'MEH', purpose: 'block' }, build({ pool: ['meh', 'hotalt'] }), buildIndex(build({ pool: ['meh', 'hotalt'] })));
+  check('...and refused as a block when no rival gains', noSupport.fails.some((f) => /no rival who matters/.test(f)), noSupport.fails.join(' | '));
+  const marketBid = pointsFindings({ ...bid, player: 'meh', name: 'MEH', purpose: 'trade_chip', value_note: 'Starter hurt; role open per beat reporter' },
+    scramble, buildIndex(scramble));
+  check('...but a contested player passes with a value_note naming the reason', marketBid.fails.length === 0, marketBid.fails.join(' | '));
 }
 
 // ---- the modules must be importable without doing anything ------------

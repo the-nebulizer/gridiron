@@ -34,6 +34,7 @@ import { readFile, writeFile, readdir, stat } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 import { SLOT_ELIGIBILITY, buildOutlook } from './outlook.mjs';
 import { moveValue, swapTable } from './value-core.mjs';
+import { denialRow, candidatePool } from './denial-core.mjs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -686,6 +687,29 @@ export function pointsFindings(out, snapshot, index) {
         }
       }
     }
+    // A bid that adds nothing to my own lineup is a block or a trade chip, and
+    // has to say which — then the denial model has to agree there is something
+    // to block or sell (scripts/denial-core.mjs). Born 2026-11-05: four
+    // reports passed on Singletary because he added no lineup points, and
+    // annaf23 — a Bowers trade partner — won him for $15.
+    const addsNothing = value.this_week <= 0 && value.rest_of_season <= 0;
+    const bidding = out.mode === 'waiver' && Number.isInteger(out.faab) && out.faab > 0;
+    if (bidding && addsNothing && !out.purpose) {
+      fails.push(`${out.name} adds nothing to my lineup, so $${out.faab} is a block or a trade-chip bid — set purpose to "block" or "trade_chip" (node scripts/denial.mjs --player ${out.player} shows who gains), or drop the bid`);
+    }
+    if (out.purpose) {
+      const pool = candidatePool(snapshot).find((p) => p.id === out.player);
+      if (!pool) {
+        fails.push(`purpose "${out.purpose}" needs an unrostered target, and ${out.name} is not in the free-agent pool`);
+      } else {
+        const d = denialRow(snapshot, pool);
+        const supported = out.purpose === 'block' ? d.threats.length > 0 : d.buyers.length > 0;
+        const marketOnly = d.verdict === 'CONTESTED_CHECK' && out.value_note;
+        if (!supported && !marketOnly) {
+          fails.push(`purpose "${out.purpose}" for ${out.name}: the model finds ${out.purpose === 'block' ? 'no rival who matters to my season gaining from him' : 'no team that would start him'} (${d.verdict}: ${d.reason}). Add value_note with the role or injury news that explains the demand, or drop the bid`);
+        }
+      }
+    }
     // A bid for a kicker or defense whose game comes after the next waiver
     // run, in a league that reopens the pool after every run, buys nothing
     // the free pickup wouldn't — except an earlier decision with less news.
@@ -893,6 +917,7 @@ async function validateAndBuildAction(action, i, snapshot, index, problems, opts
     after: isNonEmptyString(action.after) ? action.after : undefined,
     if_not: isNonEmptyString(action.if_not) ? action.if_not : undefined,
     value_note: action.value_note,
+    purpose: action.purpose,
   };
 
   // ---- displaces: required on add/trade — docs/ACTIONS.md "The case". The
@@ -1335,6 +1360,10 @@ async function validateAndBuildAction(action, i, snapshot, index, problems, opts
   // "The case" — docs/ACTIONS.md "The case — why this move, in four lines".
   // Only computed for a genuinely open action: done/gone actions get no case,
   // the same reasoning that already exempts them from the world checks above.
+  if (out.purpose !== undefined && (kind !== 'add' || !['block', 'trade_chip'].includes(out.purpose))) {
+    push(`(${kind}) purpose is only valid on an add, and must be "block" or "trade_chip" — omit it for an add that improves my own lineup`);
+    bad = true;
+  }
   if (out.value_note !== undefined && (!isNonEmptyString(out.value_note) || out.value_note.length > 200)) {
     push(`(${kind}) value_note must be a non-empty string of at most 200 characters`);
     bad = true;
@@ -1531,6 +1560,7 @@ function finalizeAction(action, source, report, week) {
   }
   if (action.message !== undefined) out.message = action.message;
   if (action.value_note !== undefined) out.value_note = action.value_note;
+  if (action.purpose !== undefined) out.purpose = action.purpose;
   // displaces is `undefined` (never set) when the report predates the rule
   // and this is a compile — see resolveDisplaces above — vs. explicitly
   // `null` when the routine said the player doesn't start; that distinction
