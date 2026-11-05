@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-11-05T12:09:52.743Z",
+  "compiled_at": "2026-11-05T12:31:46.123Z",
   "season": "2026",
   "week": 9,
   "games_have_started": true,
@@ -39,10 +39,10 @@
     "lineup": {
       "report": "2026-11-05-lineup.md",
       "week": 9,
-      "verdict": "Start Houston's defense over Denver again — that swap from Monday is still right and still hasn't been made in the app. Everything else holds, including Kraft over Gesicki at TE.",
+      "verdict": "Start Houston's defense over Denver. The news backs the matchup: Herbert is healthy but the Chargers can't protect him, and Houston is the favorite. Everything else holds.",
       "next_check": "Inactives, Sun 10am",
       "stale": false,
-      "written_at": "2026-11-05T12:09:48.644Z"
+      "written_at": "2026-11-05T12:31:46.021Z"
     },
     "trades": {
       "report": "2026-11-04-trades.md",
@@ -81,7 +81,7 @@
       ],
       "urgency": "before_kickoff",
       "deadline_label": "before Sunday's games",
-      "why": "Houston faces the Chargers, the offense defenses have scored against more than any other this season; its matchup number still beats Denver's, 12.2 to 10.7.",
+      "why": "Chargers allow defenses 12.3 a game, most in the league; Herbert has 23 sacks and 10 interceptions, and Houston is a 4-point favorite in a game with a total near 41.",
       "case": {
         "starts": "Houston Texans in at DEF, Denver Broncos to the bench",
         "need": "Denver Broncos: healthy, DEN bye W10"
