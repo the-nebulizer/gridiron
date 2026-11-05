@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-11-05T13:19:39.526Z",
+  "compiled_at": "2026-11-05T22:18:04.377Z",
   "season": "2026",
   "week": 9,
   "games_have_started": true,
@@ -31,35 +31,90 @@
     "waivers": {
       "report": "2026-11-05-waivers.md",
       "week": 9,
-      "verdict": "Hold. Bench and IR are still completely full from Wednesday's claims, and nothing on the wire — including today's trending names — is worth freeing a spot for.",
+      "verdict": "Add Sam Darnold right now, first-come-first-serve, $0 — he's Seattle's actual starting quarterback, unclaimed while he's hurt, and a bubble rival would happily grab him. Drop Mike Gesicki, who costs nothing to lose. Two handcuffs the denial check also flagged, Chris Rodriguez Jr. and Kendre Miller, don't clear the bar — pass on both.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-11-05T13:19:17.814Z"
+      "written_at": "2026-11-05T22:17:18.854Z"
     },
     "lineup": {
       "report": "2026-11-05-lineup.md",
       "week": 9,
-      "verdict": "Lineup's set. Houston's defense is now actually started over Denver — the swap this morning's report called for is made. Everything else holds.",
+      "verdict": "Lineup's set, nothing changes today. Lamar Jackson's status flipped from Out to IR, confirming surgery and a return no sooner than Week 14 — it's news about a player already in my IR slot, not a lineup decision.",
       "next_check": "Inactives, Sun 10am",
       "stale": false,
-      "written_at": "2026-11-05T13:19:06.066Z"
+      "written_at": "2026-11-05T22:17:38.654Z"
     },
     "trades": {
       "report": "2026-11-05-trades.md",
       "week": 9,
-      "verdict": "Hold. The defense swap (Houston in, Denver benched) doesn't touch the trade picture, and a full re-scan of all 11 other rosters turns up nothing new.",
+      "verdict": "Hold. Lamar Jackson's tag is now officially IR — surgery, no return before Week 14 — which only reinforces why Cousins stays off the table. A full re-scan of all 11 other rosters turns up nothing new.",
       "next_check": "Waivers, Tue 7am",
       "stale": false,
-      "written_at": "2026-11-05T13:19:27.786Z"
+      "written_at": "2026-11-05T22:17:52.290Z"
     },
     "inactives": {
       "report": "2026-11-05-inactives.md",
       "week": 9,
-      "verdict": "Not actionable — Week 9's first game (Baltimore at Jacksonville) kicks off tonight, but none of my players are in it, so there's nothing to check yet.",
+      "verdict": "Not actionable — Week 9's first game (Baltimore at Jacksonville) kicks off tonight, but none of my active players are in it. Lamar Jackson, on Baltimore, is on injured reserve and isn't playing regardless.",
       "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-11-05T13:19:34.362Z"
+      "written_at": "2026-11-05T22:17:58.994Z"
     }
   },
-  "actions": []
+  "actions": [
+    {
+      "id": "waivers:add:4943",
+      "source": "waivers",
+      "report": "2026-11-05-waivers.md",
+      "kind": "add",
+      "week": 9,
+      "player": "4943",
+      "name": "Sam Darnold",
+      "pos": "QB",
+      "team": "SEA",
+      "drop": "4993",
+      "drop_name": "Mike Gesicki",
+      "mode": "fcfs",
+      "value_note": "He's Seattle's named starter, not a backup — Drew Lock is only playing because Darnold is hurt, so the projection model undersells him badly.",
+      "purpose": "block",
+      "displaces": null,
+      "displaces_name": null,
+      "evidence": {
+        "note": "Seahawks coach Mike Macdonald reaffirmed Sam Darnold as the starting quarterback in mid-October; he has missed time with a hip injury, which is why Drew Lock has been starting in his place.",
+        "url": "https://www.foxsports.com/stories/nfl/seattle-sticking-sam-darnold-starting-quarterback",
+        "as_of": "2026-10-18"
+      },
+      "consumes": [
+        "4993"
+      ],
+      "urgency": "now",
+      "deadline_label": "first-come-first-serve, $0",
+      "why": "Blocks annaf23 (rank 9, on the bubble) from a real starting QB for free; also covers my Week 13 SUPER_FLEX when Cousins is on bye.",
+      "case": {
+        "starts": "Bench — QB4 behind Jared Goff, Kirk Cousins",
+        "tradeoff": {
+          "net": "neutral",
+          "fixes": [],
+          "opens": []
+        },
+        "need": "QB: you have 3 — not thin · fixes nothing on the calendar",
+        "cost": "$0, first come first served · drops Mike Gesicki (TE, bench, 9.8/g in 7 games)",
+        "later": "opens no holes",
+        "points": "0 this week · +1.6 rest of season · 0 playoffs",
+        "value": {
+          "this_week": 0,
+          "next_3": 0,
+          "rest_of_season": 1.6,
+          "playoffs": 0,
+          "by_week": [
+            {
+              "week": 13,
+              "delta": 1.6
+            }
+          ]
+        },
+        "override": "He's Seattle's named starter, not a backup — Drew Lock is only playing because Darnold is hurt, so the projection model undersells him badly."
+      }
+    }
+  ]
 }
