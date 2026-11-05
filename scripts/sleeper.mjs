@@ -15,6 +15,8 @@ const get = (p) => fetchJson(`${BASE}${p}`);
 
 export const getState = () => get('/state/nfl');
 export const getLeague = (leagueId) => get(`/league/${leagueId}`);
+// A user's leagues for one season — how a new season's league is found (new-season.mjs).
+export const getUserLeagues = (userId, season, sport = 'nfl') => get(`/user/${userId}/leagues/${sport}/${season}`);
 export const getRosters = (leagueId) => get(`/league/${leagueId}/rosters`);
 export const getUsers = (leagueId) => get(`/league/${leagueId}/users`);
 export const getMatchups = (leagueId, week) => get(`/league/${leagueId}/matchups/${week}`);

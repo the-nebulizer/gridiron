@@ -16,7 +16,8 @@ import { buildOutlook, SLOT_ELIGIBILITY, fillSlots } from './outlook.mjs';
 import { streamOptions, streamSeason, parseOpponent } from './stream.mjs';
 import { matchupSheet } from './matchups.mjs';
 import { lifecycleState, buildIndex, freeAgencyIsOpen, pointsFindings } from './actions.mjs';
-import { denialRow } from './denial-core.mjs';
+import { denialRow, bidHistory } from './denial-core.mjs';
+import { leagueFacts, diffFacts, describeDiff, pickNewLeague, buildLeagueBlock } from './league-facts.mjs';
 import { scoreLine, bestLineup, weekPoints, moveValue, swapTable, dropTable, defenseAllowed, matchupAdjusted, lineupWithMatchups } from './value-core.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -2907,6 +2908,52 @@ console.log('\ndenial — block / trade-chip / contested');
   const marketBid = pointsFindings({ ...bid, player: 'meh', name: 'MEH', purpose: 'trade_chip', value_note: 'Starter hurt; role open per beat reporter' },
     scramble, buildIndex(scramble));
   check('...but a contested player passes with a value_note naming the reason', marketBid.fails.length === 0, marketBid.fails.join(' | '));
+}
+
+// ---- season rollover and rules drift ---------------------------------------
+// Sleeper makes a new league (new id, new roster ids) every season, and a
+// commissioner can change a rule mid-season. Neither may pass silently.
+
+console.log('\nleague facts — rules drift and season rollover');
+
+{
+  const base = { teams: 12, waiver_budget: 100, scoring: { pass_td: 6, rec: 0.5 }, roster_positions: ['QB', 'BN'], noise: 1 };
+  const facts = leagueFacts(base);
+  check('only rule fields are compared; unknown API fields are ignored', !('noise' in facts) && facts.teams === 12);
+  check('identical rules produce no drift, whatever the key order', diffFacts(facts, leagueFacts({ ...base, scoring: { rec: 0.5, pass_td: 6 } })).length === 0);
+  const moved = diffFacts(facts, leagueFacts({ ...base, waiver_budget: 150, scoring: { pass_td: 4, rec: 0.5 } }));
+  check('a changed rule is reported with its old and new value', moved.some((d) => d.key === 'waiver_budget' && d.was === 100 && d.now === 150));
+  check('a changed scoring entry is named on its own, not as a wall of JSON', describeDiff(moved).some((l) => l === 'scoring.pass_td: 6 -> 4'), describeDiff(moved).join(' | '));
+  check('a rule that vanished or appeared is reported', diffFacts({ a: 1 }, { b: 2 }).map((d) => d.kind).sort().join() === 'gone,new');
+
+  const leagues = [{ league_id: 'n1', name: 'Battle', previous_league_id: 'old' }, { league_id: 'n2', name: 'Other', previous_league_id: 'x' }];
+  check('the new season is matched through previous_league_id first', pickNewLeague(leagues, { previousLeagueId: 'old', leagueName: 'Nope' }).league?.league_id === 'n1');
+  check('...then by name', pickNewLeague(leagues, { previousLeagueId: 'zzz', leagueName: 'Other' }).how === 'name');
+  check('two equally good matches are ambiguous — never silently picked', pickNewLeague([...leagues, { league_id: 'n3', name: 'Battle', previous_league_id: 'old' }], { previousLeagueId: 'old', leagueName: 'Battle' }).how === 'ambiguous');
+  check('no match returns no league', pickNewLeague(leagues, { previousLeagueId: 'q', leagueName: 'q' }).league === null);
+
+  const block = buildLeagueBlock({ name: 'L', total_rosters: 12, roster_positions: ['QB', 'BN', 'BN'], settings: { waiver_type: 2, waiver_budget: 100, reserve_allow_out: 1, league_average_match: 1, pick_trading: 0 }, scoring_settings: { pass_td: 6, rec: 0.5 } });
+  check('the snapshot league block reads Sleeper settings (FAAB, IR eligibility, median game, bench slots)',
+    block.waiver_type === 'faab' && block.ir_eligible_statuses.join() === 'Out' && block.median_matchup === true && block.bench_slots === 2 && block.draft_pick_trading === false);
+}
+
+// ---- bid history: what a rival has paid, from the full ledger -----------------
+
+console.log('\ndenial — bid history');
+
+{
+  const snap = { transaction_history: [
+    { type: 'waiver', status: 'complete', by: ['rival'], adds: [{ position: 'RB' }], faab_bid: 15 },
+    { type: 'waiver', status: 'complete', by: ['rival'], adds: [{ position: 'WR' }], faab_bid: 4 },
+    { type: 'waiver', status: 'complete', by: ['rival'], adds: [{ position: 'RB' }], faab_bid: 0 },
+    { type: 'waiver', status: 'failed', by: ['rival'], adds: [{ position: 'QB' }], faab_bid: 30 },
+    { type: 'waiver', status: 'complete', by: ['other'], adds: [{ position: 'RB' }], faab_bid: 50 },
+  ] };
+  const h = bidHistory(snap, 'rival', 'RB');
+  check('bid history counts only that manager\'s winning, paid claims', h.max_paid === 15 && h.paid_claims === 2 && h.claims_won === 3, JSON.stringify(h));
+  check('...and what he paid at one position', h.max_paid_at_position === 15 && bidHistory(snap, 'rival', 'WR').max_paid_at_position === 4);
+  check('a losing bid is placed but is not a price paid', h.bids_placed === 4 && h.max_paid < 30);
+  check('with no ledger at all it degrades to zeros, not an error', bidHistory({}, 'rival').max_paid === 0);
 }
 
 // ---- the modules must be importable without doing anything ------------

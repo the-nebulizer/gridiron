@@ -114,6 +114,26 @@ export function demandFor(snapshot, playerId) {
   return { claimants: [...claimants], bids, dropped_by };
 }
 
+// What one manager has actually paid this season, from the full ledger
+// (snapshot.transaction_history; falls back to the two-week window on an old
+// snapshot). Only winning waiver claims show what a manager will pay; their
+// losing bids show what they were willing to bid on a contested player.
+export function bidHistory(snapshot, owner, position = null) {
+  const ledger = snapshot.transaction_history ?? snapshot.transactions ?? [];
+  const mine = ledger.filter((t) => t.type === 'waiver' && (t.by ?? []).includes(owner));
+  const won = mine.filter((t) => t.status === 'complete');
+  const paid = (list) => list.map((t) => t.faab_bid ?? 0).filter((x) => x > 0);
+  const atPos = position ? won.filter((t) => (t.adds ?? []).some((a) => a.position === position)) : won;
+  const nums = paid(won).sort((a, b) => a - b);
+  const median = nums.length ? nums[Math.floor(nums.length / 2)] : 0;
+  return {
+    claims_won: won.length, paid_claims: nums.length,
+    max_paid: nums.length ? nums[nums.length - 1] : 0, median_paid: median,
+    max_paid_at_position: Math.max(0, ...paid(atPos)),
+    bids_placed: mine.length,
+  };
+}
+
 // What bids have looked like in the waiver runs the snapshot carries: every
 // winning bid above $0, and how many winning claims cleared at $0. The price
 // of a block is not visible (bids are blind) but this is the real market.
@@ -175,6 +195,7 @@ export function denialRow(snapshot, player, { partners = [], cache = new Map() }
     return {
       roster_id: t.roster_id, owner: t.owner, relation: r.tag, rank: r.rank, record: r.record,
       faab: t.faab_remaining, contesting, partner: partners.includes(t.owner),
+      history: bidHistory(snapshot, t.owner, player.position),
       this_week: g.this_week, rest_of_season: g.rest_of_season, playoffs: g.playoffs,
       raw_rest_of_season: g.raw.rest_of_season, material, buyer: g.rest_of_season >= CHIP_ROS_GAIN,
     };
@@ -260,7 +281,15 @@ export function denialRow(snapshot, player, { partners = [], cache = new Map() }
   return {
     id: player.id, name: player.name, pos: player.position, team: player.team,
     market: { net_adds: netAdds },
-    demand, own, cuff_for, teams, threats, buyers, price: { bids_on_him: demand.bids, market: bidMarket(snapshot), ceiling, bidders_who_can_pay: likely.map((t) => ({ owner: t.owner, faab: t.faab })) },
+    demand, own, cuff_for, teams, threats, buyers, price: { bids_on_him: demand.bids, market: bidMarket(snapshot), ceiling,
+      // What it would take to out-bid each threat: what they have paid for this
+      // position (else anything) this season, plus $1, capped at what they have
+      // left. Bids are blind, so this is evidence, not a quote.
+      to_beat: [...new Map([...threats, ...teams.filter((t) => cuffMatters.some((c) => c.owner === t.owner))].map((t) => [t.owner, t])).values()].map((t) => ({
+        owner: t.owner, faab: t.faab,
+        top_paid: t.history.max_paid_at_position || t.history.max_paid,
+        bid_needed: Math.min(t.faab, (t.history.max_paid_at_position || t.history.max_paid) + 1),
+      })), bidders_who_can_pay: likely.map((t) => ({ owner: t.owner, faab: t.faab })) },
     verdict, reason,
   };
 }

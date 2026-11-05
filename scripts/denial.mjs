@@ -63,7 +63,7 @@ if (isMain) {
       console.log(`    ${r.threats.length ? 'threat' : 'buyer '} ${pad(t.owner, 14)} ${pad(t.relation, 19)} $${t.faab} left · ${sg(t.this_week)} now, ${sg(t.rest_of_season)} ROS, ${sg(t.playoffs)} playoffs${t.partner ? ' · TRADE PARTNER' : ''}`);
     }
     if (r.demand.bids.length) console.log(`    bids on him last run: ${r.demand.bids.map((b) => `${b.by} $${b.faab}${b.won ? ' (won)' : ' (lost)'}`).join(', ')}`);
-    if (r.price.ceiling) console.log(`    to out-bid every threat you would need more than $${r.price.ceiling} (bids are blind — that is a ceiling, not a price)`);
+    for (const b of r.price.to_beat) console.log(`    to out-bid ${b.owner}: they have paid up to $${b.top_paid} this season and have $${b.faab} left, so about $${b.bid_needed} (blind bids — evidence, not a quote)`);
   }
   const m = bidMarket(snapshot);
   console.log(`\n  Real prices last run: ${m.claims} winning claims, ${m.at_zero} at $0; paid: ${m.paid.map((x) => `$${x.faab} ${x.player} (${x.by})`).join(', ') || 'none'}. Every bid amount in the log is real, losers included.`);

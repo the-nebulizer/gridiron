@@ -8,6 +8,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import * as sleeper from './sleeper.mjs';
+import { buildLeagueBlock, leagueFacts, diffFacts, describeDiff } from './league-facts.mjs';
 import { buildOutlook } from './outlook.mjs';
 import { scoreLine, defenseAllowed } from './value-core.mjs';
 
@@ -113,10 +114,17 @@ function buildTeamQbs(players) {
 }
 const teamQbs = buildTeamQbs(players);
 
-const txWeeks = week > 1 ? [week - 1, week] : [week];
-const transactionsRaw = (
-  await Promise.all(txWeeks.map((w) => sleeper.getTransactions(config.league_id, w)))
+// The whole season to date, not just this week and last: bid prices, who
+// went after whom and every drop-and-rebid are what a block or a trade chip is
+// priced on (scripts/denial-core.mjs), and a two-week window forgot them. One
+// extra request per week played; the two-week slice below is what every
+// older consumer still reads.
+const txAllWeeks = Array.from({ length: Math.max(week, 1) }, (_, i) => i + 1);
+const txAllRaw = (
+  await Promise.all(txAllWeeks.map((w) => sleeper.getTransactions(config.league_id, w).catch(() => [])))
 ).flat();
+const txWeeks = week > 1 ? [week - 1, week] : [week];
+const transactionsRaw = txAllRaw.filter((t) => txWeeks.includes(t.leg));
 
 const ownerName = new Map(users.map((u) => [u.user_id, u.display_name]));
 
@@ -186,6 +194,21 @@ const transactions = transactionsRaw.map((t) => ({
   drops: Object.keys(t.drops ?? {}).map(resolve),
   faab_bid: t.settings?.waiver_bid ?? null,
 }));
+
+// Compact season-to-date ledger. Failed claims keep their amount (Sleeper
+// records every bid, losers included; a $0 is a real $0 — confirmed by Ben).
+const transactionHistory = txAllRaw
+  .map((t) => ({
+    week: t.leg,
+    at: t.status_updated ?? t.created ?? null,
+    type: t.type,
+    status: t.status,
+    by: (t.roster_ids ?? []).map((rid) => teams.find((x) => x.roster_id === rid)?.owner ?? rid),
+    adds: Object.keys(t.adds ?? {}).map((id) => { const r = resolve(id); return { id, name: r.name, position: r.position }; }),
+    drops: Object.keys(t.drops ?? {}).map((id) => { const r = resolve(id); return { id, name: r.name, position: r.position }; }),
+    faab_bid: t.settings?.waiver_bid ?? null,
+  }))
+  .sort((a, b) => (a.at ?? 0) - (b.at ?? 0));
 
 // `count` used to be called `add_count` on BOTH lists, so a player being cut
 // by 400k managers carried an "add_count" of 400k — an invitation to read the
@@ -361,47 +384,8 @@ const snapshot = {
   // Every league rule a recommendation might turn on, read from the API — not
   // a subset. A rule that isn't here is a rule some routine will reconstruct
   // from memory, which is the one thing this project exists to prevent.
-  league: {
-    name: league.name,
-    teams: league.total_rosters ?? league.settings?.num_teams ?? null,
-    divisions: league.settings?.divisions ?? 0,
-    roster_positions: league.roster_positions,
-    bench_slots: (league.roster_positions ?? []).filter((p) => p === 'BN').length,
-    reserve_slots: league.settings?.reserve_slots ?? 0,
-    taxi_slots: league.settings?.taxi_slots ?? 0,
-    // Which injury designations Sleeper will let into the IR slot. An `ir`
-    // recommendation for a player carrying anything else is a move the app
-    // will simply refuse.
-    ir_eligible_statuses: Object.entries({
-      Out: league.settings?.reserve_allow_out,
-      Doubtful: league.settings?.reserve_allow_doubtful,
-      NA: league.settings?.reserve_allow_na,
-      Sus: league.settings?.reserve_allow_sus,
-      DNR: league.settings?.reserve_allow_dnr,
-      COV: league.settings?.reserve_allow_cov,
-    }).filter(([, allowed]) => allowed === 1).map(([status]) => status),
-    pass_td: league.scoring_settings?.pass_td,
-    rec: league.scoring_settings?.rec,
-    scoring: league.scoring_settings,
-    waiver_type: league.settings?.waiver_type === 2 ? 'faab' : String(league.settings?.waiver_type ?? ''),
-    waiver_budget: league.settings?.waiver_budget,
-    waiver_bid_min: league.settings?.waiver_bid_min ?? 0,
-    waiver_clear_days: league.settings?.waiver_clear_days,
-    // Sleeper counts the week from Sunday, so 2 is Tuesday night's deadline
-    // for the Wednesday run.
-    waiver_day_of_week: league.settings?.waiver_day_of_week,
-    trade_deadline: league.settings?.trade_deadline,
-    trade_review_days: league.settings?.trade_review_days,
-    veto_votes_needed: league.settings?.veto_votes_needed,
-    trades_disabled: league.settings?.disable_trades === 1,
-    draft_pick_trading: league.settings?.pick_trading === 1,
-    max_keepers: league.settings?.max_keepers ?? 0,
-    playoff_teams: league.settings?.playoff_teams,
-    playoff_week_start: league.settings?.playoff_week_start,
-    // With league_average_match on, every team also plays the league median
-    // each week — a second result that rewards a high floor over a boom bench.
-    median_matchup: league.settings?.league_average_match === 1,
-  },
+  league: buildLeagueBlock(league),
+
   // Team -> bye week for all 32 NFL teams, so any player's bye is derivable
   // without re-fetching the schedule (and without anyone recalling one).
   byes: Object.fromEntries([...byes.entries()].sort()),
@@ -420,6 +404,8 @@ const snapshot = {
       }
     : null,
   transactions: transactions.sort((a, b) => (b.at ?? 0) - (a.at ?? 0)),
+  // Every transaction this season, oldest first — see transactionHistory.
+  transaction_history: transactionHistory,
   trending: { adds: trendResolve(trendingAdds, 'add'), drops: trendResolve(trendingDrops, 'drop') },
   // The free-agent pool by position, best first. This is the candidate list
   // for /waivers — `trending` alone is Sleeper-wide noise, not availability.
@@ -466,6 +452,21 @@ if (waiverWarning) console.error(waiverWarning);
 snapshot.outlook = buildOutlook(snapshot);
 
 await mkdir(path.join(dataDir, 'league'), { recursive: true });
+// Rules drift: the league's settings against docs/league-constants.json (the
+// machine-checked copy of what CLAUDE.md and docs/LEAGUE.md say in prose). A
+// commissioner changing FAAB, scoring or a roster slot mid-season, or a new
+// season's league arriving with different rules, should be seen here on the
+// first sync, not discovered from a recommendation that no longer fits.
+try {
+  const expected = JSON.parse(await readFile(path.join(root, 'docs', 'league-constants.json'), 'utf8'));
+  if (String(expected.league_id) !== String(config.league_id)) {
+    snapshot.rules_drift = [{ key: 'league_id', was: expected.league_id, now: config.league_id }];
+  } else {
+    snapshot.rules_drift = diffFacts(expected.facts, leagueFacts(snapshot.league));
+  }
+} catch {
+  snapshot.rules_drift = null; // no baseline yet — node scripts/new-season.mjs --season <year> --write creates one
+}
 await writeFile(path.join(dataDir, 'league', 'snapshot.json'), JSON.stringify(snapshot, null, 2));
 
 // Human-readable summary
@@ -551,4 +552,10 @@ try {
   }
 } catch {
   console.log('\n(Could not compare reports with origin/main — make sure the newest reports are read before advising.)');
+}
+
+if (snapshot.rules_drift?.length) {
+  console.log('\nLEAGUE RULES CHANGED since docs/league-constants.json — the prose in CLAUDE.md, docs/LEAGUE.md and the skills may be wrong:');
+  for (const line of snapshot.rules_drift.some((d) => d.key === 'league_id') ? [`league_id: ${snapshot.rules_drift[0].was} -> ${snapshot.rules_drift[0].now} (a different league than the baseline — run node scripts/new-season.mjs)`] : describeDiff(snapshot.rules_drift)) console.log(`  - ${line}`);
+  console.log('  Read snapshot.league for the truth; once the docs are corrected, node scripts/new-season.mjs --season <year> --write refreshes the baseline.');
 }
