@@ -104,11 +104,23 @@ export function demandFor(snapshot, playerId) {
   for (const tx of snapshot.transactions ?? []) {
     if ((tx.adds ?? []).some((a) => a.id === playerId)) {
       for (const who of tx.by ?? []) claimants.add(who);
-      if (tx.status === 'complete' && tx.type === 'waiver') bids.push({ by: (tx.by ?? [])[0], faab: tx.faab_bid ?? 0 });
+      // Sleeper records the amount of every waiver bid, winning or losing, so a
+      // $0 in the log is a real $0 bid (confirmed by Ben, 2026-11-05).
+      if (tx.type === 'waiver') bids.push({ by: (tx.by ?? [])[0], faab: tx.faab_bid ?? 0, won: tx.status === 'complete' });
     }
     if ((tx.drops ?? []).some((d) => d.id === playerId)) dropped_by = (tx.by ?? [])[0] ?? null;
   }
-  return { claimants: [...claimants], winning_bids: bids, dropped_by };
+  return { claimants: [...claimants], bids, dropped_by };
+}
+
+// What bids have looked like in the waiver runs the snapshot carries: every
+// winning bid above $0, and how many winning claims cleared at $0. The price
+// of a block is not visible (bids are blind) but this is the real market.
+export function bidMarket(snapshot) {
+  const won = (snapshot.transactions ?? []).filter((t) => t.type === 'waiver' && t.status === 'complete');
+  const paid = won.filter((t) => (t.faab_bid ?? 0) > 0).map((t) => ({ by: (t.by ?? [])[0], faab: t.faab_bid, player: (t.adds ?? [])[0]?.name }));
+  paid.sort((a, b) => b.faab - a.faab);
+  return { claims: won.length, at_zero: won.length - paid.length, paid };
 }
 
 // Candidates: the unrostered pool, deduped. Dropped-and-unclaimed players are
@@ -189,13 +201,13 @@ export function denialRow(snapshot, player, { partners = [], cache = new Map() }
     verdict = 'TRADE_CHIP_CANDIDATE';
     reason = `${buyers.slice(0, 3).map((t) => t.owner).join(', ')} would start him`;
   } else {
-    verdict = 'NO'; reason = 'no team that matters to my season gains from him, and nobody who would start him is a trade partner';
+    verdict = 'NO'; reason = 'no team that matters to my season gains from him, and no team in the league would start him';
   }
   if (verdict !== 'NO' && partners.length) {
     const hit = buyers.filter((t) => t.partner);
     if (hit.length && !['ADD_ON_MERIT'].includes(verdict)) {
       verdict = verdict === 'BLOCK_CANDIDATE' ? 'BLOCK_AND_CHIP' : 'TRADE_CHIP_CANDIDATE';
-      reason += `; ${hit.map((t) => t.owner).join(', ')} (a trade partner) would start him`;
+      reason += `; ${hit.map((t) => t.owner).join(', ')} (a team I am already talking to) would start him`;
     }
   }
 
@@ -216,7 +228,7 @@ export function denialRow(snapshot, player, { partners = [], cache = new Map() }
   return {
     id: player.id, name: player.name, pos: player.position, team: player.team,
     market: { net_adds: netAdds },
-    demand, own, teams, threats, buyers, price: { ceiling, bidders_who_can_pay: likely.map((t) => ({ owner: t.owner, faab: t.faab })) },
+    demand, own, teams, threats, buyers, price: { bids_on_him: demand.bids, market: bidMarket(snapshot), ceiling, bidders_who_can_pay: likely.map((t) => ({ owner: t.owner, faab: t.faab })) },
     verdict, reason,
   };
 }

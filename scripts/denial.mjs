@@ -9,7 +9,7 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { denialTable, denialRow, candidatePool, OPPONENT_THIS_WEEK_GAIN, RIVAL_ROS_GAIN, RIVAL_PLAYOFF_GAIN, CHIP_ROS_GAIN, OWN_MERIT_GAIN } from './denial-core.mjs';
+import { denialTable, denialRow, candidatePool, bidMarket, OPPONENT_THIS_WEEK_GAIN, RIVAL_ROS_GAIN, RIVAL_PLAYOFF_GAIN, CHIP_ROS_GAIN, OWN_MERIT_GAIN } from './denial-core.mjs';
 
 const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isMain) {
@@ -61,7 +61,10 @@ if (isMain) {
     for (const t of (r.threats.length ? r.threats : r.buyers).slice(0, 4)) {
       console.log(`    ${r.threats.length ? 'threat' : 'buyer '} ${pad(t.owner, 14)} ${pad(t.relation, 19)} $${t.faab} left · ${sg(t.this_week)} now, ${sg(t.rest_of_season)} ROS, ${sg(t.playoffs)} playoffs${t.partner ? ' · TRADE PARTNER' : ''}`);
     }
+    if (r.demand.bids.length) console.log(`    bids on him last run: ${r.demand.bids.map((b) => `${b.by} $${b.faab}${b.won ? ' (won)' : ' (lost)'}`).join(', ')}`);
     if (r.price.ceiling) console.log(`    to out-bid every threat you would need more than $${r.price.ceiling} (bids are blind — that is a ceiling, not a price)`);
   }
+  const m = bidMarket(snapshot);
+  console.log(`\n  Real prices last run: ${m.claims} winning claims, ${m.at_zero} at $0; paid: ${m.paid.map((x) => `$${x.faab} ${x.player} (${x.by})`).join(', ') || 'none'}. Every bid amount in the log is real, losers included.`);
   console.log('\n  This is evidence, not a decision: the report says whether the block or chip is worth the FAAB and the roster spot, and names the player dropped for it.');
 }

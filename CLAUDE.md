@@ -99,7 +99,7 @@ node scripts/denial.mjs                  # block / trade-chip / contested, every
 node scripts/denial.mjs --player <id>    # one player, team by team
 ```
 
-It scores each unrostered player against the other 11 lineups, net of the free alternative every team has, tagged by what the team means to Ben's season. It supplies evidence and the cost side (FAAB ceilings, the drop); the report makes the call and says it. A waiver bid that adds nothing to Ben's lineup must carry `purpose: "block"` or `"trade_chip"` and the compiler checks it against the same model. See `.claude/skills/waivers/SKILL.md` 3a.
+It scores each unrostered player against the other 11 lineups (any of them is a possible trade buyer, not only teams already in talks), net of the free alternative every team has, tagged by what the team means to Ben's season. Bid amounts in the transaction log are real, losing bids included: a `$0` is a real $0 bid. It supplies evidence and the cost side (FAAB ceilings, the drop); the report makes the call and says it. A waiver bid that adds nothing to Ben's lineup must carry `purpose: "block"` or `"trade_chip"` and the compiler checks it against the same model. See `.claude/skills/waivers/SKILL.md` 3a.
 
 ## Trades: certain or nothing
 
