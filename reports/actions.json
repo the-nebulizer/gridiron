@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-11-05T12:31:46.123Z",
+  "compiled_at": "2026-11-05T13:19:39.526Z",
   "season": "2026",
   "week": 9,
   "games_have_started": true,
@@ -14,14 +14,14 @@
       "11610",
       "1166",
       "11792",
-      "DEN"
+      "HOU"
     ],
     "bench": [
       "4993",
       "7002",
       "8228",
       "9228",
-      "HOU"
+      "DEN"
     ],
     "reserve": [
       "4881"
@@ -29,63 +29,37 @@
   },
   "sources": {
     "waivers": {
-      "report": "2026-11-04-waivers.md",
+      "report": "2026-11-05-waivers.md",
       "week": 9,
-      "verdict": "Hold. Gesicki and Houston's defense both cleared waivers, the bench and IR are now completely full, and nothing on the wire is worth freeing a spot for.",
+      "verdict": "Hold. Bench and IR are still completely full from Wednesday's claims, and nothing on the wire — including today's trending names — is worth freeing a spot for.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-11-04T12:18:18.000Z"
+      "written_at": "2026-11-05T13:19:17.814Z"
     },
     "lineup": {
       "report": "2026-11-05-lineup.md",
       "week": 9,
-      "verdict": "Start Houston's defense over Denver. The news backs the matchup: Herbert is healthy but the Chargers can't protect him, and Houston is the favorite. Everything else holds.",
+      "verdict": "Lineup's set. Houston's defense is now actually started over Denver — the swap this morning's report called for is made. Everything else holds.",
       "next_check": "Inactives, Sun 10am",
       "stale": false,
-      "written_at": "2026-11-05T12:31:46.021Z"
+      "written_at": "2026-11-05T13:19:06.066Z"
     },
     "trades": {
-      "report": "2026-11-04-trades.md",
+      "report": "2026-11-05-trades.md",
       "week": 9,
-      "verdict": "Hold. The roster move that triggered this check (Gesicki and Houston's defense landing, Cleveland out) doesn't change the trade picture — nothing clears the bar of being certain to leave you better off.",
-      "next_check": "Trades, Mon 7am",
+      "verdict": "Hold. The defense swap (Houston in, Denver benched) doesn't touch the trade picture, and a full re-scan of all 11 other rosters turns up nothing new.",
+      "next_check": "Waivers, Tue 7am",
       "stale": false,
-      "written_at": "2026-11-04T12:18:18.000Z"
+      "written_at": "2026-11-05T13:19:27.786Z"
     },
     "inactives": {
-      "report": "2026-11-04-inactives.md",
+      "report": "2026-11-05-inactives.md",
       "week": 9,
-      "verdict": "Not actionable — Week 9's first game (Baltimore at Jacksonville, Thursday) is still a day out, so there are no inactive lists yet and nothing to check.",
+      "verdict": "Not actionable — Week 9's first game (Baltimore at Jacksonville) kicks off tonight, but none of my players are in it, so there's nothing to check yet.",
       "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-11-04T12:18:18.000Z"
+      "written_at": "2026-11-05T13:19:34.362Z"
     }
   },
-  "actions": [
-    {
-      "id": "lineup:start:HOU",
-      "source": "lineup",
-      "report": "2026-11-05-lineup.md",
-      "kind": "start",
-      "week": 9,
-      "player": "HOU",
-      "name": "Houston Texans",
-      "pos": "DEF",
-      "team": "HOU",
-      "slot": "DEF",
-      "for": "DEN",
-      "for_name": "Denver Broncos",
-      "consumes": [
-        "DEN",
-        "HOU"
-      ],
-      "urgency": "before_kickoff",
-      "deadline_label": "before Sunday's games",
-      "why": "Chargers allow defenses 12.3 a game, most in the league; Herbert has 23 sacks and 10 interceptions, and Houston is a 4-point favorite in a game with a total near 41.",
-      "case": {
-        "starts": "Houston Texans in at DEF, Denver Broncos to the bench",
-        "need": "Denver Broncos: healthy, DEN bye W10"
-      }
-    }
-  ]
+  "actions": []
 }
