@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-11-08T15:14:26.870Z",
+  "compiled_at": "2026-11-09T12:04:28.532Z",
   "season": "2026",
   "week": 9,
   "games_have_started": true,
@@ -45,12 +45,12 @@
       "written_at": "2026-11-05T22:18:11.000Z"
     },
     "trades": {
-      "report": "2026-11-05-trades.md",
+      "report": "2026-11-09-trades.md",
       "week": 9,
-      "verdict": "Hold. Lamar Jackson's tag is now officially IR — surgery, no return before Week 14 — which only reinforces why Cousins stays off the table. A full re-scan of all 11 other rosters turns up nothing new.",
+      "verdict": "Hold. Full re-scan of all 12 rosters finds nothing that clears the bar — no trade projects better in every window once the other side's own needs are weighed in.",
       "next_check": "Waivers, Tue 7am",
       "stale": false,
-      "written_at": "2026-11-05T22:18:11.000Z"
+      "written_at": "2026-11-09T12:04:24.052Z"
     },
     "inactives": {
       "report": "2026-11-08-inactives.md",
@@ -58,7 +58,7 @@
       "verdict": "Hold — all ten starters show clean as of this morning's sync (10:10am ET), and none of today's official inactive lists have posted yet. Nothing to flip right now.",
       "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-11-08T15:14:21.800Z"
+      "written_at": "2026-11-08T15:14:31.000Z"
     }
   },
   "actions": [
