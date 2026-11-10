@@ -1,7 +1,7 @@
 {
-  "compiled_at": "2026-11-09T12:04:28.532Z",
+  "compiled_at": "2026-11-10T12:13:44.849Z",
   "season": "2026",
-  "week": 9,
+  "week": 10,
   "games_have_started": true,
   "roster": {
     "starters": [
@@ -29,19 +29,19 @@
   },
   "sources": {
     "waivers": {
-      "report": "2026-11-05-waivers.md",
-      "week": 9,
-      "verdict": "Add Sam Darnold right now, first-come-first-serve, $0 — he's Seattle's actual starting quarterback, unclaimed while he's hurt, and a bubble rival would happily grab him. Drop Mike Gesicki, who costs nothing to lose. Two handcuffs the denial check also flagged, Chris Rodriguez Jr. and Kendre Miller, don't clear the bar — pass on both.",
+      "report": "2026-11-10-waivers.md",
+      "week": 10,
+      "verdict": "Hold — no add clears the bar this week. Keep Will Reichard and the Texans as your K/DEF starts, and hold your $61 FAAB; the trade deadline is one week out and your roster has no hole between now and the playoffs.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-11-05T22:18:11.000Z"
+      "written_at": "2026-11-10T12:13:39.230Z"
     },
     "lineup": {
       "report": "2026-11-05-lineup.md",
       "week": 9,
       "verdict": "Lineup's set, nothing changes today. Lamar Jackson's status flipped from Out to IR, confirming surgery and a return no sooner than Week 14 — it's news about a player already in my IR slot, not a lineup decision.",
       "next_check": "Inactives, Sun 10am",
-      "stale": false,
+      "stale": true,
       "written_at": "2026-11-05T22:18:11.000Z"
     },
     "trades": {
@@ -49,39 +49,17 @@
       "week": 9,
       "verdict": "Hold. Full re-scan of all 12 rosters finds nothing that clears the bar — no trade projects better in every window once the other side's own needs are weighed in.",
       "next_check": "Waivers, Tue 7am",
-      "stale": false,
-      "written_at": "2026-11-09T12:04:24.052Z"
+      "stale": true,
+      "written_at": "2026-11-09T12:04:31.000Z"
     },
     "inactives": {
       "report": "2026-11-08-inactives.md",
       "week": 9,
       "verdict": "Hold — all ten starters show clean as of this morning's sync (10:10am ET), and none of today's official inactive lists have posted yet. Nothing to flip right now.",
       "next_check": "Trades, Mon 7am",
-      "stale": false,
+      "stale": true,
       "written_at": "2026-11-08T15:14:31.000Z"
     }
   },
-  "actions": [
-    {
-      "id": "waivers:add:4943",
-      "source": "waivers",
-      "report": "2026-11-05-waivers.md",
-      "kind": "add",
-      "week": 9,
-      "state": "gone",
-      "player": "4943",
-      "name": "Sam Darnold",
-      "pos": "QB",
-      "team": "SEA",
-      "drop": "4993",
-      "drop_name": "Mike Gesicki",
-      "mode": "fcfs",
-      "value_note": "He's Seattle's named starter, not a backup — Drew Lock is only playing because Darnold is hurt, so the projection model undersells him badly.",
-      "purpose": "block",
-      "consumes": [],
-      "urgency": "now",
-      "deadline_label": "first-come-first-serve, $0",
-      "why": "Blocks annaf23 (rank 9, on the bubble) from a real starting QB for free; also covers my Week 13 SUPER_FLEX when Cousins is on bye."
-    }
-  ]
+  "actions": []
 }
