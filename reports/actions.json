@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-11-11T12:57:58.502Z",
+  "compiled_at": "2026-11-11T13:00:06.039Z",
   "season": "2026",
   "week": 10,
   "games_have_started": true,
@@ -31,18 +31,18 @@
     "waivers": {
       "report": "2026-11-11-waivers.md",
       "week": 10,
-      "verdict": "Mendoza went to sparkJ88 for $47, more than the card would have bid, so missing the deadline cost nothing. Do three things before Sunday: Jaylen Warren in for Bucky Irving (bye), Bryce Young in for Kirk Cousins at SUPER_FLEX, and swap Will Reichard for Cam Little at kicker if Sleeper lets you add him now.",
+      "verdict": "Mendoza went to sparkJ88 for $47, more than the card would have bid, so missing the deadline cost nothing. Swap Will Reichard for Cam Little at kicker if Sleeper lets you add him now. Lineup moves are in today's lineup report.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-11-11T12:57:53.285Z"
+      "written_at": "2026-11-11T13:00:02.291Z"
     },
     "lineup": {
-      "report": "2026-11-05-lineup.md",
-      "week": 9,
-      "verdict": "Lineup's set, nothing changes today. Lamar Jackson's status flipped from Out to IR, confirming surgery and a return no sooner than Week 14 — it's news about a player already in my IR slot, not a lineup decision.",
+      "report": "2026-11-11-lineup.md",
+      "week": 10,
+      "verdict": "Three swaps: Jaylen Warren in for Bucky Irving (bye), Bryce Young in for Jared Goff at QB (your rule; Goff's matchup is ordinary, not exceptional), Mike Gesicki in for Malik Washington at FLEX (Miami is down to Kyle McCord at QB). Cousins stays at SUPER_FLEX; Kraft at TE and Houston at DEF hold.",
       "next_check": "Inactives, Sun 10am",
-      "stale": true,
-      "written_at": "2026-11-05T22:18:11.000Z"
+      "stale": false,
+      "written_at": "2026-11-11T12:59:57.697Z"
     },
     "trades": {
       "report": "2026-11-09-trades.md",
@@ -62,54 +62,6 @@
     }
   },
   "actions": [
-    {
-      "id": "w10-rb",
-      "source": "waivers",
-      "report": "2026-11-11-waivers.md",
-      "kind": "start",
-      "week": 10,
-      "player": "8228",
-      "name": "Jaylen Warren",
-      "pos": "RB",
-      "team": "PIT",
-      "slot": "RB",
-      "for": "11584",
-      "for_name": "Bucky Irving",
-      "consumes": [
-        "11584",
-        "8228"
-      ],
-      "urgency": "now",
-      "why": "Bucky Irving is on bye and still in an RB slot, which scores zero; Jaylen Warren (at Cincinnati) is the only other back.",
-      "case": {
-        "starts": "Jaylen Warren in at RB, Bucky Irving to the bench",
-        "need": "Bucky Irving: healthy, TB bye W10"
-      }
-    },
-    {
-      "id": "w10-sf",
-      "source": "waivers",
-      "report": "2026-11-11-waivers.md",
-      "kind": "start",
-      "week": 10,
-      "player": "9228",
-      "name": "Bryce Young",
-      "pos": "QB",
-      "team": "CAR",
-      "slot": "SUPER_FLEX",
-      "for": "1166",
-      "for_name": "Kirk Cousins",
-      "consumes": [
-        "1166",
-        "9228"
-      ],
-      "urgency": "this_week",
-      "why": "Close call. Young (at New Orleans, indoors) edges Cousins on projection and matchup; Cousins debuts days after the trade in a 40.5-total game at Green Bay.",
-      "case": {
-        "starts": "Bryce Young in at SUPERFLEX, Kirk Cousins to the bench",
-        "need": "Kirk Cousins: healthy, MIN bye W6"
-      }
-    },
     {
       "id": "w10-k",
       "source": "waivers",
@@ -186,6 +138,78 @@
             }
           ]
         }
+      }
+    },
+    {
+      "id": "w10-rb",
+      "source": "lineup",
+      "report": "2026-11-11-lineup.md",
+      "kind": "start",
+      "week": 10,
+      "player": "8228",
+      "name": "Jaylen Warren",
+      "pos": "RB",
+      "team": "PIT",
+      "slot": "RB",
+      "for": "11584",
+      "for_name": "Bucky Irving",
+      "consumes": [
+        "11584",
+        "8228"
+      ],
+      "urgency": "now",
+      "why": "Bucky Irving is on bye and still in an RB slot, which scores zero; Warren (at Cincinnati) is the only other back.",
+      "case": {
+        "starts": "Jaylen Warren in at RB, Bucky Irving to the bench",
+        "need": "Bucky Irving: healthy, TB bye W10"
+      }
+    },
+    {
+      "id": "w10-qb",
+      "source": "lineup",
+      "report": "2026-11-11-lineup.md",
+      "kind": "start",
+      "week": 10,
+      "player": "9228",
+      "name": "Bryce Young",
+      "pos": "QB",
+      "team": "CAR",
+      "slot": "QB",
+      "for": "3163",
+      "for_name": "Jared Goff",
+      "consumes": [
+        "3163",
+        "9228"
+      ],
+      "urgency": "this_week",
+      "why": "Your rule: Goff sits unless the matchup is exceptional. New England is 20th in points allowed to QBs, which is ordinary. He scored 12 and 6.3 the last two weeks. Benching him costs 0.4 to 5 points.",
+      "case": {
+        "starts": "Bryce Young in at QB, Jared Goff to the bench",
+        "need": "Jared Goff: healthy, DET bye W6"
+      }
+    },
+    {
+      "id": "w10-flex",
+      "source": "lineup",
+      "report": "2026-11-11-lineup.md",
+      "kind": "start",
+      "week": 10,
+      "player": "4993",
+      "name": "Mike Gesicki",
+      "pos": "TE",
+      "team": "CIN",
+      "slot": "FLEX",
+      "for": "11610",
+      "for_name": "Malik Washington",
+      "consumes": [
+        "11610",
+        "4993"
+      ],
+      "urgency": "this_week",
+      "why": "Miami is down to Kyle McCord at QB, and its total has dropped to about 40. Gesicki plays with Joe Burrow in the highest total of the three games (47.5–49.5) and projects higher.",
+      "case": {
+        "starts": "Mike Gesicki in at FLEX, Malik Washington to the bench",
+        "need": "Malik Washington: healthy, MIA bye W6"
       }
     }
   ]
