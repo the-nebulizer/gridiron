@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-11-11T00:57:31.811Z",
+  "compiled_at": "2026-11-11T12:57:58.502Z",
   "season": "2026",
   "week": 10,
   "games_have_started": true,
@@ -29,12 +29,12 @@
   },
   "sources": {
     "waivers": {
-      "report": "2026-11-10-waivers.md",
+      "report": "2026-11-11-waivers.md",
       "week": 10,
-      "verdict": "Claim Fernando Mendoza for $6 tonight, dropping Juwan Johnson — Las Vegas made him its starter when it traded Kirk Cousins to Minnesota. Also swap Jaylen Warren in for Bucky Irving (on bye) and start Bryce Young over Cousins at SUPER_FLEX this week. No trade clears the bar.",
+      "verdict": "Mendoza went to sparkJ88 for $47, more than the card would have bid, so missing the deadline cost nothing. Do three things before Sunday: Jaylen Warren in for Bucky Irving (bye), Bryce Young in for Kirk Cousins at SUPER_FLEX, and swap Will Reichard for Cam Little at kicker if Sleeper lets you add him now.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-11-11T00:57:26.991Z"
+      "written_at": "2026-11-11T12:57:53.285Z"
     },
     "lineup": {
       "report": "2026-11-05-lineup.md",
@@ -65,7 +65,7 @@
     {
       "id": "w10-rb",
       "source": "waivers",
-      "report": "2026-11-10-waivers.md",
+      "report": "2026-11-11-waivers.md",
       "kind": "start",
       "week": 10,
       "player": "8228",
@@ -80,7 +80,7 @@
         "8228"
       ],
       "urgency": "now",
-      "why": "Bucky Irving is on bye this week and is still sitting in an RB slot; Jaylen Warren (@CIN) is the only other back.",
+      "why": "Bucky Irving is on bye and still in an RB slot, which scores zero; Jaylen Warren (at Cincinnati) is the only other back.",
       "case": {
         "starts": "Jaylen Warren in at RB, Bucky Irving to the bench",
         "need": "Bucky Irving: healthy, TB bye W10"
@@ -89,7 +89,7 @@
     {
       "id": "w10-sf",
       "source": "waivers",
-      "report": "2026-11-10-waivers.md",
+      "report": "2026-11-11-waivers.md",
       "kind": "start",
       "week": 10,
       "player": "9228",
@@ -104,72 +104,88 @@
         "9228"
       ],
       "urgency": "this_week",
-      "why": "Cousins was traded to Minnesota on Tuesday and isn't confirmed to start at Green Bay; Young (@NO) also has the better matchup.",
+      "why": "Close call. Young (at New Orleans, indoors) edges Cousins on projection and matchup; Cousins debuts days after the trade in a 40.5-total game at Green Bay.",
       "case": {
         "starts": "Bryce Young in at SUPERFLEX, Kirk Cousins to the bench",
         "need": "Kirk Cousins: healthy, MIN bye W6"
       }
     },
     {
-      "id": "w10-mendoza",
+      "id": "w10-k",
       "source": "waivers",
-      "report": "2026-11-10-waivers.md",
+      "report": "2026-11-11-waivers.md",
       "kind": "add",
       "week": 10,
-      "player": "13269",
-      "name": "Fernando Mendoza",
-      "pos": "QB",
-      "team": "LV",
-      "drop": "7002",
-      "drop_name": "Juwan Johnson",
-      "mode": "waiver",
-      "faab": 6,
-      "value_note": "Named LV starter Nov 10; projections stop at W10, so the model sees nobody gaining. A starting superflex QB, keeper-age, and the two QB-needy contenders have FAAB.",
-      "purpose": "block",
-      "displaces": null,
-      "displaces_name": null,
+      "player": "11786",
+      "name": "Cam Little",
+      "pos": "K",
+      "team": "JAX",
+      "drop": "11792",
+      "drop_name": "Will Reichard",
+      "mode": "fcfs",
+      "displaces": "11792",
+      "displaces_name": "Will Reichard",
       "evidence": {
-        "note": "Raiders named Mendoza their starting QB for Week 10 on, after trading Kirk Cousins to Minnesota.",
-        "url": "https://www.raiders.com/news/fernando-mendoza-named-raiders-starting-quarterback",
+        "note": "Jaguars are 10.5-point favorites at Tennessee with a 45.5 total; Vikings-Packers total is 40.5.",
+        "url": "https://www.covers.com/nfl/week-10-odds-opening-lines-2026",
         "as_of": "2026-11-10"
       },
       "consumes": [
-        "7002"
+        "11792"
       ],
-      "urgency": "now",
-      "why": "A new NFL starting QB on the wire in superflex; keeps him from sparkJ88 (both QBs injury-tagged), backs up Cousins' unsettled move and has keeper value.",
+      "urgency": "this_week",
+      "why": "Little's Jaguars project to score about 28 at Tennessee, which allows kickers the second-most points; Reichard is at Green Bay, which allows the second-fewest.",
       "case": {
-        "starts": "Bench — QB4 behind Jared Goff, Kirk Cousins",
+        "starts": "Starts over Will Reichard at K",
         "tradeoff": {
           "net": "neutral",
           "fixes": [],
           "opens": []
         },
-        "need": "QB: you have 3 — not thin · fixes nothing on the calendar",
-        "cost": "$6 of $61 · league average $39 left · #6 most-added in Sleeper this week · drops Juwan Johnson (TE, bench, 8.1/g in 8 games)",
-        "later": "opens no holes",
-        "points": "0 this week · -1.6 rest of season · 0 playoffs",
+        "need": "K: you have 1 — your thinnest spot · fixes nothing on the calendar",
+        "cost": "$0, first come first served · drops Will Reichard (K, starter, 11.1/g in 8 games)",
+        "later": "opens no holes · drops your only K",
+        "points": "+0.7 this week · -2.3 rest of season · -0.6 playoffs",
         "value": {
-          "this_week": 0,
-          "next_3": -0.9,
-          "rest_of_season": -1.6,
-          "playoffs": 0,
+          "this_week": 0.7,
+          "next_3": -0.7,
+          "rest_of_season": -2.3,
+          "playoffs": -0.6,
           "by_week": [
             {
+              "week": 10,
+              "delta": 0.7
+            },
+            {
               "week": 11,
-              "delta": -0.5
+              "delta": -0.7
             },
             {
               "week": 12,
-              "delta": -0.4
+              "delta": -0.7
             },
             {
               "week": 13,
               "delta": -0.7
+            },
+            {
+              "week": 14,
+              "delta": -0.3
+            },
+            {
+              "week": 15,
+              "delta": -0.5
+            },
+            {
+              "week": 16,
+              "delta": -0.2
+            },
+            {
+              "week": 17,
+              "delta": 0.1
             }
           ]
-        },
-        "override": "Named LV starter Nov 10; projections stop at W10, so the model sees nobody gaining. A starting superflex QB, keeper-age, and the two QB-needy contenders have FAAB."
+        }
       }
     }
   ]
