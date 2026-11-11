@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-11-10T12:13:44.849Z",
+  "compiled_at": "2026-11-11T00:57:31.811Z",
   "season": "2026",
   "week": 10,
   "games_have_started": true,
@@ -31,10 +31,10 @@
     "waivers": {
       "report": "2026-11-10-waivers.md",
       "week": 10,
-      "verdict": "Hold — no add clears the bar this week. Keep Will Reichard and the Texans as your K/DEF starts, and hold your $61 FAAB; the trade deadline is one week out and your roster has no hole between now and the playoffs.",
+      "verdict": "Claim Fernando Mendoza for $6 tonight, dropping Juwan Johnson — Las Vegas made him its starter when it traded Kirk Cousins to Minnesota. Also swap Jaylen Warren in for Bucky Irving (on bye) and start Bryce Young over Cousins at SUPER_FLEX this week. No trade clears the bar.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-11-10T12:13:39.230Z"
+      "written_at": "2026-11-11T00:57:26.991Z"
     },
     "lineup": {
       "report": "2026-11-05-lineup.md",
@@ -61,5 +61,116 @@
       "written_at": "2026-11-08T15:14:31.000Z"
     }
   },
-  "actions": []
+  "actions": [
+    {
+      "id": "w10-rb",
+      "source": "waivers",
+      "report": "2026-11-10-waivers.md",
+      "kind": "start",
+      "week": 10,
+      "player": "8228",
+      "name": "Jaylen Warren",
+      "pos": "RB",
+      "team": "PIT",
+      "slot": "RB",
+      "for": "11584",
+      "for_name": "Bucky Irving",
+      "consumes": [
+        "11584",
+        "8228"
+      ],
+      "urgency": "now",
+      "why": "Bucky Irving is on bye this week and is still sitting in an RB slot; Jaylen Warren (@CIN) is the only other back.",
+      "case": {
+        "starts": "Jaylen Warren in at RB, Bucky Irving to the bench",
+        "need": "Bucky Irving: healthy, TB bye W10"
+      }
+    },
+    {
+      "id": "w10-sf",
+      "source": "waivers",
+      "report": "2026-11-10-waivers.md",
+      "kind": "start",
+      "week": 10,
+      "player": "9228",
+      "name": "Bryce Young",
+      "pos": "QB",
+      "team": "CAR",
+      "slot": "SUPER_FLEX",
+      "for": "1166",
+      "for_name": "Kirk Cousins",
+      "consumes": [
+        "1166",
+        "9228"
+      ],
+      "urgency": "this_week",
+      "why": "Cousins was traded to Minnesota on Tuesday and isn't confirmed to start at Green Bay; Young (@NO) also has the better matchup.",
+      "case": {
+        "starts": "Bryce Young in at SUPERFLEX, Kirk Cousins to the bench",
+        "need": "Kirk Cousins: healthy, MIN bye W6"
+      }
+    },
+    {
+      "id": "w10-mendoza",
+      "source": "waivers",
+      "report": "2026-11-10-waivers.md",
+      "kind": "add",
+      "week": 10,
+      "player": "13269",
+      "name": "Fernando Mendoza",
+      "pos": "QB",
+      "team": "LV",
+      "drop": "7002",
+      "drop_name": "Juwan Johnson",
+      "mode": "waiver",
+      "faab": 6,
+      "value_note": "Named LV starter Nov 10; projections stop at W10, so the model sees nobody gaining. A starting superflex QB, keeper-age, and the two QB-needy contenders have FAAB.",
+      "purpose": "block",
+      "displaces": null,
+      "displaces_name": null,
+      "evidence": {
+        "note": "Raiders named Mendoza their starting QB for Week 10 on, after trading Kirk Cousins to Minnesota.",
+        "url": "https://www.raiders.com/news/fernando-mendoza-named-raiders-starting-quarterback",
+        "as_of": "2026-11-10"
+      },
+      "consumes": [
+        "7002"
+      ],
+      "urgency": "now",
+      "why": "A new NFL starting QB on the wire in superflex; keeps him from sparkJ88 (both QBs injury-tagged), backs up Cousins' unsettled move and has keeper value.",
+      "case": {
+        "starts": "Bench — QB4 behind Jared Goff, Kirk Cousins",
+        "tradeoff": {
+          "net": "neutral",
+          "fixes": [],
+          "opens": []
+        },
+        "need": "QB: you have 3 — not thin · fixes nothing on the calendar",
+        "cost": "$6 of $61 · league average $39 left · #6 most-added in Sleeper this week · drops Juwan Johnson (TE, bench, 8.1/g in 8 games)",
+        "later": "opens no holes",
+        "points": "0 this week · -1.6 rest of season · 0 playoffs",
+        "value": {
+          "this_week": 0,
+          "next_3": -0.9,
+          "rest_of_season": -1.6,
+          "playoffs": 0,
+          "by_week": [
+            {
+              "week": 11,
+              "delta": -0.5
+            },
+            {
+              "week": 12,
+              "delta": -0.4
+            },
+            {
+              "week": 13,
+              "delta": -0.7
+            }
+          ]
+        },
+        "override": "Named LV starter Nov 10; projections stop at W10, so the model sees nobody gaining. A starting superflex QB, keeper-age, and the two QB-needy contenders have FAAB."
+      }
+    }
+  ]
 }
