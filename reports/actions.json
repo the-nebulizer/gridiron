@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-11-11T13:00:06.039Z",
+  "compiled_at": "2026-11-12T12:12:15.692Z",
   "season": "2026",
   "week": 10,
   "games_have_started": true,
@@ -34,15 +34,15 @@
       "verdict": "Mendoza went to sparkJ88 for $47, more than the card would have bid, so missing the deadline cost nothing. Swap Will Reichard for Cam Little at kicker if Sleeper lets you add him now. Lineup moves are in today's lineup report.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-11-11T13:00:02.291Z"
+      "written_at": "2026-11-11T13:00:12.000Z"
     },
     "lineup": {
-      "report": "2026-11-11-lineup.md",
+      "report": "2026-11-12-lineup.md",
       "week": 10,
-      "verdict": "Three swaps: Jaylen Warren in for Bucky Irving (bye), Bryce Young in for Jared Goff at QB (your rule; Goff's matchup is ordinary, not exceptional), Mike Gesicki in for Malik Washington at FLEX (Miami is down to Kyle McCord at QB). Cousins stays at SUPER_FLEX; Kraft at TE and Houston at DEF hold.",
+      "verdict": "Three swaps, unchanged from Wednesday and still live in the app: Jaylen Warren in for Bucky Irving (bye), Bryce Young in for Jared Goff at QB (your rule — Goff's matchup is still ordinary, not exceptional), Mike Gesicki in for Malik Washington at FLEX (Miami's still down to Kyle McCord). Cousins holds SUPER_FLEX, Kraft holds TE, Houston holds DEF, Reichard holds K pending the Cam Little waiver swap.",
       "next_check": "Inactives, Sun 10am",
       "stale": false,
-      "written_at": "2026-11-11T12:59:57.697Z"
+      "written_at": "2026-11-12T12:12:10.138Z"
     },
     "trades": {
       "report": "2026-11-09-trades.md",
@@ -97,16 +97,16 @@
         "need": "K: you have 1 — your thinnest spot · fixes nothing on the calendar",
         "cost": "$0, first come first served · drops Will Reichard (K, starter, 11.1/g in 8 games)",
         "later": "opens no holes · drops your only K",
-        "points": "+0.7 this week · -2.3 rest of season · -0.6 playoffs",
+        "points": "+0.5 this week · -2.5 rest of season · -0.6 playoffs",
         "value": {
-          "this_week": 0.7,
-          "next_3": -0.7,
-          "rest_of_season": -2.3,
+          "this_week": 0.5,
+          "next_3": -0.9,
+          "rest_of_season": -2.5,
           "playoffs": -0.6,
           "by_week": [
             {
               "week": 10,
-              "delta": 0.7
+              "delta": 0.5
             },
             {
               "week": 11,
@@ -143,7 +143,7 @@
     {
       "id": "w10-rb",
       "source": "lineup",
-      "report": "2026-11-11-lineup.md",
+      "report": "2026-11-12-lineup.md",
       "kind": "start",
       "week": 10,
       "player": "8228",
@@ -157,8 +157,9 @@
         "11584",
         "8228"
       ],
-      "urgency": "now",
-      "why": "Bucky Irving is on bye and still in an RB slot, which scores zero; Warren (at Cincinnati) is the only other back.",
+      "urgency": "before_kickoff",
+      "deadline_label": "before Sun 11/15 kickoffs — Irving's bye means this scores zero until it's made",
+      "why": "Bucky Irving is on bye and still sitting in an RB slot; Warren (at Cincinnati, 15.7 proj) is the only other healthy back.",
       "case": {
         "starts": "Jaylen Warren in at RB, Bucky Irving to the bench",
         "need": "Bucky Irving: healthy, TB bye W10"
@@ -167,7 +168,7 @@
     {
       "id": "w10-qb",
       "source": "lineup",
-      "report": "2026-11-11-lineup.md",
+      "report": "2026-11-12-lineup.md",
       "kind": "start",
       "week": 10,
       "player": "9228",
@@ -181,17 +182,18 @@
         "3163",
         "9228"
       ],
-      "urgency": "this_week",
-      "why": "Your rule: Goff sits unless the matchup is exceptional. New England is 20th in points allowed to QBs, which is ordinary. He scored 12 and 6.3 the last two weeks. Benching him costs 0.4 to 5 points.",
+      "urgency": "before_kickoff",
+      "deadline_label": "before 9:30am ET Sun 11/15 — Goff's Munich game is the earliest kickoff of the week",
+      "why": "Your rule: Goff sits unless the matchup is exceptional. New England allows QBs 19.3/g (20th of 32) — ordinary, not exceptional.",
       "case": {
         "starts": "Bryce Young in at QB, Jared Goff to the bench",
-        "need": "Jared Goff: healthy, DET bye W6"
+        "need": "Jared Goff: Questionable, DET bye W6"
       }
     },
     {
       "id": "w10-flex",
       "source": "lineup",
-      "report": "2026-11-11-lineup.md",
+      "report": "2026-11-12-lineup.md",
       "kind": "start",
       "week": 10,
       "player": "4993",
@@ -205,8 +207,9 @@
         "11610",
         "4993"
       ],
-      "urgency": "this_week",
-      "why": "Miami is down to Kyle McCord at QB, and its total has dropped to about 40. Gesicki plays with Joe Burrow in the highest total of the three games (47.5–49.5) and projects higher.",
+      "urgency": "before_kickoff",
+      "deadline_label": "before Sun 11/15 kickoffs",
+      "why": "Miami is still down to Kyle McCord at QB (Willis on IR); Gesicki projects 8.7 with Burrow against Washington's 7.8.",
       "case": {
         "starts": "Mike Gesicki in at FLEX, Malik Washington to the bench",
         "need": "Malik Washington: healthy, MIA bye W6"
