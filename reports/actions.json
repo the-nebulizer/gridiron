@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-11-12T12:12:15.692Z",
+  "compiled_at": "2026-11-15T15:18:59.333Z",
   "season": "2026",
   "week": 10,
   "games_have_started": true,
@@ -42,7 +42,7 @@
       "verdict": "Three swaps, unchanged from Wednesday and still live in the app: Jaylen Warren in for Bucky Irving (bye), Bryce Young in for Jared Goff at QB (your rule — Goff's matchup is still ordinary, not exceptional), Mike Gesicki in for Malik Washington at FLEX (Miami's still down to Kyle McCord). Cousins holds SUPER_FLEX, Kraft holds TE, Houston holds DEF, Reichard holds K pending the Cam Little waiver swap.",
       "next_check": "Inactives, Sun 10am",
       "stale": false,
-      "written_at": "2026-11-12T12:12:10.138Z"
+      "written_at": "2026-11-12T12:12:19.000Z"
     },
     "trades": {
       "report": "2026-11-09-trades.md",
@@ -53,12 +53,12 @@
       "written_at": "2026-11-09T12:04:31.000Z"
     },
     "inactives": {
-      "report": "2026-11-08-inactives.md",
-      "week": 9,
-      "verdict": "Hold — all ten starters show clean as of this morning's sync (10:10am ET), and none of today's official inactive lists have posted yet. Nothing to flip right now.",
+      "report": "2026-11-15-inactives.md",
+      "week": 10,
+      "verdict": "Nobody new is Out or Doubtful. But Goff's early Munich kickoff already passed, which locks Thursday's planned QB swap out of the QB slot for good — it has to land at SUPER_FLEX instead, starting Young over Cousins. Irving (bye) for Warren at RB and Gesicki for Washington at FLEX are unchanged from Thursday and still open — make all three before the 1pm kickoffs.",
       "next_check": "Trades, Mon 7am",
-      "stale": true,
-      "written_at": "2026-11-08T15:14:31.000Z"
+      "stale": false,
+      "written_at": "2026-11-15T15:18:53.978Z"
     }
   },
   "actions": [
@@ -68,6 +68,7 @@
       "report": "2026-11-11-waivers.md",
       "kind": "add",
       "week": 10,
+      "state": "gone",
       "player": "11786",
       "name": "Cam Little",
       "pos": "K",
@@ -75,70 +76,9 @@
       "drop": "11792",
       "drop_name": "Will Reichard",
       "mode": "fcfs",
-      "displaces": "11792",
-      "displaces_name": "Will Reichard",
-      "evidence": {
-        "note": "Jaguars are 10.5-point favorites at Tennessee with a 45.5 total; Vikings-Packers total is 40.5.",
-        "url": "https://www.covers.com/nfl/week-10-odds-opening-lines-2026",
-        "as_of": "2026-11-10"
-      },
-      "consumes": [
-        "11792"
-      ],
+      "consumes": [],
       "urgency": "this_week",
-      "why": "Little's Jaguars project to score about 28 at Tennessee, which allows kickers the second-most points; Reichard is at Green Bay, which allows the second-fewest.",
-      "case": {
-        "starts": "Starts over Will Reichard at K",
-        "tradeoff": {
-          "net": "neutral",
-          "fixes": [],
-          "opens": []
-        },
-        "need": "K: you have 1 — your thinnest spot · fixes nothing on the calendar",
-        "cost": "$0, first come first served · drops Will Reichard (K, starter, 11.1/g in 8 games)",
-        "later": "opens no holes · drops your only K",
-        "points": "+0.5 this week · -2.5 rest of season · -0.6 playoffs",
-        "value": {
-          "this_week": 0.5,
-          "next_3": -0.9,
-          "rest_of_season": -2.5,
-          "playoffs": -0.6,
-          "by_week": [
-            {
-              "week": 10,
-              "delta": 0.5
-            },
-            {
-              "week": 11,
-              "delta": -0.7
-            },
-            {
-              "week": 12,
-              "delta": -0.7
-            },
-            {
-              "week": 13,
-              "delta": -0.7
-            },
-            {
-              "week": 14,
-              "delta": -0.3
-            },
-            {
-              "week": 15,
-              "delta": -0.5
-            },
-            {
-              "week": 16,
-              "delta": -0.2
-            },
-            {
-              "week": 17,
-              "delta": 0.1
-            }
-          ]
-        }
-      }
+      "why": "Little's Jaguars project to score about 28 at Tennessee, which allows kickers the second-most points; Reichard is at Green Bay, which allows the second-fewest."
     },
     {
       "id": "w10-rb",
@@ -167,27 +107,27 @@
     },
     {
       "id": "w10-qb",
-      "source": "lineup",
-      "report": "2026-11-12-lineup.md",
+      "source": "inactives",
+      "report": "2026-11-15-inactives.md",
       "kind": "start",
       "week": 10,
       "player": "9228",
       "name": "Bryce Young",
       "pos": "QB",
       "team": "CAR",
-      "slot": "QB",
-      "for": "3163",
-      "for_name": "Jared Goff",
+      "slot": "SUPER_FLEX",
+      "for": "1166",
+      "for_name": "Kirk Cousins",
       "consumes": [
-        "3163",
+        "1166",
         "9228"
       ],
       "urgency": "before_kickoff",
-      "deadline_label": "before 9:30am ET Sun 11/15 — Goff's Munich game is the earliest kickoff of the week",
-      "why": "Your rule: Goff sits unless the matchup is exceptional. New England allows QBs 19.3/g (20th of 32) — ordinary, not exceptional.",
+      "deadline_label": "before 1:00pm ET Sun 11/15 kickoffs",
+      "why": "Goff's Munich kickoff already passed, locking him at QB, so Thursday's planned QB swap has to land here instead; Young projects 22.4 to Cousins' 17.7 and grades out ahead on the matchup too.",
       "case": {
-        "starts": "Bryce Young in at QB, Jared Goff to the bench",
-        "need": "Jared Goff: Questionable, DET bye W6"
+        "starts": "Bryce Young in at SUPERFLEX, Kirk Cousins to the bench",
+        "need": "Kirk Cousins: healthy, MIN bye W6"
       }
     },
     {
