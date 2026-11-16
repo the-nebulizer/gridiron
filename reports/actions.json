@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-11-16T12:10:11.894Z",
+  "compiled_at": "2026-11-16T19:12:09.114Z",
   "season": "2026",
   "week": 10,
   "games_have_started": true,
@@ -47,10 +47,10 @@
     "trades": {
       "report": "2026-11-16-trades.md",
       "week": 10,
-      "verdict": "Send Juwan Johnson to elembach for D'Andre Swift — it fixes their only real hole (zero bench TE) and gets me a flex-caliber back right as Jeanty's role is collapsing.",
+      "verdict": "Offer Bryce Young for D'Andre Swift. This morning's Juwan Johnson offer won't be accepted: Swift is elembach's best back and their only healthy one this week. Young fills the quarterback hole Geno Smith's ankle and Michael Penix's bye leave them with.",
       "next_check": "Waivers, Tue 7am",
       "stale": false,
-      "written_at": "2026-11-16T12:10:08.335Z"
+      "written_at": "2026-11-16T19:12:00.362Z"
     },
     "inactives": {
       "report": "2026-11-15-inactives.md",
@@ -149,10 +149,10 @@
       "with": 4,
       "with_owner": "elembach",
       "give": [
-        "7002"
+        "9228"
       ],
       "give_names": [
-        "Juwan Johnson"
+        "Bryce Young"
       ],
       "get": [
         "6790"
@@ -160,22 +160,23 @@
       "get_names": [
         "D'Andre Swift"
       ],
-      "message": "Trade idea: Juwan Johnson for D'Andre Swift. You're down to one TE with zero depth behind Strange — Johnson's a real streaming-caliber TE (8+ a game) as insurance. Swift's buried on your bench behind backs I don't think you're starting over him once his bye passes, and I could use the RB depth.",
-      "displaces": null,
-      "displaces_name": null,
+      "message": "Geno's ankle plus Penix's bye leaves your SUPER_FLEX empty this week. Bryce Young for Swift? Young's averaging 21+ in this scoring and covers you until Geno's back, and longer if the ankle lingers. You've still got Charbonnet, Stevenson and Hampton once the byes clear.",
+      "displaces": "12527",
+      "displaces_name": "Ashton Jeanty",
       "evidence": {
-        "note": "Jeanty's carries fell to a season-low 2 as LV shifts touches to Mike Washington; Swift's main competition, Kyle Monangai, is Out (confirmed on another roster here).",
-        "url": "https://abc7.com/post/raiders-ashton-jeanty-limited-carries-win-jets/20006695/"
+        "note": "Geno Smith left Week 10 with an ankle injury and has no timeline; Penix is on bye in Week 11, so elembach has no second QB this week.",
+        "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-11-15/geno-smith-heads-to-locker-room-with-ankle-injury",
+        "as_of": "2026-11-16"
       },
       "consumes": [
-        "7002"
+        "9228"
       ],
       "urgency": "this_week",
-      "why": "Swift projects 14-18/wk on 78% snaps, 20+ carries/g; Jeanty's touches cratered to 2 last game. Johnson adds nothing behind Kraft but fixes elembach's only real hole.",
+      "why": "Swift takes Jeanty's RB slot (17.8 vs 10.4 projected this week); better in every window. Cost: QB depth drops to Goff and Cousins until Lamar is back.",
       "case": {
-        "starts": "D'Andre Swift is depth (RB4)",
-        "need": "RB: you have 3 — not thin · gives TE depth (you have 3, start 1)",
-        "cost": "gives Juwan Johnson — 0 starters, 1 bench · no FAAB",
+        "starts": "D'Andre Swift starts over Ashton Jeanty at RB",
+        "need": "RB: you have 3 — not thin · gives QB depth (you have 3, start 2)",
+        "cost": "gives Bryce Young — 0 starters, 1 bench · no FAAB",
         "asks": "elembach benches D'Andre Swift — one of 5 RBs they carry",
         "tradeoff": {
           "net": "neutral",
@@ -183,16 +184,20 @@
           "opens": []
         },
         "later": "opens no holes",
-        "points": "0 this week · +32.3 rest of season · +10.3 playoffs",
+        "points": "-5.1 this week · +24.2 rest of season · +8.4 playoffs",
         "value": {
-          "this_week": 0,
-          "next_3": 12.2,
-          "rest_of_season": 32.3,
-          "playoffs": 10.3,
+          "this_week": -5.1,
+          "next_3": 6.2,
+          "rest_of_season": 24.2,
+          "playoffs": 8.4,
           "by_week": [
             {
+              "week": 10,
+              "delta": -5.1
+            },
+            {
               "week": 11,
-              "delta": 7.4
+              "delta": 6.5
             },
             {
               "week": 12,
@@ -200,19 +205,19 @@
             },
             {
               "week": 13,
-              "delta": 6.5
+              "delta": 6.4
             },
             {
               "week": 14,
-              "delta": 3.3
+              "delta": 3.2
             },
             {
               "week": 15,
-              "delta": 3.8
+              "delta": 1.7
             },
             {
               "week": 16,
-              "delta": 2.3
+              "delta": 2.5
             },
             {
               "week": 17,
