@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-11-15T15:18:59.333Z",
+  "compiled_at": "2026-11-16T12:10:11.894Z",
   "season": "2026",
   "week": 10,
   "games_have_started": true,
@@ -45,12 +45,12 @@
       "written_at": "2026-11-12T12:12:19.000Z"
     },
     "trades": {
-      "report": "2026-11-09-trades.md",
-      "week": 9,
-      "verdict": "Hold. Full re-scan of all 12 rosters finds nothing that clears the bar — no trade projects better in every window once the other side's own needs are weighed in.",
+      "report": "2026-11-16-trades.md",
+      "week": 10,
+      "verdict": "Send Juwan Johnson to elembach for D'Andre Swift — it fixes their only real hole (zero bench TE) and gets me a flex-caliber back right as Jeanty's role is collapsing.",
       "next_check": "Waivers, Tue 7am",
-      "stale": true,
-      "written_at": "2026-11-09T12:04:31.000Z"
+      "stale": false,
+      "written_at": "2026-11-16T12:10:08.335Z"
     },
     "inactives": {
       "report": "2026-11-15-inactives.md",
@@ -58,7 +58,7 @@
       "verdict": "Nobody new is Out or Doubtful. But Goff's early Munich kickoff already passed, which locks Thursday's planned QB swap out of the QB slot for good — it has to land at SUPER_FLEX instead, starting Young over Cousins. Irving (bye) for Warren at RB and Gesicki for Washington at FLEX are unchanged from Thursday and still open — make all three before the 1pm kickoffs.",
       "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-11-15T15:18:53.978Z"
+      "written_at": "2026-11-15T15:19:08.000Z"
     }
   },
   "actions": [
@@ -86,6 +86,8 @@
       "report": "2026-11-12-lineup.md",
       "kind": "start",
       "week": 10,
+      "state": "stale",
+      "state_reason": "Jaylen Warren's game has already kicked off (complete)",
       "player": "8228",
       "name": "Jaylen Warren",
       "pos": "RB",
@@ -93,17 +95,10 @@
       "slot": "RB",
       "for": "11584",
       "for_name": "Bucky Irving",
-      "consumes": [
-        "11584",
-        "8228"
-      ],
+      "consumes": [],
       "urgency": "before_kickoff",
       "deadline_label": "before Sun 11/15 kickoffs — Irving's bye means this scores zero until it's made",
-      "why": "Bucky Irving is on bye and still sitting in an RB slot; Warren (at Cincinnati, 15.7 proj) is the only other healthy back.",
-      "case": {
-        "starts": "Jaylen Warren in at RB, Bucky Irving to the bench",
-        "need": "Bucky Irving: healthy, TB bye W10"
-      }
+      "why": "Bucky Irving is on bye and still sitting in an RB slot; Warren (at Cincinnati, 15.7 proj) is the only other healthy back."
     },
     {
       "id": "w10-qb",
@@ -111,6 +106,8 @@
       "report": "2026-11-15-inactives.md",
       "kind": "start",
       "week": 10,
+      "state": "stale",
+      "state_reason": "Bryce Young's game has already kicked off (complete)",
       "player": "9228",
       "name": "Bryce Young",
       "pos": "QB",
@@ -118,17 +115,10 @@
       "slot": "SUPER_FLEX",
       "for": "1166",
       "for_name": "Kirk Cousins",
-      "consumes": [
-        "1166",
-        "9228"
-      ],
+      "consumes": [],
       "urgency": "before_kickoff",
       "deadline_label": "before 1:00pm ET Sun 11/15 kickoffs",
-      "why": "Goff's Munich kickoff already passed, locking him at QB, so Thursday's planned QB swap has to land here instead; Young projects 22.4 to Cousins' 17.7 and grades out ahead on the matchup too.",
-      "case": {
-        "starts": "Bryce Young in at SUPERFLEX, Kirk Cousins to the bench",
-        "need": "Kirk Cousins: healthy, MIN bye W6"
-      }
+      "why": "Goff's Munich kickoff already passed, locking him at QB, so Thursday's planned QB swap has to land here instead; Young projects 22.4 to Cousins' 17.7 and grades out ahead on the matchup too."
     },
     {
       "id": "w10-flex",
@@ -136,6 +126,8 @@
       "report": "2026-11-12-lineup.md",
       "kind": "start",
       "week": 10,
+      "state": "stale",
+      "state_reason": "Mike Gesicki's game has already kicked off (complete)",
       "player": "4993",
       "name": "Mike Gesicki",
       "pos": "TE",
@@ -143,16 +135,91 @@
       "slot": "FLEX",
       "for": "11610",
       "for_name": "Malik Washington",
-      "consumes": [
-        "11610",
-        "4993"
-      ],
+      "consumes": [],
       "urgency": "before_kickoff",
       "deadline_label": "before Sun 11/15 kickoffs",
-      "why": "Miami is still down to Kyle McCord at QB (Willis on IR); Gesicki projects 8.7 with Burrow against Washington's 7.8.",
+      "why": "Miami is still down to Kyle McCord at QB (Willis on IR); Gesicki projects 8.7 with Burrow against Washington's 7.8."
+    },
+    {
+      "id": "trades:trade:4",
+      "source": "trades",
+      "report": "2026-11-16-trades.md",
+      "kind": "trade",
+      "week": 10,
+      "with": 4,
+      "with_owner": "elembach",
+      "give": [
+        "7002"
+      ],
+      "give_names": [
+        "Juwan Johnson"
+      ],
+      "get": [
+        "6790"
+      ],
+      "get_names": [
+        "D'Andre Swift"
+      ],
+      "message": "Trade idea: Juwan Johnson for D'Andre Swift. You're down to one TE with zero depth behind Strange — Johnson's a real streaming-caliber TE (8+ a game) as insurance. Swift's buried on your bench behind backs I don't think you're starting over him once his bye passes, and I could use the RB depth.",
+      "displaces": null,
+      "displaces_name": null,
+      "evidence": {
+        "note": "Jeanty's carries fell to a season-low 2 as LV shifts touches to Mike Washington; Swift's main competition, Kyle Monangai, is Out (confirmed on another roster here).",
+        "url": "https://abc7.com/post/raiders-ashton-jeanty-limited-carries-win-jets/20006695/"
+      },
+      "consumes": [
+        "7002"
+      ],
+      "urgency": "this_week",
+      "why": "Swift projects 14-18/wk on 78% snaps, 20+ carries/g; Jeanty's touches cratered to 2 last game. Johnson adds nothing behind Kraft but fixes elembach's only real hole.",
       "case": {
-        "starts": "Mike Gesicki in at FLEX, Malik Washington to the bench",
-        "need": "Malik Washington: healthy, MIA bye W6"
+        "starts": "D'Andre Swift is depth (RB4)",
+        "need": "RB: you have 3 — not thin · gives TE depth (you have 3, start 1)",
+        "cost": "gives Juwan Johnson — 0 starters, 1 bench · no FAAB",
+        "asks": "elembach benches D'Andre Swift — one of 5 RBs they carry",
+        "tradeoff": {
+          "net": "neutral",
+          "fixes": [],
+          "opens": []
+        },
+        "later": "opens no holes",
+        "points": "0 this week · +32.3 rest of season · +10.3 playoffs",
+        "value": {
+          "this_week": 0,
+          "next_3": 12.2,
+          "rest_of_season": 32.3,
+          "playoffs": 10.3,
+          "by_week": [
+            {
+              "week": 11,
+              "delta": 7.4
+            },
+            {
+              "week": 12,
+              "delta": 4.8
+            },
+            {
+              "week": 13,
+              "delta": 6.5
+            },
+            {
+              "week": 14,
+              "delta": 3.3
+            },
+            {
+              "week": 15,
+              "delta": 3.8
+            },
+            {
+              "week": 16,
+              "delta": 2.3
+            },
+            {
+              "week": 17,
+              "delta": 4.2
+            }
+          ]
+        }
       }
     }
   ]
