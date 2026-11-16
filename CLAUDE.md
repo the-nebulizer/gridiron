@@ -141,6 +141,8 @@ Ben is on a usage-metered plan. The dashboard costs nothing; every scheduled run
 
 Reports in `reports/` and the dashboard's own copy are written for Ben, not for the machine. Say what's true in plain English; keep the plumbing out of the copy — no command lines, no snapshot field names (`games_have_started`, `season_start_date`, `faab_bid`), no "scanned `data/league/snapshot.json`". The prime directive still requires the sync, and the report should still say the data is fresh and where the calendar stands — as a sentence a manager would read ("Read off a fresh sync; Week 1 hasn't kicked off yet"), not as evidence of compliance. Naming a slash command Ben can run (`/lineup`) or a doc he can open (`docs/LEAGUE.md`) is fine; those are for him. Same on the dashboard, only more so: The card shows the move and its one-line reason; the facts, the source and the fallbacks open on demand, as short statements never paragraphs. The full write-up stays folded by section and on GitHub. The page shows what to do, what happened, and when — a date rather than a report filename, a reason for a move rather than an exception string, and no explanation of how the system reached it.
 
+**Lineups are listed in Sleeper's order** (Ben, 2026-11-16) — in a report, a chat answer, or on the card: the league's starting slots in the order the snapshot's `starting_slots` gives them (QB, RB, RB, WR, WR, TE, FLEX, SUPER_FLEX, K, DEF), then the bench. Never group the two quarterback slots together or lead with the slot that changed; Ben reads the list against the app top to bottom.
+
 ## Layout
 
 - `config.json` — league/user IDs (public data, committed)

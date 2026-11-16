@@ -585,6 +585,10 @@ const KIND_RANK = {
   trades:  {start:0, trade:1, add:2, drop:2, ir:2, activate:2},
 };
 const kindRank = (k, focus)=>{ const r = KIND_RANK[focus] || KIND_RANK.lineup; return r[k]==null ? 3 : r[k]; };
+// Lineup moves are listed in Sleeper's own slot order, so the card reads top to bottom the way the
+// app does (Ben, 2026-11-16). Any other kind, or an unknown slot, keeps its place.
+const SLOT_ORDER = ['QB','RB','WR','TE','FLEX','SUPER_FLEX','K','DEF'];
+const slotRank = (i)=>{ if(i.kind!=='start') return 0; const n = SLOT_ORDER.indexOf(i.slot); return n<0 ? SLOT_ORDER.length : n; };
 
 /* Dependency resolution. Items arrive carrying the base state actionState gave them; `after` and
    `if_not` name another action in the same compiled file. Pure, and re-runnable: the base state
@@ -890,6 +894,7 @@ function renderDoNow(m){
   // order today's focus puts them in (weekFocus); urgency, then report date, within each.
   const open = items.filter(i=>i.state==='open' && !i.parent_id)
     .sort((a,b)=> kindRank(a.kind, m.focus)-kindRank(b.kind, m.focus)
+               || slotRank(a)-slotRank(b)
                || urgRank(a.urgency)-urgRank(b.urgency)
                || String(b.report||'').localeCompare(String(a.report||'')));
   const shelved = items.filter(i=>i.state==='done' || i.state==='gone' || i.state==='superseded' || i.state==='stale');
