@@ -39,7 +39,7 @@ The dashboard uses no tokens at all — it's a static page reading Sleeper direc
 | Routine | Model | Why |
 |---|---|---|
 | Waivers | Sonnet 4.5 / 5 | Web research on candidates plus a valuation call in this league's scoring — judgment |
-| Lineup | Sonnet | Start/sit with injury research and floor-vs-ceiling framing — judgment |
+| Lineup | Sonnet | Start/sit with injury and matchup research — the most expected points, nothing else — judgment |
 | Trades | Sonnet | Valuing both sides of an offer across 12 rosters — judgment |
 | Inactives | **Haiku 4.5** | Look up each starter's status, list OUT/ACTIVE, name the pivot — mechanical |
 | Roster watcher | **Haiku 4.5** | Sync, fingerprint, stop — mechanical; on the rare CHANGED day it regenerates the four reports at Haiku quality, and the next Sonnet run refreshes each within days |

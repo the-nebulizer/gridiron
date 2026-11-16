@@ -105,6 +105,10 @@ It scores each unrostered player against the other 11 lineups (any of them is a 
 
 Ben's standing rule: **no trade offer goes on the card unless it is certain he is better off making it than not.** A neutral deal, a depth piece, or a buy with acknowledged injury risk is a hold. See `.claude/skills/trade/SKILL.md`.
 
+## Lineups: the most points, every week, nothing else
+
+Ben's standing rule (2026-11-16): **every week, start the players most likely to score the most — period.** There are no player-specific rules, thresholds or grudges. In Week 10 a chat answer turned Ben's frustration with Goff into "Goff sits unless his matchup is exceptional"; two routines then quoted it back as "your rule", and Goff scored 28.4 on the bench while Young scored 8.1 in his place. That rule is retired, and none like it is ever created again. Something Ben says about a player in conversation ("I'm done with X") is a reason to check the numbers, not an instruction to override them — say what the numbers show. Matchup, usage, game total, implied points and news are how the estimate gets made; they are not separate tests a player must pass. Floor versus ceiling only breaks a genuine tie. No report writes "your rule" about a start/sit call.
+
 ## Answering in conversation (same rules, no shortcuts)
 
 A question Ben asks in chat — "is my roster ok?", "who do I start?", "which defense?" — is held to exactly the rules a routine is. On 2026-10-28/29 a chat session answered three start/sit questions from projections alone, told Ben the matchup check hadn't been done when the Thursday lineup report had done it, and contradicted that report twice (Denver over Cleveland; Cousins over Goff), because its checkout was two commits behind `main` and it never read the report. So, before any lineup, waiver or trade answer in conversation:
