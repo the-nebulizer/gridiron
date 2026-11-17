@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-11-16T19:12:28.832Z",
+  "compiled_at": "2026-11-17T12:15:44.011Z",
   "season": "2026",
   "week": 11,
   "games_have_started": true,
@@ -29,12 +29,12 @@
   },
   "sources": {
     "waivers": {
-      "report": "2026-11-11-waivers.md",
-      "week": 10,
-      "verdict": "Mendoza went to sparkJ88 for $47, more than the card would have bid, so missing the deadline cost nothing. Swap Will Reichard for Cam Little at kicker if Sleeper lets you add him now. Lineup moves are in today's lineup report.",
+      "report": "2026-11-17-waivers.md",
+      "week": 11,
+      "verdict": "Claim Joe Milton for $6 to block amandaberry's bye-week QB fix; drop Juwan Johnson to make room. Everything else — kicker, defense, the four trending names — holds.",
       "next_check": "Lineup, Thu 7am",
-      "stale": true,
-      "written_at": "2026-11-11T13:00:12.000Z"
+      "stale": false,
+      "written_at": "2026-11-17T12:15:37.779Z"
     },
     "lineup": {
       "report": "2026-11-12-lineup.md",
@@ -63,22 +63,48 @@
   },
   "actions": [
     {
-      "id": "w10-k",
+      "id": "waivers:add:11557",
       "source": "waivers",
-      "report": "2026-11-11-waivers.md",
+      "report": "2026-11-17-waivers.md",
       "kind": "add",
-      "week": 10,
-      "state": "gone",
-      "player": "11786",
-      "name": "Cam Little",
-      "pos": "K",
-      "team": "JAX",
-      "drop": "11792",
-      "drop_name": "Will Reichard",
-      "mode": "fcfs",
-      "consumes": [],
-      "urgency": "this_week",
-      "why": "Little's Jaguars project to score about 28 at Tennessee, which allows kickers the second-most points; Reichard is at Green Bay, which allows the second-fewest."
+      "week": 11,
+      "player": "11557",
+      "name": "Joe Milton",
+      "pos": "QB",
+      "team": "PHI",
+      "drop": "7002",
+      "drop_name": "Juwan Johnson",
+      "mode": "waiver",
+      "faab": 6,
+      "purpose": "block",
+      "displaces": null,
+      "displaces_name": null,
+      "evidence": null,
+      "consumes": [
+        "7002"
+      ],
+      "urgency": "by_tuesday",
+      "deadline_label": "before Tuesday night waiver lock",
+      "why": "amandaberry (this week's opponent) has Jordan Love on bye and $90 FAAB; Milton is their cheapest fix and the denial model's bid estimate is about $6.",
+      "case": {
+        "starts": "Bench — QB4 behind Jared Goff, Kirk Cousins",
+        "tradeoff": {
+          "net": "neutral",
+          "fixes": [],
+          "opens": []
+        },
+        "need": "QB: you have 3 — not thin · fixes nothing on the calendar",
+        "cost": "$6 of $61 · league average $33 left · not trending · drops Juwan Johnson (TE, bench, 7.6/g in 9 games)",
+        "later": "opens no holes",
+        "points": "0 this week · 0 rest of season · 0 playoffs",
+        "value": {
+          "this_week": 0,
+          "next_3": 0,
+          "rest_of_season": 0,
+          "playoffs": 0,
+          "by_week": []
+        }
+      }
     },
     {
       "id": "trades:trade:4",
@@ -117,23 +143,23 @@
         "starts": "D'Andre Swift starts over Ashton Jeanty at RB",
         "need": "RB: you have 3 — not thin · gives QB depth (you have 3, start 2)",
         "cost": "gives Bryce Young — 0 starters, 1 bench · no FAAB",
-        "asks": "elembach benches D'Andre Swift — one of 5 RBs they carry",
+        "asks": "elembach starts D'Andre Swift — one of 4 RBs they carry · asks them to bench a starter for bench pieces",
         "tradeoff": {
           "net": "neutral",
           "fixes": [],
           "opens": []
         },
         "later": "opens no holes",
-        "points": "+6.5 this week · +29.3 rest of season · +8.4 playoffs",
+        "points": "+6.8 this week · +29.6 rest of season · +8.4 playoffs",
         "value": {
-          "this_week": 6.5,
-          "next_3": 17.7,
-          "rest_of_season": 29.3,
+          "this_week": 6.8,
+          "next_3": 18,
+          "rest_of_season": 29.6,
           "playoffs": 8.4,
           "by_week": [
             {
               "week": 11,
-              "delta": 6.5
+              "delta": 6.8
             },
             {
               "week": 12,
