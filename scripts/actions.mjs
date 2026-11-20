@@ -658,15 +658,15 @@ function pointsLine(v) {
 // suite. `out` is the built action.
 export function pointsFindings(out, snapshot, index) {
   const fails = [];
+  const notes = [];
   let value, better = null;
   if (out.kind === 'trade') {
     value = moveValue(snapshot, { add: out.get ?? [], drop: out.give ?? [] });
     // Ben's standing rule (2026-10-13): no offer unless he is certainly better
     // off. A projection is not certainty, but a deal that doesn't even
-    // project better — overall, in the playoffs, and this week — is
-    // certainly not it.
-    if (!(value.rest_of_season > 0) || value.playoffs < 0 || value.this_week < 0) {
-      fails.push(`trade projects ${pointsLine(value)} — Ben only offers trades he is certain improve his team, and this one doesn't even project better in every window`);
+    // project better overall and in the playoffs is certainly not it.
+    if (!(value.rest_of_season > 0) || value.playoffs < 0) {
+      fails.push(`trade projects ${pointsLine(value)} — Ben only offers trades he is certain improve his team, and this one doesn't project better over the season and in the playoffs`);
     }
     // The playoffs are single elimination (Ben, 2026-11-20): a playoff total
     // hides the week that ends the season. Born when Young-for-St. Brown read
@@ -678,6 +678,17 @@ export function pointsFindings(out, snapshot, index) {
     if (tv.worse_playoff_weeks.length) {
       const weeks = tv.worse_playoff_weeks.map((x) => `Week ${x.week} on ${x.method === 'matchup' ? 'matchups' : 'projections'} (${x.delta})`).join(', ');
       fails.push(`trade is worse in ${weeks} — the playoffs are single elimination, so a deal that loses points in a playoff week Ben has to play isn't certain, however good the total`);
+    }
+    // A cost this week no longer cancels a deal that is clearly better overall
+    // (Ben, 2026-11-20: "better this week doesn't need to cause the trade to
+    // fail if it's clearly better overall. Leave a note"). Clearly better means
+    // ahead over the rest of the season on both methods and in every playoff
+    // week. The cost is said out loud on the card instead.
+    const costNow = Math.min(value.this_week, tv.me.matchup.this_week);
+    if (costNow < 0 && !fails.length && tv.me.matchup.rest_of_season > 0) {
+      notes.push(`${costNow} this week (${value.this_week} on projections, ${tv.me.matchup.this_week} on matchups), but ahead over the season and in every playoff week`);
+    } else if (costNow < 0 && !fails.length) {
+      fails.push(`trade costs ${costNow} this week and isn't ahead over the season on matchups (${tv.me.matchup.rest_of_season}) — not clearly better overall`);
     }
   } else if (out.kind === 'drop') {
     value = moveValue(snapshot, { drop: [out.player] });
@@ -733,7 +744,7 @@ export function pointsFindings(out, snapshot, index) {
       fails.push(`${out.name} plays ${game.kickoff}, after the ${fa.next_waiver_run} waiver run, and this league reopens free agency right after every run — add him then for $0 with the week's injury news, instead of bidding $${out.faab} now`);
     }
   }
-  return { value, line: pointsLine(value), better, fails };
+  return { value, line: pointsLine(value), better, fails, notes };
 }
 
 // The one pure, exported piece of "the case": computed the same way for
@@ -1387,6 +1398,7 @@ async function validateAndBuildAction(action, i, snapshot, index, problems, opts
   if (!bad && live && snapshot.production && ['add', 'drop', 'trade'].includes(kind)) {
     points = pointsFindings(out, snapshot, index);
     for (const f of points.fails) if (worldFail(f)) bad = true;
+    for (const n of points.notes ?? []) warnings.push(`action[${i}] (${kind}): note — costs ${n}`);
   }
 
   if (!bad && live) {
@@ -1396,6 +1408,9 @@ async function validateAndBuildAction(action, i, snapshot, index, problems, opts
       out.case.value = points.value;
       if (points.better) out.case.better_drop = points.better;
       if (out.value_note) out.case.override = out.value_note;
+      // The card's "Why anyway" line carries a this-week cost the deal is worth
+      // paying, so Ben sees it next to the move rather than in a log.
+      if (points.notes?.length && !out.case.override) out.case.override = `Costs ${points.notes.join('; ')}.`;
     }
   }
 

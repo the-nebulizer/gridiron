@@ -88,7 +88,7 @@ node scripts/value.mjs --trade --give <ids> --get <ids>   # both sides, projecti
 node scripts/value.mjs --lineup             # best lineup by projection, each player's matchup beside it, and every slot where they disagree
 ```
 
-No routine describes a player's production, names a drop, or ranks a start from memory; it quotes these numbers, and says what the projection misses when it overrules them (`value_note`, which the card shows). The compiler refuses the patterns that shipped on 2026-10-13: a drop far worse than the best one, a swap that loses points now and later, a kicker bid the night before free agency reopens, and a trade that doesn't project better in every window. Projections are a baseline, not truth: news still matters, and close numbers mean close calls — say so.
+No routine describes a player's production, names a drop, or ranks a start from memory; it quotes these numbers, and says what the projection misses when it overrules them (`value_note`, which the card shows). The compiler refuses the patterns that shipped on 2026-10-13: a drop far worse than the best one, a swap that loses points now and later, a kicker bid the night before free agency reopens, and a trade that doesn't project better over the season and in every playoff week (a cost this week alone is a note on the card, not a refusal, when the deal is clearly better overall). Projections are a baseline, not truth: news still matters, and close numbers mean close calls — say so.
 
 ## Blocking and trade chips: never pass on a contested player on lineup value alone
 

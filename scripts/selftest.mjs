@@ -2829,7 +2829,7 @@ console.log('\npoints — every add, drop and trade is scored against the best l
   check('a kicker bid the night before free agency reopens is refused', f4.fails.some((m) => /reopens free agency/.test(m)), f4.fails.join('\n'));
 
   const bad = pointsFindings({ kind: 'trade', give: ['qb'], get: ['xr'] }, snap, index);
-  check('a trade that projects worse is refused under the certainty rule', bad.fails.some((m) => /every window/.test(m)), bad.line);
+  check('a trade that projects worse is refused under the certainty rule', bad.fails.some((m) => /certain improve his team/.test(m)), bad.line);
   const good = pointsFindings({ kind: 'trade', give: ['wb'], get: ['xq'] }, snap, index);
   check('a trade that projects better now, later and in the playoffs passes', good.fails.length === 0, good.line);
 
@@ -2857,6 +2857,14 @@ console.log('\npoints — every add, drop and trade is scored against the best l
   const po = pointsFindings({ kind: 'trade', give: ['qb'], get: ['xq'] }, msnap, buildIndex(msnap));
   check('a trade worse in a playoff week on matchups is refused, however good the total',
     po.fails.some((m) => /Week 15 on matchups/.test(m) && /single elimination/.test(m)), po.fails.join('\n'));
+
+  // 2026-11-20 (Ben): "better this week doesn't need to cause the trade to fail if it's clearly
+  // better overall. Leave a note." xq is on bye in Week 7: from Week 7, giving qb for xq costs
+  // that week and gains every other, so it passes with a note rather than a refusal.
+  const w7 = { ...snap, week: 7 };
+  const cost = pointsFindings({ kind: 'trade', give: ['qb'], get: ['xq'] }, w7, buildIndex(w7));
+  check('a trade that costs this week but is ahead overall and in every playoff week passes, with a note',
+    cost.fails.length === 0 && cost.notes.some((n) => /this week/.test(n)), JSON.stringify({ fails: cost.fails, notes: cost.notes }));
 }
 
 // ---- denial: should I bid just to keep someone from getting him? ------------
