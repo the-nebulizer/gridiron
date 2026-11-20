@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-11-20T05:18:28.268Z",
+  "compiled_at": "2026-11-20T12:52:03.855Z",
   "season": "2026",
   "week": 11,
   "games_have_started": true,
@@ -47,10 +47,10 @@
     "trades": {
       "report": "2026-11-20-trades.md",
       "week": 11,
-      "verdict": "Send Bryce Young to GehrmannJake for Amon-Ra St. Brown, and withdraw the Young-for-Swift offer first. It's the best deal on the board for you and a good one for them: they're chasing the last playoff seat with no real second quarterback.",
+      "verdict": "Hold. Withdraw both open offers (Young for Swift, Young for St. Brown). Playoffs are single elimination, and each costs you points in Week 15 on matchups, when Goff draws Minnesota and Lamar likely isn't back. The one deal that helps in every playoff week, Young for Jaxon Smith-Njigba, costs 1–2 points this week, so the card can't carry it.",
       "next_check": "Inactives, Sun 10am",
       "stale": false,
-      "written_at": "2026-11-20T05:18:28.129Z"
+      "written_at": "2026-11-20T12:51:50.382Z"
     },
     "inactives": {
       "report": "2026-11-15-inactives.md",
@@ -156,86 +156,6 @@
       "case": {
         "starts": "Bryce Young in at SUPERFLEX, Kirk Cousins to the bench",
         "need": "Kirk Cousins: healthy, MIN bye W6"
-      }
-    },
-    {
-      "id": "trades:trade:2",
-      "source": "trades",
-      "report": "2026-11-20-trades.md",
-      "kind": "trade",
-      "week": 11,
-      "after": "lineup:start:9228",
-      "with": 2,
-      "with_owner": "GehrmannJake",
-      "give": [
-        "9228"
-      ],
-      "give_names": [
-        "Bryce Young"
-      ],
-      "get": [
-        "7547"
-      ],
-      "get_names": [
-        "Amon-Ra St. Brown"
-      ],
-      "message": "Your SUPER_FLEX is going to Jalon Daniels or a receiver right now. Bryce Young for St. Brown? Young averages 21+ in this scoring, you're a game out of the 7 seed, and you'd still have JSN, Burden and Moore at receiver.",
-      "displaces": "11610",
-      "displaces_name": "Malik Washington",
-      "evidence": null,
-      "consumes": [
-        "9228"
-      ],
-      "urgency": "now",
-      "why": "Fixes my receiver depth and projects better in every window (+4.5 now, +43 rest of season, +16.7 playoffs). Their side: +26.5 for the season, so they have a reason to say yes.",
-      "case": {
-        "starts": "Amon-Ra St. Brown starts over Malik Washington at FLEX",
-        "need": "WR: you have 3 — not thin · gives QB depth (you have 3, start 2)",
-        "cost": "gives Bryce Young — 0 starters, 1 bench · no FAAB",
-        "asks": "GehrmannJake starts Amon-Ra St. Brown — one of 4 WRs they carry · asks them to bench a starter for bench pieces",
-        "tradeoff": {
-          "net": "neutral",
-          "fixes": [],
-          "opens": []
-        },
-        "later": "opens no holes",
-        "points": "+4.5 this week · +43 rest of season · +16.7 playoffs",
-        "value": {
-          "this_week": 4.5,
-          "next_3": 19.2,
-          "rest_of_season": 43,
-          "playoffs": 16.7,
-          "by_week": [
-            {
-              "week": 11,
-              "delta": 4.5
-            },
-            {
-              "week": 12,
-              "delta": 6.2
-            },
-            {
-              "week": 13,
-              "delta": 8.5
-            },
-            {
-              "week": 14,
-              "delta": 7.1
-            },
-            {
-              "week": 15,
-              "delta": 2.6
-            },
-            {
-              "week": 16,
-              "delta": 7
-            },
-            {
-              "week": 17,
-              "delta": 7.1
-            }
-          ]
-        }
       }
     }
   ]
