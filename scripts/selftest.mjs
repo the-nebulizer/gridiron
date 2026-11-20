@@ -18,7 +18,7 @@ import { matchupSheet } from './matchups.mjs';
 import { lifecycleState, buildIndex, freeAgencyIsOpen, pointsFindings } from './actions.mjs';
 import { denialRow, bidHistory } from './denial-core.mjs';
 import { leagueFacts, diffFacts, describeDiff, pickNewLeague, buildLeagueBlock } from './league-facts.mjs';
-import { scoreLine, bestLineup, weekPoints, moveValue, swapTable, dropTable, defenseAllowed, matchupAdjusted, lineupWithMatchups } from './value-core.mjs';
+import { scoreLine, bestLineup, weekPoints, moveValue, swapTable, dropTable, defenseAllowed, matchupAdjusted, lineupWithMatchups, tradeValue } from './value-core.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const verbose = process.argv.includes('-v');
@@ -1333,6 +1333,12 @@ console.log('\nwho a quarterback plays is computed, ranked and on the sheet');
   check('no estimate for a team on bye', matchupAdjusted(snap, { id: 'qd', position: 'QB', team: 'DDD' }) === null);
   check('no estimate for a kicker or defense', matchupAdjusted(snap, { id: 'k', position: 'K', team: 'AAA' }) === null);
   check('no estimate with no games to compare', matchupAdjusted(snap, { id: 'qc', position: 'QB', team: 'CCC' }) === null);
+  // 2026-11-20: Kirk Cousins scored for the Raiders, then was traded to Minnesota, and his
+  // estimate measured Raiders games against the Vikings' schedule. A player who scored in a
+  // week his current team was on bye changed teams: no estimate rather than a wrong one.
+  const movedSnap = { ...snap, team_schedule_played: { AAA: { 1: 'BBB', 2: 'BYE' } } };
+  check('no estimate for a player who changed teams mid-season',
+    matchupAdjusted(movedSnap, { id: 'qa', position: 'QB', team: 'AAA' }) === null);
 }
 {
   // 2026-10-29: chat answered start/sit from the projection-only lineup while the
@@ -2823,9 +2829,34 @@ console.log('\npoints — every add, drop and trade is scored against the best l
   check('a kicker bid the night before free agency reopens is refused', f4.fails.some((m) => /reopens free agency/.test(m)), f4.fails.join('\n'));
 
   const bad = pointsFindings({ kind: 'trade', give: ['qb'], get: ['xr'] }, snap, index);
-  check('a trade that projects worse is refused under the certainty rule', bad.fails.length === 1, bad.line);
+  check('a trade that projects worse is refused under the certainty rule', bad.fails.some((m) => /every window/.test(m)), bad.line);
   const good = pointsFindings({ kind: 'trade', give: ['wb'], get: ['xq'] }, snap, index);
   check('a trade that projects better now, later and in the playoffs passes', good.fails.length === 0, good.line);
+
+  // 2026-11-20: Young-for-St. Brown read +16.7 for the playoffs on projections and -7.5 in
+  // Week 15 on matchups. The playoffs are single elimination, so any playoff week that is
+  // worse on either method fails. Here xq projects 26 every week, but his Week 15 opponent
+  // allows almost nothing, so on matchups he sits and qc (19) replaces qb (20) at SUPER_FLEX.
+  const pre = pointsFindings({ kind: 'trade', give: ['qb'], get: ['xq'] }, snap, index);
+  check('with no matchup data, qb for xq passes on projections alone', pre.fails.length === 0, pre.fails.join('\n'));
+  const msnap = {
+    ...snap,
+    defense_vs_position: { YYY: { QB: { avg: 26, rank: 1, of: 2 } }, ZZZ: { QB: { avg: 2, rank: 2, of: 2 } } },
+    team_schedule: { XQ: { 15: 'ZZZ' } },
+    team_schedule_played: { XQ: { 1: 'YYY' } },
+    production: { ...production, xq: { ...production.xq, pts: { 1: 26 } } },
+  };
+  const tv = tradeValue(msnap, { give: ['qb'], get: ['xq'] });
+  check('tradeValue reads each playoff week on its own, both methods',
+    tv.me.projection.playoff_weeks.every((x) => x.delta > 0)
+      && tv.me.matchup.playoff_weeks.find((x) => x.week === 15)?.delta < 0
+      && tv.worse_playoff_weeks.length === 1 && tv.worse_playoff_weeks[0].method === 'matchup',
+    JSON.stringify(tv.worse_playoff_weeks));
+  check('tradeValue scores the partner\'s side from their own roster',
+    tv.partner?.owner === 'them' && typeof tv.partner.projection.rest_of_season === 'number', JSON.stringify(tv.partner && tv.partner.projection));
+  const po = pointsFindings({ kind: 'trade', give: ['qb'], get: ['xq'] }, msnap, buildIndex(msnap));
+  check('a trade worse in a playoff week on matchups is refused, however good the total',
+    po.fails.some((m) => /Week 15 on matchups/.test(m) && /single elimination/.test(m)), po.fails.join('\n'));
 }
 
 // ---- denial: should I bid just to keep someone from getting him? ------------

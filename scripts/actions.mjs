@@ -33,7 +33,7 @@
 import { readFile, writeFile, readdir, stat } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 import { SLOT_ELIGIBILITY, buildOutlook } from './outlook.mjs';
-import { moveValue, swapTable } from './value-core.mjs';
+import { moveValue, swapTable, tradeValue } from './value-core.mjs';
 import { denialRow, candidatePool } from './denial-core.mjs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -667,6 +667,17 @@ export function pointsFindings(out, snapshot, index) {
     // certainly not it.
     if (!(value.rest_of_season > 0) || value.playoffs < 0 || value.this_week < 0) {
       fails.push(`trade projects ${pointsLine(value)} — Ben only offers trades he is certain improve his team, and this one doesn't even project better in every window`);
+    }
+    // The playoffs are single elimination (Ben, 2026-11-20): a playoff total
+    // hides the week that ends the season. Born when Young-for-St. Brown read
+    // +16.7 for the playoffs on projections and -7.5 in Week 15 on matchups.
+    // Any playoff week worse on either method fails. There is no exception for
+    // a clinched bye, because the trade deadline (W11) always comes before one
+    // can be clinched.
+    const tv = tradeValue(snapshot, { give: out.give ?? [], get: out.get ?? [] });
+    if (tv.worse_playoff_weeks.length) {
+      const weeks = tv.worse_playoff_weeks.map((x) => `Week ${x.week} on ${x.method === 'matchup' ? 'matchups' : 'projections'} (${x.delta})`).join(', ');
+      fails.push(`trade is worse in ${weeks} — the playoffs are single elimination, so a deal that loses points in a playoff week Ben has to play isn't certain, however good the total`);
     }
   } else if (out.kind === 'drop') {
     value = moveValue(snapshot, { drop: [out.player] });

@@ -144,9 +144,9 @@ function slotsOf(snapshot) {
   return (snapshot.league?.roster_positions ?? []).filter((p) => p !== 'BN');
 }
 
-export function weeklyTotals(snapshot, roster, weeks = remainingWeeks(snapshot)) {
+export function weeklyTotals(snapshot, roster, weeks = remainingWeeks(snapshot), pointsOf = weekPoints) {
   const slots = slotsOf(snapshot);
-  return weeks.map((week) => ({ week, total: bestLineup(slots, roster, (p) => weekPoints(snapshot, p, week)).total }));
+  return weeks.map((week) => ({ week, total: bestLineup(slots, roster, (p) => pointsOf(snapshot, p, week)).total }));
 }
 
 const r1 = (x) => Math.round(x * 10) / 10;
@@ -154,21 +154,70 @@ const r1 = (x) => Math.round(x * 10) / 10;
 // The value of a move, in projected starting-lineup points, against the roster
 // as it stands. Positive is good. Broken out so a report can't hide a cost
 // behind a total: this week, the next three, rest of season, and playoffs.
-export function moveValue(snapshot, { add = [], drop = [] } = {}) {
+export function moveValue(snapshot, { add = [], drop = [] } = {}, { pointsOf = weekPoints } = {}) {
+  return valueBetween(snapshot, activeRoster(snapshot), activeRoster(snapshot, { add, drop }), pointsOf);
+}
+
+// The same comparison for any two rosters, scored by any points function —
+// projections (weekPoints) or matchup-adjusted estimates (matchupPoints).
+// `weeks` keeps every remaining week, zeros included, so a reader can take the
+// playoff weeks one at a time; `by_week` drops the zeros for display.
+function valueBetween(snapshot, baseRoster, nextRoster, pointsOf) {
   const weeks = remainingWeeks(snapshot);
-  const base = weeklyTotals(snapshot, activeRoster(snapshot), weeks);
-  const next = weeklyTotals(snapshot, activeRoster(snapshot, { add, drop }), weeks);
+  const base = weeklyTotals(snapshot, baseRoster, weeks, pointsOf);
+  const next = weeklyTotals(snapshot, nextRoster, weeks, pointsOf);
   const playoffStart = snapshot.league?.playoff_week_start ?? 15;
-  const by_week = weeks.map((week, i) => ({ week, delta: r1(next[i].total - base[i].total) }));
-  const sum = (f) => r1(by_week.filter(f).reduce((s, x) => s + x.delta, 0));
+  const all = weeks.map((week, i) => ({ week, delta: r1(next[i].total - base[i].total) }));
+  const sum = (f) => r1(all.filter(f).reduce((s, x) => s + x.delta, 0));
   const thisWeek = weeks[0];
   return {
     this_week: sum((x) => x.week === thisWeek),
     next_3: sum((x) => x.week < thisWeek + 3),
     rest_of_season: sum(() => true),
     playoffs: sum((x) => x.week >= playoffStart),
-    by_week: by_week.filter((x) => x.delta !== 0),
+    playoff_weeks: all.filter((x) => x.week >= playoffStart),
+    weeks: all,
+    by_week: all.filter((x) => x.delta !== 0),
   };
+}
+
+// Points by matchup instead of by projection: the player's matchup-adjusted
+// estimate for that week's opponent where one can be made, his projection where
+// it can't (no history, a kicker or defense, a mid-season team change), and zero
+// whenever the projection is zero (bye, injury tag this week).
+export function matchupPoints(snapshot, player, week) {
+  const proj = weekPoints(snapshot, player, week);
+  if (!proj) return 0;
+  const m = matchupAdjusted(snapshot, player, week);
+  return m ? m.estimate : proj;
+}
+
+// A trade, scored both ways and from both sides. The playoffs are single
+// elimination (Ben, 2026-11-20), so a deal is read week by week through them:
+// a playoff total can hide the one week that ends the season. The partner's
+// side is scored the same way, so the odds of acceptance come from their roster
+// rather than from mine.
+export function tradeValue(snapshot, { give = [], get = [] } = {}) {
+  const methods = { projection: weekPoints, matchup: matchupPoints };
+  const me = Object.fromEntries(Object.entries(methods).map(([k, f]) => [k, moveValue(snapshot, { add: get, drop: give }, { pointsOf: f })]));
+  const partnerTeam = get.length
+    ? snapshot.teams.find((t) => t.roster_id !== snapshot.my_roster_id
+        && get.every((id) => [...t.starters, ...t.bench, ...(t.reserve ?? [])].some((p) => p?.id === id)))
+    : null;
+  let partner = null;
+  if (partnerTeam) {
+    const base = [...partnerTeam.starters, ...partnerTeam.bench].filter(Boolean);
+    const getSet = new Set(get);
+    const next = base.filter((p) => !getSet.has(p.id)).concat(give.map((id) => findPlayer(snapshot, id)));
+    partner = { owner: partnerTeam.owner, roster_id: partnerTeam.roster_id,
+      ...Object.fromEntries(Object.entries(methods).map(([k, f]) => [k, valueBetween(snapshot, base, next, f)])) };
+  }
+  // Every playoff week where either method says I'm worse off.
+  const worse_playoff_weeks = [];
+  for (const [method, v] of Object.entries(me)) {
+    for (const x of v.playoff_weeks) if (x.delta < 0) worse_playoff_weeks.push({ method, week: x.week, delta: x.delta });
+  }
+  return { me, partner, worse_playoff_weeks };
 }
 
 // Cover value: what a player is worth as insurance, which a projection-only
@@ -365,6 +414,12 @@ export function matchupAdjusted(snapshot, player, week = snapshot.week) {
   if (!raw || raw === 'BYE') return null;
   const opp = raw.replace(/^@/, '');
   const pts = snapshot.production?.[player.id]?.pts ?? {};
+  // A player who scored in a week his current team had a bye changed teams
+  // mid-season: his games were against his old team's opponents, and measuring
+  // them against his new team's schedule produces a number that means nothing
+  // (2026-11-20: Kirk Cousins, Raiders to Vikings). No estimate beats a wrong one.
+  const played = snapshot.team_schedule_played?.[team] ?? {};
+  if (Object.entries(pts).some(([w, p]) => p && played[w] === 'BYE')) return null;
   let scored = 0, expected = 0, games = 0;
   for (const [w, p] of Object.entries(pts)) {
     const faced = snapshot.team_schedule_played?.[team]?.[w];

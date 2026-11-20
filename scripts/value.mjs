@@ -4,14 +4,15 @@
 //   node scripts/value.mjs                       # drop order: what losing each player costs
 //   node scripts/value.mjs --add <id>            # every possible drop for that add, best first
 //   node scripts/value.mjs --add <id> --drop <id># one move, week by week
-//   node scripts/value.mjs --trade --give <id,..> --get <id,..>
+//   node scripts/value.mjs --trade --give <id,..> --get <id,..>   # both sides, on projections and on matchups,
+//                                                # each playoff week on its own (single elimination)
 //   node scripts/value.mjs --lineup [week]       # best lineup by projection, each player's matchup beside it,
 //                                                # and every slot where the matchup picks someone else
 //   --json                                       # machine-readable
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { dropTable, swapTable, moveValue, lineupWithMatchups } from './value-core.mjs';
+import { dropTable, swapTable, moveValue, tradeValue, lineupWithMatchups } from './value-core.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const snapshot = JSON.parse(await readFile(path.join(root, 'data/league/snapshot.json'), 'utf8'));
@@ -51,10 +52,30 @@ if (args.includes('--lineup')) {
   }
   console.log('\n  allows = what this opponent gives up to the position per game (rank 1 = most); adj = the player scored against what his past opponents allowed, applied to this one. node scripts/matchups.mjs adds usage and the full Calls table.');
 } else if (args.includes('--trade')) {
-  const v = moveValue(snapshot, { add: ids(opt('--get')), drop: ids(opt('--give')) });
-  if (json) { console.log(JSON.stringify(v, null, 2)); process.exit(0); }
-  console.log(`Trade: this week ${sign(v.this_week)} · next 3 ${sign(v.next_3)} · rest of season ${sign(v.rest_of_season)} · playoffs ${sign(v.playoffs)}`);
-  console.log(`  ${weeksLine(v)}`);
+  const t = tradeValue(snapshot, { give: ids(opt('--give')), get: ids(opt('--get')) });
+  if (json) { console.log(JSON.stringify(t, null, 2)); process.exit(0); }
+  const line = (v) => `this week ${sign(v.this_week)} · next 3 ${sign(v.next_3)} · rest of season ${sign(v.rest_of_season)} · playoffs ${sign(v.playoffs)}`;
+  const wk = (v) => v.weeks.map((x) => `W${x.week} ${sign(x.delta)}`).join(', ');
+  const po = (side) => side.projection.playoff_weeks.map((x, i) => {
+    const m = side.matchup.playoff_weeks[i];
+    return `W${x.week} ${sign(x.delta)} / ${sign(m.delta)}${x.delta < 0 || m.delta < 0 ? ' WORSE' : ''}`;
+  }).join(' · ');
+  console.log(`Trade, my side`);
+  console.log(`  projection: ${line(t.me.projection)}`);
+  console.log(`    ${wk(t.me.projection)}`);
+  console.log(`  matchup:    ${line(t.me.matchup)}`);
+  console.log(`    ${wk(t.me.matchup)}`);
+  console.log(`  playoff weeks, one at a time (projection / matchup): ${po(t.me)}`);
+  if (t.partner) {
+    console.log(`Their side (${t.partner.owner})`);
+    console.log(`  projection: ${line(t.partner.projection)}`);
+    console.log(`  matchup:    ${line(t.partner.matchup)}`);
+    console.log(`  playoff weeks (projection / matchup): ${po(t.partner)}`);
+  }
+  if (t.worse_playoff_weeks.length) {
+    console.log(`\n  NOT CERTAIN — worse in ${t.worse_playoff_weeks.map((x) => `W${x.week} on ${x.method === 'matchup' ? 'matchups' : 'projections'} (${x.delta})`).join(', ')}. The playoffs are single elimination: a week Ben has to play can't be traded away for later ones.`);
+  }
+  console.log('\n  matchup = each player\'s scoring against what his past opponents allowed his position, applied to each week\'s opponent; the projection stands in where there is no history or he changed teams mid-season.');
 } else if (opt('--add') && opt('--drop')) {
   const v = moveValue(snapshot, { add: [opt('--add')], drop: [opt('--drop')] });
   if (json) { console.log(JSON.stringify(v, null, 2)); process.exit(0); }

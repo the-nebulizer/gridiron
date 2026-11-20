@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-11-20T12:52:03.855Z",
+  "compiled_at": "2026-11-20T12:54:37.522Z",
   "season": "2026",
   "week": 11,
   "games_have_started": true,
@@ -50,7 +50,7 @@
       "verdict": "Hold. Withdraw both open offers (Young for Swift, Young for St. Brown). Playoffs are single elimination, and each costs you points in Week 15 on matchups, when Goff draws Minnesota and Lamar likely isn't back. The one deal that helps in every playoff week, Young for Jaxon Smith-Njigba, costs 1–2 points this week, so the card can't carry it.",
       "next_check": "Inactives, Sun 10am",
       "stale": false,
-      "written_at": "2026-11-20T12:51:50.382Z"
+      "written_at": "2026-11-20T12:52:03.000Z"
     },
     "inactives": {
       "report": "2026-11-15-inactives.md",

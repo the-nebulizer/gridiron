@@ -84,7 +84,7 @@ Every sync also pulls this season's box scores and Sleeper's weekly projections 
 ```
 node scripts/value.mjs                      # the drop order, with averages and cover value
 node scripts/value.mjs --add <id>           # every possible drop for that add, best first
-node scripts/value.mjs --trade --give <ids> --get <ids>
+node scripts/value.mjs --trade --give <ids> --get <ids>   # both sides, projections and matchups, each playoff week
 node scripts/value.mjs --lineup             # best lineup by projection, each player's matchup beside it, and every slot where they disagree
 ```
 
@@ -105,7 +105,7 @@ It scores each unrostered player against the other 11 lineups (any of them is a 
 
 Ben's standing rule: **no trade offer goes on the card unless it is certain he is better off making it than not.** A neutral deal, a depth piece, or a buy with acknowledged injury risk is a hold. See `.claude/skills/trade/SKILL.md`.
 
-**The playoffs are single elimination** (Ben, 2026-11-20: "I could get knocked out if I lose one game"). A playoff total hides the one week that matters: a trade that loses points in Week 15 and wins them back in Weeks 16–17 only pays off if Ben survives Week 15. So every trade and every add that changes a playoff-week lineup is checked **week by week through the playoffs, on projections and on matchup-adjusted estimates both**. Being worse in any playoff week Ben has to play, on either method, means it isn't certain. The exception is Week 15 when the top-seed bye is clinched. Seven teams make it, and only the top seed skips Week 15. Say whether the bye is clinched, in reach, or gone.
+**The playoffs are single elimination** (Ben, 2026-11-20: "I could get knocked out if I lose one game"). A playoff total hides the one week that matters: a trade that loses points in Week 15 and wins them back in Weeks 16–17 only pays off if Ben survives Week 15. So every trade and every add that changes a playoff-week lineup is checked **week by week through the playoffs, on projections and on matchup-adjusted estimates both**. `value.mjs --trade` prints exactly that, for the partner's side too. The compiler refuses a trade that is worse in any playoff week on either method. Seven teams make it, and only the top seed skips Week 15; the bye can't be clinched before the W11 trade deadline, so no week is exempt. Say whether the bye is clinched, in reach, or gone.
 
 ## Lineups: the most points, every week, nothing else
 
