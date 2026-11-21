@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-11-21T15:31:20.803Z",
+  "compiled_at": "2026-11-21T23:53:23.501Z",
   "season": "2026",
   "week": 11,
   "games_have_started": true,
@@ -47,10 +47,10 @@
     "trades": {
       "report": "2026-11-20-trades.md",
       "week": 11,
-      "verdict": "Send Bryce Young + Ashton Jeanty to GehrmannJake for Jaxon Smith-Njigba. Young is the piece they need: Jalon Daniels isn't Tampa Bay's starter, so JSN has been playing their SUPER_FLEX. If they say no, hold. The Young + Warren fallback was pulled because it doesn't survive a JSN injury.",
+      "verdict": "GehrmannJake declined Young + Jeanty for JSN. Hold. The only other deals that come out ahead for both teams both have a problem. Bowers is a game-time decision with an ankle and quad injury, and McBride + Addison means trading with this week's opponent: it's +6.5 for them this week and leans on an injured Addison. Keep Young as quarterback cover.",
       "next_check": "Inactives, Sun 10am",
       "stale": false,
-      "written_at": "2026-11-21T15:31:20.520Z"
+      "written_at": "2026-11-21T23:53:23.309Z"
     },
     "inactives": {
       "report": "2026-11-15-inactives.md",
@@ -139,138 +139,6 @@
       "urgency": "before_kickoff",
       "deadline_label": "before Sunday's 1:00pm ET games (Nov 22)",
       "why": "QBs are bunched on projection, but SF is the stingiest of the three matchups. Holds only if the open Young-for-Swift trade offer doesn't process first."
-    },
-    {
-      "id": "t-jsn-jeanty",
-      "source": "trades",
-      "report": "2026-11-20-trades.md",
-      "kind": "trade",
-      "week": 11,
-      "after": "lineup:start:9228",
-      "with": 2,
-      "with_owner": "GehrmannJake",
-      "give": [
-        "9228",
-        "12527"
-      ],
-      "give_names": [
-        "Bryce Young",
-        "Ashton Jeanty"
-      ],
-      "get": [
-        "9488"
-      ],
-      "get_names": [
-        "Jaxon Smith-Njigba"
-      ],
-      "message": "Your SUPER_FLEX has been a receiver or Jalon Daniels. Bryce Young + Ashton Jeanty for JSN? You get a starting QB for the playoff push and a young lead back you could keep, and you'd still have St. Brown, Burden and Moore at receiver.",
-      "displaces": null,
-      "displaces_name": null,
-      "evidence": {
-        "note": "JSN drew 11, 11 and 10 targets in Drew Lock's starts (1,207 yards, 10 TDs on the season); Darnold is expected back for Week 12.",
-        "url": "https://sports.yahoo.com/articles/2-seattle-seahawks-qb-injuries-070000372.html",
-        "as_of": "2026-11-20"
-      },
-      "consumes": [
-        "9228",
-        "12527"
-      ],
-      "urgency": "now",
-      "why": "JSN averages 22.4 a game, the best receiver on the board, and he's keeper-age. Ahead in every playoff week on both methods. Costs about 4 points this week (Seattle bye).",
-      "case": {
-        "starts": "Jaxon Smith-Njigba is depth (WR4)",
-        "need": "WR: you have 3 — not thin · gives QB depth (you have 3, start 2) · gives RB depth (you have 3, start 3)",
-        "cost": "gives Bryce Young, Ashton Jeanty — 2 starters, 0 bench · no FAAB",
-        "asks": "GehrmannJake benches Jaxon Smith-Njigba — one of 4 WRs they carry",
-        "tradeoff": {
-          "net": "neutral",
-          "fixes": [],
-          "opens": []
-        },
-        "later": "opens no holes · frees 1 bench slot · empties SUPERFLEX, RB this week — set a starter there before kickoff",
-        "points": "-4.1 this week · +52 rest of season · +23.2 playoffs",
-        "value": {
-          "this_week": -4.1,
-          "next_3": 20.2,
-          "rest_of_season": 52,
-          "playoffs": 23.2,
-          "playoff_weeks": [
-            {
-              "week": 15,
-              "delta": 7.8
-            },
-            {
-              "week": 16,
-              "delta": 7.2
-            },
-            {
-              "week": 17,
-              "delta": 8.2
-            }
-          ],
-          "weeks": [
-            {
-              "week": 11,
-              "delta": -4.1
-            },
-            {
-              "week": 12,
-              "delta": 9.4
-            },
-            {
-              "week": 13,
-              "delta": 14.9
-            },
-            {
-              "week": 14,
-              "delta": 8.6
-            },
-            {
-              "week": 15,
-              "delta": 7.8
-            },
-            {
-              "week": 16,
-              "delta": 7.2
-            },
-            {
-              "week": 17,
-              "delta": 8.2
-            }
-          ],
-          "by_week": [
-            {
-              "week": 11,
-              "delta": -4.1
-            },
-            {
-              "week": 12,
-              "delta": 9.4
-            },
-            {
-              "week": 13,
-              "delta": 14.9
-            },
-            {
-              "week": 14,
-              "delta": 8.6
-            },
-            {
-              "week": 15,
-              "delta": 7.8
-            },
-            {
-              "week": 16,
-              "delta": 7.2
-            },
-            {
-              "week": 17,
-              "delta": 8.2
-            }
-          ]
-        },
-        "override": "Costs -4.1 this week (-4.1 on projections, -4 on matchups), but ahead over the season and in every playoff week."
-      }
     }
   ]
 }
