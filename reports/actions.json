@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-11-21T05:23:09.509Z",
+  "compiled_at": "2026-11-21T05:32:03.978Z",
   "season": "2026",
   "week": 11,
   "games_have_started": true,
@@ -47,10 +47,10 @@
     "trades": {
       "report": "2026-11-20-trades.md",
       "week": 11,
-      "verdict": "Send Bryce Young + Ashton Jeanty to GehrmannJake for Jaxon Smith-Njigba. It's ahead in every playoff week on projections and matchups, and it's worth +45 to +52 over the season. It costs about 4 points this week while Seattle is on bye. It also helps GehrmannJake on both methods, so they have a reason to say yes.",
+      "verdict": "Send Bryce Young + Ashton Jeanty to GehrmannJake for Jaxon Smith-Njigba. If they say no, offer Young + Jaylen Warren instead. Young is the piece they need: their second QB, Jalon Daniels, isn't Tampa Bay's starter and projects 0, so JSN has been playing their SUPER_FLEX.",
       "next_check": "Inactives, Sun 10am",
       "stale": false,
-      "written_at": "2026-11-21T05:23:09.258Z"
+      "written_at": "2026-11-21T05:32:01.024Z"
     },
     "inactives": {
       "report": "2026-11-15-inactives.md",
@@ -159,7 +159,7 @@
       }
     },
     {
-      "id": "trades:trade:2",
+      "id": "t-jsn-jeanty",
       "source": "trades",
       "report": "2026-11-20-trades.md",
       "kind": "trade",
@@ -288,6 +288,145 @@
           ]
         },
         "override": "Costs -4.2 this week (-4.2 on projections, -4 on matchups), but ahead over the season and in every playoff week."
+      }
+    },
+    {
+      "id": "t-jsn-warren",
+      "source": "trades",
+      "report": "2026-11-20-trades.md",
+      "kind": "trade",
+      "week": 11,
+      "after": "lineup:start:8228",
+      "if_not": "t-jsn-jeanty",
+      "with": 2,
+      "with_owner": "GehrmannJake",
+      "give": [
+        "9228",
+        "8228"
+      ],
+      "give_names": [
+        "Bryce Young",
+        "Jaylen Warren"
+      ],
+      "get": [
+        "9488"
+      ],
+      "get_names": [
+        "Jaxon Smith-Njigba"
+      ],
+      "message": "Fair point on the backs. Bryce Young + Jaylen Warren for JSN instead? Young fixes your SUPER_FLEX (Jalon Daniels isn't starting), and Warren's been getting 14 carries a game.",
+      "displaces": null,
+      "displaces_name": null,
+      "evidence": {
+        "note": "JSN drew 11, 11 and 10 targets in Drew Lock's starts (1,207 yards, 10 TDs on the season); Darnold is expected back for Week 12.",
+        "url": "https://sports.yahoo.com/articles/2-seattle-seahawks-qb-injuries-070000372.html",
+        "as_of": "2026-11-20"
+      },
+      "consumes": [
+        "9228",
+        "8228"
+      ],
+      "urgency": "now",
+      "why": "Fallback if the Jeanty version is declined. Still ahead in every playoff week (+19.8 to +28.5 over the season), and clearly good for them (+18 to +19), since Warren outplays Jeanty.",
+      "case": {
+        "starts": "Jaxon Smith-Njigba is depth (WR4)",
+        "need": "WR: you have 3 — not thin · gives QB depth (you have 3, start 2) · gives RB depth (you have 3, start 2)",
+        "cost": "gives Bryce Young, Jaylen Warren — 0 starters, 2 bench · no FAAB",
+        "asks": "GehrmannJake benches Jaxon Smith-Njigba — one of 4 WRs they carry",
+        "tradeoff": {
+          "net": "costs_only",
+          "fixes": [],
+          "opens": [
+            {
+              "week": 13,
+              "slot": "RB",
+              "kind": "hole"
+            }
+          ]
+        },
+        "later": "opens a W13 RB hole · frees 1 bench slot",
+        "points": "-7.5 this week · +28.5 rest of season · +17.7 playoffs",
+        "value": {
+          "this_week": -7.5,
+          "next_3": 2,
+          "rest_of_season": 28.5,
+          "playoffs": 17.7,
+          "playoff_weeks": [
+            {
+              "week": 15,
+              "delta": 6.4
+            },
+            {
+              "week": 16,
+              "delta": 5.4
+            },
+            {
+              "week": 17,
+              "delta": 5.9
+            }
+          ],
+          "weeks": [
+            {
+              "week": 11,
+              "delta": -7.5
+            },
+            {
+              "week": 12,
+              "delta": 7.9
+            },
+            {
+              "week": 13,
+              "delta": 1.6
+            },
+            {
+              "week": 14,
+              "delta": 8.8
+            },
+            {
+              "week": 15,
+              "delta": 6.4
+            },
+            {
+              "week": 16,
+              "delta": 5.4
+            },
+            {
+              "week": 17,
+              "delta": 5.9
+            }
+          ],
+          "by_week": [
+            {
+              "week": 11,
+              "delta": -7.5
+            },
+            {
+              "week": 12,
+              "delta": 7.9
+            },
+            {
+              "week": 13,
+              "delta": 1.6
+            },
+            {
+              "week": 14,
+              "delta": 8.8
+            },
+            {
+              "week": 15,
+              "delta": 6.4
+            },
+            {
+              "week": 16,
+              "delta": 5.4
+            },
+            {
+              "week": 17,
+              "delta": 5.9
+            }
+          ]
+        },
+        "override": "Costs -7.5 this week (-7.5 on projections, -4.9 on matchups), but ahead over the season and in every playoff week."
       }
     }
   ]
