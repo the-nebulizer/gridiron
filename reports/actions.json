@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-11-21T05:44:49.445Z",
+  "compiled_at": "2026-11-21T15:31:20.803Z",
   "season": "2026",
   "week": 11,
   "games_have_started": true,
@@ -10,17 +10,17 @@
       "11584",
       "12526",
       "2449",
-      "9484",
-      "11610",
-      "1166",
+      "4993",
+      "8228",
+      "9228",
       "11792",
       "HOU"
     ],
     "bench": [
-      "4993",
+      "11610",
+      "1166",
       "7002",
-      "8228",
-      "9228",
+      "9484",
       "DEN"
     ],
     "reserve": [
@@ -50,7 +50,7 @@
       "verdict": "Send Bryce Young + Ashton Jeanty to GehrmannJake for Jaxon Smith-Njigba. Young is the piece they need: Jalon Daniels isn't Tampa Bay's starter, so JSN has been playing their SUPER_FLEX. If they say no, hold. The Young + Warren fallback was pulled because it doesn't survive a JSN injury.",
       "next_check": "Inactives, Sun 10am",
       "stale": false,
-      "written_at": "2026-11-21T05:44:49.219Z"
+      "written_at": "2026-11-21T15:31:20.520Z"
     },
     "inactives": {
       "report": "2026-11-15-inactives.md",
@@ -89,6 +89,7 @@
       "report": "2026-11-19-lineup.md",
       "kind": "start",
       "week": 11,
+      "state": "done",
       "player": "4993",
       "name": "Mike Gesicki",
       "pos": "TE",
@@ -96,17 +97,10 @@
       "slot": "TE",
       "for": "9484",
       "for_name": "Tucker Kraft",
-      "consumes": [
-        "9484",
-        "4993"
-      ],
+      "consumes": [],
       "urgency": "before_kickoff",
       "deadline_label": "before Sunday's 1:00pm ET games (Nov 22)",
-      "why": "Kraft is on bye. Gesicki's matchup is the better of the two bench tight ends — Washington gives up the 2nd-most fantasy points to TEs in the league.",
-      "case": {
-        "starts": "Mike Gesicki in at TE, Tucker Kraft to the bench",
-        "need": "Tucker Kraft: healthy, GB bye W11"
-      }
+      "why": "Kraft is on bye. Gesicki's matchup is the better of the two bench tight ends — Washington gives up the 2nd-most fantasy points to TEs in the league."
     },
     {
       "id": "lineup:start:8228",
@@ -114,6 +108,7 @@
       "report": "2026-11-19-lineup.md",
       "kind": "start",
       "week": 11,
+      "state": "done",
       "player": "8228",
       "name": "Jaylen Warren",
       "pos": "RB",
@@ -121,17 +116,10 @@
       "slot": "FLEX",
       "for": "11610",
       "for_name": "Malik Washington",
-      "consumes": [
-        "11610",
-        "8228"
-      ],
+      "consumes": [],
       "urgency": "before_kickoff",
       "deadline_label": "before Sunday's 1:00pm ET games (Nov 22)",
-      "why": "Warren projects higher and grades higher on the matchup; Washington's Miami offense is down to its third different QB (McCord) this season.",
-      "case": {
-        "starts": "Jaylen Warren in at FLEX, Malik Washington to the bench",
-        "need": "Malik Washington: healthy, MIA bye W6"
-      }
+      "why": "Warren projects higher and grades higher on the matchup; Washington's Miami offense is down to its third different QB (McCord) this season."
     },
     {
       "id": "lineup:start:9228",
@@ -139,6 +127,7 @@
       "report": "2026-11-19-lineup.md",
       "kind": "start",
       "week": 11,
+      "state": "done",
       "player": "9228",
       "name": "Bryce Young",
       "pos": "QB",
@@ -146,17 +135,10 @@
       "slot": "SUPER_FLEX",
       "for": "1166",
       "for_name": "Kirk Cousins",
-      "consumes": [
-        "1166",
-        "9228"
-      ],
+      "consumes": [],
       "urgency": "before_kickoff",
       "deadline_label": "before Sunday's 1:00pm ET games (Nov 22)",
-      "why": "QBs are bunched on projection, but SF is the stingiest of the three matchups. Holds only if the open Young-for-Swift trade offer doesn't process first.",
-      "case": {
-        "starts": "Bryce Young in at SUPERFLEX, Kirk Cousins to the bench",
-        "need": "Kirk Cousins: healthy, MIN bye W6"
-      }
+      "why": "QBs are bunched on projection, but SF is the stingiest of the three matchups. Holds only if the open Young-for-Swift trade offer doesn't process first."
     },
     {
       "id": "t-jsn-jeanty",
@@ -197,20 +179,20 @@
       "why": "JSN averages 22.4 a game, the best receiver on the board, and he's keeper-age. Ahead in every playoff week on both methods. Costs about 4 points this week (Seattle bye).",
       "case": {
         "starts": "Jaxon Smith-Njigba is depth (WR4)",
-        "need": "WR: you have 3 — not thin · gives QB depth (you have 3, start 2) · gives RB depth (you have 3, start 2)",
-        "cost": "gives Bryce Young, Ashton Jeanty — 1 starter, 1 bench · no FAAB",
+        "need": "WR: you have 3 — not thin · gives QB depth (you have 3, start 2) · gives RB depth (you have 3, start 3)",
+        "cost": "gives Bryce Young, Ashton Jeanty — 2 starters, 0 bench · no FAAB",
         "asks": "GehrmannJake benches Jaxon Smith-Njigba — one of 4 WRs they carry",
         "tradeoff": {
           "net": "neutral",
           "fixes": [],
           "opens": []
         },
-        "later": "opens no holes · frees 1 bench slot · empties RB this week — set a starter there before kickoff",
-        "points": "-4.2 this week · +51.7 rest of season · +23.2 playoffs",
+        "later": "opens no holes · frees 1 bench slot · empties SUPERFLEX, RB this week — set a starter there before kickoff",
+        "points": "-4.1 this week · +52 rest of season · +23.2 playoffs",
         "value": {
-          "this_week": -4.2,
-          "next_3": 19.9,
-          "rest_of_season": 51.7,
+          "this_week": -4.1,
+          "next_3": 20.2,
+          "rest_of_season": 52,
           "playoffs": 23.2,
           "playoff_weeks": [
             {
@@ -229,11 +211,11 @@
           "weeks": [
             {
               "week": 11,
-              "delta": -4.2
+              "delta": -4.1
             },
             {
               "week": 12,
-              "delta": 9.2
+              "delta": 9.4
             },
             {
               "week": 13,
@@ -259,11 +241,11 @@
           "by_week": [
             {
               "week": 11,
-              "delta": -4.2
+              "delta": -4.1
             },
             {
               "week": 12,
-              "delta": 9.2
+              "delta": 9.4
             },
             {
               "week": 13,
@@ -287,7 +269,7 @@
             }
           ]
         },
-        "override": "Costs -4.2 this week (-4.2 on projections, -4 on matchups), but ahead over the season and in every playoff week."
+        "override": "Costs -4.1 this week (-4.1 on projections, -4 on matchups), but ahead over the season and in every playoff week."
       }
     }
   ]
