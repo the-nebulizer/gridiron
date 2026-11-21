@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-11-20T12:58:43.383Z",
+  "compiled_at": "2026-11-21T05:23:09.509Z",
   "season": "2026",
   "week": 11,
   "games_have_started": true,
@@ -50,7 +50,7 @@
       "verdict": "Send Bryce Young + Ashton Jeanty to GehrmannJake for Jaxon Smith-Njigba. It's ahead in every playoff week on projections and matchups, and it's worth +45 to +52 over the season. It costs about 4 points this week while Seattle is on bye. It also helps GehrmannJake on both methods, so they have a reason to say yes.",
       "next_check": "Inactives, Sun 10am",
       "stale": false,
-      "written_at": "2026-11-20T12:58:10.545Z"
+      "written_at": "2026-11-21T05:23:09.258Z"
     },
     "inactives": {
       "report": "2026-11-15-inactives.md",
@@ -206,11 +206,11 @@
           "opens": []
         },
         "later": "opens no holes · frees 1 bench slot · empties RB this week — set a starter there before kickoff",
-        "points": "-4.1 this week · +51.8 rest of season · +23.2 playoffs",
+        "points": "-4.2 this week · +51.7 rest of season · +23.2 playoffs",
         "value": {
-          "this_week": -4.1,
-          "next_3": 20,
-          "rest_of_season": 51.8,
+          "this_week": -4.2,
+          "next_3": 19.9,
+          "rest_of_season": 51.7,
           "playoffs": 23.2,
           "playoff_weeks": [
             {
@@ -229,7 +229,7 @@
           "weeks": [
             {
               "week": 11,
-              "delta": -4.1
+              "delta": -4.2
             },
             {
               "week": 12,
@@ -259,7 +259,7 @@
           "by_week": [
             {
               "week": 11,
-              "delta": -4.1
+              "delta": -4.2
             },
             {
               "week": 12,
@@ -287,7 +287,7 @@
             }
           ]
         },
-        "override": "Costs -4.1 this week (-4.1 on projections, -4 on matchups), but ahead over the season and in every playoff week."
+        "override": "Costs -4.2 this week (-4.2 on projections, -4 on matchups), but ahead over the season and in every playoff week."
       }
     }
   ]
