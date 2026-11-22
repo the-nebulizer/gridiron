@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-11-22T00:52:14.190Z",
+  "compiled_at": "2026-11-22T15:13:49.836Z",
   "season": "2026",
   "week": 11,
   "games_have_started": true,
@@ -50,15 +50,15 @@
       "verdict": "Offer Bryce Young + Juwan Johnson to annaf23 for Brock Bowers. Bowers's ankle doesn't look major, and the deal is ahead in every playoff week as long as he's back by Week 15. It only loses if he misses the playoffs.",
       "next_check": "Inactives, Sun 10am",
       "stale": false,
-      "written_at": "2026-11-22T00:52:10.829Z"
+      "written_at": "2026-11-22T00:52:14.000Z"
     },
     "inactives": {
-      "report": "2026-11-15-inactives.md",
-      "week": 10,
-      "verdict": "Nobody new is Out or Doubtful. But Goff's early Munich kickoff already passed, which locks Thursday's planned QB swap out of the QB slot for good — it has to land at SUPER_FLEX instead, starting Young over Cousins. Irving (bye) for Warren at RB and Gesicki for Washington at FLEX are unchanged from Thursday and still open — make all three before the 1pm kickoffs.",
+      "report": "2026-11-22-inactives.md",
+      "week": 11,
+      "verdict": "No starter carries an injury tag and nothing in today's news flips that — hold the lineup as set.",
       "next_check": "Trades, Mon 7am",
-      "stale": true,
-      "written_at": "2026-11-15T15:19:08.000Z"
+      "stale": false,
+      "written_at": "2026-11-22T15:13:45.797Z"
     }
   },
   "actions": [
@@ -187,11 +187,11 @@
           "opens": []
         },
         "later": "opens no holes · frees 1 bench slot · empties SUPERFLEX this week — set a starter there before kickoff",
-        "points": "+3.4 this week · +31.2 rest of season · +15 playoffs",
+        "points": "+2.7 this week · +30.5 rest of season · +15 playoffs",
         "value": {
-          "this_week": 3.4,
-          "next_3": 9,
-          "rest_of_season": 31.2,
+          "this_week": 2.7,
+          "next_3": 8.3,
+          "rest_of_season": 30.5,
           "playoffs": 15,
           "playoff_weeks": [
             {
@@ -210,7 +210,7 @@
           "weeks": [
             {
               "week": 11,
-              "delta": 3.4
+              "delta": 2.7
             },
             {
               "week": 12,
@@ -240,7 +240,7 @@
           "by_week": [
             {
               "week": 11,
-              "delta": 3.4
+              "delta": 2.7
             },
             {
               "week": 12,
