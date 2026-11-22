@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-11-22T18:37:25.285Z",
+  "compiled_at": "2026-11-22T19:05:10.653Z",
   "season": "2026",
   "week": 11,
   "games_have_started": true,
@@ -12,15 +12,15 @@
       "2449",
       "4993",
       "8228",
-      "9228",
+      null,
       "11792",
       "HOU"
     ],
     "bench": [
+      "11604",
       "11610",
       "1166",
       "7002",
-      "9484",
       "DEN"
     ],
     "reserve": [
@@ -29,12 +29,12 @@
   },
   "sources": {
     "waivers": {
-      "report": "2026-11-17-waivers.md",
+      "report": "2026-11-22-waivers.md",
       "week": 11,
-      "verdict": "Claim Joe Milton for $6 to block amandaberry's bye-week QB fix; drop Juwan Johnson to make room. Everything else — kicker, defense, the four trending names — holds.",
-      "next_check": "Lineup, Thu 7am",
+      "verdict": "Claim Anthony Richardson for $23 into the spot the Bowers trade opened. With Young gone, Goff and Cousins are your only healthy quarterbacks until Lamar returns. $23 is $1 more than GehrmannJake's entire budget, and they're the team most likely to want him.",
+      "next_check": "Waivers, Tue 7am",
       "stale": false,
-      "written_at": "2026-11-17T12:15:47.000Z"
+      "written_at": "2026-11-22T19:04:27.021Z"
     },
     "lineup": {
       "report": "2026-11-19-lineup.md",
@@ -50,7 +50,7 @@
       "verdict": "Accept annaf23's counter: Bryce Young + Tucker Kraft for Brock Bowers. Ahead in every playoff week on both methods, nothing lost this week (Kraft's on bye, Young's points today stay yours), and Gesicki stays at TE.",
       "next_check": "Inactives, Sun 10am",
       "stale": false,
-      "written_at": "2026-11-22T18:37:24.949Z"
+      "written_at": "2026-11-22T18:37:25.000Z"
     },
     "inactives": {
       "report": "2026-11-22-inactives.md",
@@ -63,25 +63,94 @@
   },
   "actions": [
     {
-      "id": "waivers:add:11557",
+      "id": "waivers:add:9229",
       "source": "waivers",
-      "report": "2026-11-17-waivers.md",
+      "report": "2026-11-22-waivers.md",
       "kind": "add",
       "week": 11,
-      "state": "gone",
-      "player": "11557",
-      "name": "Joe Milton",
+      "player": "9229",
+      "name": "Anthony Richardson Sr.",
       "pos": "QB",
-      "team": "PHI",
-      "drop": "7002",
-      "drop_name": "Juwan Johnson",
+      "team": "IND",
       "mode": "waiver",
-      "faab": 6,
+      "faab": 23,
+      "value_note": "QB cover: Goff and Cousins are the only healthy QBs until Lamar returns (Week 16 at the earliest); the lineup model doesn't price a backup. Also keeps him from GehrmannJake.",
       "purpose": "block",
+      "displaces": null,
+      "displaces_name": null,
+      "evidence": {
+        "note": "The Colts made Richardson their starter after moving on from Daniel Jones; Riley Leonard is Out.",
+        "url": "https://www.nfl.com/news/nfl-week-11-injury-report-2026-season",
+        "as_of": "2026-11-22"
+      },
       "consumes": [],
+      "needs_slot": true,
       "urgency": "by_tuesday",
-      "deadline_label": "before Tuesday night waiver lock",
-      "why": "amandaberry (this week's opponent) has Jordan Love on bye and $90 FAAB; Milton is their cheapest fix and the denial model's bid estimate is about $6."
+      "why": "Backup QB for a superflex roster down to two. Projects 14–15 a week from Week 12 (bye Week 13). $23 beats GehrmannJake's $22 budget.",
+      "case": {
+        "starts": "Bench — QB3 behind Jared Goff",
+        "tradeoff": {
+          "net": "neutral",
+          "fixes": [],
+          "opens": []
+        },
+        "need": "QB: you have 2 — starts 2, no cover · fixes nothing on the calendar",
+        "cost": "$23 of $61 · league average $32 left · not trending",
+        "later": "opens no holes · uses your last bench slot",
+        "points": "0 this week · 0 rest of season · 0 playoffs",
+        "value": {
+          "this_week": 0,
+          "next_3": 0,
+          "rest_of_season": 0,
+          "playoffs": 0,
+          "playoff_weeks": [
+            {
+              "week": 15,
+              "delta": 0
+            },
+            {
+              "week": 16,
+              "delta": 0
+            },
+            {
+              "week": 17,
+              "delta": 0
+            }
+          ],
+          "weeks": [
+            {
+              "week": 11,
+              "delta": 0
+            },
+            {
+              "week": 12,
+              "delta": 0
+            },
+            {
+              "week": 13,
+              "delta": 0
+            },
+            {
+              "week": 14,
+              "delta": 0
+            },
+            {
+              "week": 15,
+              "delta": 0
+            },
+            {
+              "week": 16,
+              "delta": 0
+            },
+            {
+              "week": 17,
+              "delta": 0
+            }
+          ],
+          "by_week": []
+        },
+        "override": "QB cover: Goff and Cousins are the only healthy QBs until Lamar returns (Week 16 at the earliest); the lineup model doesn't price a backup. Also keeps him from GehrmannJake."
+      }
     },
     {
       "id": "lineup:start:4993",
@@ -127,7 +196,7 @@
       "report": "2026-11-19-lineup.md",
       "kind": "start",
       "week": 11,
-      "state": "done",
+      "state": "gone",
       "player": "9228",
       "name": "Bryce Young",
       "pos": "QB",
@@ -146,6 +215,7 @@
       "report": "2026-11-20-trades.md",
       "kind": "trade",
       "week": 11,
+      "state": "done",
       "with": 7,
       "with_owner": "annaf23",
       "give": [
@@ -163,113 +233,9 @@
         "Brock Bowers"
       ],
       "message": "Deal. Accepting Young + Kraft for Bowers.",
-      "displaces": "4993",
-      "displaces_name": "Mike Gesicki",
-      "evidence": {
-        "note": "Bowers (right ankle, quad) is questionable for Sunday after limited practices Thursday and Friday. Good Morning Football reported he did not suffer a major ankle injury.",
-        "url": "https://www.fantasypros.com/nfl/news/621434/brock-bowers-anklequad-questionable-to-play-sunday.php",
-        "as_of": "2026-11-21"
-      },
-      "consumes": [
-        "9228",
-        "9484"
-      ],
+      "consumes": [],
       "urgency": "now",
-      "why": "annaf23's own counter, and better for Ben than his: Kraft is on bye this week, so Gesicki stays at TE. Ahead every playoff week (+23 to +33 over the season). Loses only if Bowers misses the playoffs.",
-      "case": {
-        "starts": "Brock Bowers starts over Mike Gesicki at TE",
-        "need": "TE: you have 3 — not thin · gives QB depth (you have 3, start 2) · gives TE depth (you have 3, start 1)",
-        "cost": "gives Bryce Young, Tucker Kraft — 1 starter, 1 bench · no FAAB",
-        "asks": "annaf23 starts Brock Bowers, Questionable — one of 1 TE they carry",
-        "tradeoff": {
-          "net": "neutral",
-          "fixes": [],
-          "opens": []
-        },
-        "later": "opens no holes · frees 1 bench slot · empties SUPERFLEX this week — set a starter there before kickoff",
-        "points": "-1.6 this week · +23.3 rest of season · +15 playoffs",
-        "value": {
-          "this_week": -1.6,
-          "next_3": 1.1,
-          "rest_of_season": 23.3,
-          "playoffs": 15,
-          "playoff_weeks": [
-            {
-              "week": 15,
-              "delta": 1.3
-            },
-            {
-              "week": 16,
-              "delta": 6.1
-            },
-            {
-              "week": 17,
-              "delta": 7.6
-            }
-          ],
-          "weeks": [
-            {
-              "week": 11,
-              "delta": -1.6
-            },
-            {
-              "week": 12,
-              "delta": 5.1
-            },
-            {
-              "week": 13,
-              "delta": -2.4
-            },
-            {
-              "week": 14,
-              "delta": 7.2
-            },
-            {
-              "week": 15,
-              "delta": 1.3
-            },
-            {
-              "week": 16,
-              "delta": 6.1
-            },
-            {
-              "week": 17,
-              "delta": 7.6
-            }
-          ],
-          "by_week": [
-            {
-              "week": 11,
-              "delta": -1.6
-            },
-            {
-              "week": 12,
-              "delta": 5.1
-            },
-            {
-              "week": 13,
-              "delta": -2.4
-            },
-            {
-              "week": 14,
-              "delta": 7.2
-            },
-            {
-              "week": 15,
-              "delta": 1.3
-            },
-            {
-              "week": 16,
-              "delta": 6.1
-            },
-            {
-              "week": 17,
-              "delta": 7.6
-            }
-          ]
-        },
-        "override": "Costs -1.6 this week (-1.6 on projections, 0 on matchups), but ahead over the season and in every playoff week."
-      }
+      "why": "annaf23's own counter, and better for Ben than his: Kraft is on bye this week, so Gesicki stays at TE. Ahead every playoff week (+23 to +33 over the season). Loses only if Bowers misses the playoffs."
     }
   ]
 }
