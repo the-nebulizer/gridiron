@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-11-22T19:18:03.982Z",
+  "compiled_at": "2026-11-22T20:11:23.386Z",
   "season": "2026",
   "week": 11,
   "games_have_started": true,
@@ -34,15 +34,15 @@
       "verdict": "Claim Anthony Richardson for $23 into the spot the Bowers trade opened. With Young gone, Goff and Cousins are your only healthy quarterbacks until Lamar returns. $23 is $1 more than GehrmannJake's entire budget, and they're the team most likely to want him.",
       "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-11-22T19:17:32.539Z"
+      "written_at": "2026-11-22T20:11:13.159Z"
     },
     "lineup": {
       "report": "2026-11-22-lineup.md",
       "week": 11,
-      "verdict": "Start Kirk Cousins at SUPER_FLEX before tonight's 8:20pm ET Vikings-49ers kickoff — that slot is empty right now and costs about 20 points sitting that way.",
+      "verdict": "Start Kirk Cousins at SUPER_FLEX before tonight's 8:20pm ET Vikings-49ers kickoff — that slot is empty right now and costs about 20 points sitting that way. Bowers being ruled out for today's game changes nothing else.",
       "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-11-22T19:16:41.711Z"
+      "written_at": "2026-11-22T20:10:46.067Z"
     },
     "trades": {
       "report": "2026-11-22-trades.md",
@@ -50,15 +50,15 @@
       "verdict": "Hold. This afternoon's Bowers-for-Young-and-Kraft trade already closed the one real hole on the roster; a fresh scan of all 11 other teams finds nothing else Ben would be certain to be better off making, with today being the last day trades process this season.",
       "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-11-22T19:17:55.343Z"
+      "written_at": "2026-11-22T20:11:17.411Z"
     },
     "inactives": {
       "report": "2026-11-22-inactives.md",
       "week": 11,
-      "verdict": "Nobody new is ruled out. The open item right now is the empty SUPER_FLEX left by this afternoon's trade — that's on the lineup report, not an inactive.",
+      "verdict": "Brock Bowers is officially out for today's Raiders-Broncos game. He's bench depth, not a starter, so nothing in the active lineup changes. The open item is still the empty SUPER_FLEX from this afternoon's trade — that's on the lineup report, not an inactive.",
       "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-11-22T19:17:01.311Z"
+      "written_at": "2026-11-22T20:11:08.879Z"
     }
   },
   "actions": [

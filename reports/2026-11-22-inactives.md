@@ -1,17 +1,17 @@
-# Week 11 inactives (afternoon update) — no new scratches, but check the lineup report first
+# Week 11 inactives (update) — Brock Bowers ruled Out; doesn't touch the lineup
 
 ```actions
 {
   "week": 11,
-  "verdict": "Nobody new is ruled out. The open item right now is the empty SUPER_FLEX left by this afternoon's trade — that's on the lineup report, not an inactive.",
+  "verdict": "Brock Bowers is officially out for today's Raiders-Broncos game. He's bench depth, not a starter, so nothing in the active lineup changes. The open item is still the empty SUPER_FLEX from this afternoon's trade — that's on the lineup report, not an inactive.",
   "next_check": "Trades, Mon 7am",
   "actions": []
 }
 ```
 
-> Refreshed Nov 22 after a roster change: added Brock Bowers, dropped Bryce Young and Tucker Kraft.
+> Refreshed Nov 22 after a roster change: Brock Bowers ruled Out.
 
-This morning's inactives check (10:13am ET) found nobody tagged and nothing in the news to flip a slot. Since then the only change is the Bowers-for-Young-and-Kraft trade, which is a roster move, not an injury — it doesn't belong in this report, but it does leave a hole: **SUPER_FLEX is empty in the live Sleeper lineup**, because Young's own game had already kicked off when the trade processed and Sleeper can't carry him into a slot for a team he's no longer on. The fix — Kirk Cousins, the only other healthy QB on the bench — is the lineup report's action, with the matchup case behind it. Set it before tonight's 8:20pm ET Vikings–49ers kickoff.
+Brock Bowers (ankle/quad) is now officially ruled out for the Raiders' 4:25pm ET game at Denver — this afternoon's inactives check had flagged him as Questionable with "not a lot of optimism" he'd suit up, and that's now confirmed. He doesn't start for Ben regardless: Gesicki is already the Monday-night TE and stays there. This afternoon's Bowers-for-Young-and-Kraft trade is a separate, unrelated roster move — it doesn't belong in this report, but it does leave a hole: **SUPER_FLEX is empty in the live Sleeper lineup**, because Young's own game had already kicked off when the trade processed and Sleeper couldn't carry him into a slot for a team he's no longer on. The fix — Kirk Cousins, the only other healthy QB on the bench — is the lineup report's action, with the matchup case behind it. Set it before tonight's 8:20pm ET Vikings–49ers kickoff.
 
 ## Checklist, re-checked this afternoon
 
@@ -26,12 +26,12 @@ This morning's inactives check (10:13am ET) found nobody tagged and nothing in t
 - K — Will Reichard (MIN @ SF, 8:20pm ET): ACTIVE, no change.
 - DEF — Houston Texans: already played and finished Thursday, locked in, nothing to decide.
 
-## Brock Bowers — the one real game-day call left, and it isn't due yet
+## Brock Bowers — the one real game-day call, now resolved
 
-Bowers (ankle/quad) is officially Questionable for the Raiders' 4:25pm ET game at Denver. Adam Schefter reported Sunday morning that "there is not a lot of optimism" he suits up, though Bowers himself has said he's pushing to play; his final call comes after pregame warmups, roughly 90 minutes before kickoff — call it 2:55pm ET, which hasn't happened yet. Nothing to do about this right now: Gesicki is already the correct Monday-night starter if Bowers sits, and if Bowers is instead active, he becomes the better Monday play over Gesicki — a swap for tonight's check or tomorrow's lineup update, not this one. The trades report already worked out this contingency when it made the deal.
+Bowers (ankle/quad) is now officially Out for the Raiders' 4:25pm ET game at Denver, confirming what Adam Schefter reported Sunday morning ("there is not a lot of optimism" he suits up) despite Bowers himself pushing to play. Nothing to do about it: Gesicki was already the correct Monday-night starter whenever Bowers sat, and that contingency — the trades report worked it out when it made the deal — is now simply the outcome. He stays on the bench; no Sleeper roster slot moves.
 
 ## What's still open
 
-The 1:00pm ET slate's official inactive lists are already out and clean for Ben's active starters — nothing flipped. Diggs and Gesicki play Monday night, so there's nothing to check on either of them until closer to that kickoff. Bowers' active/inactive call lands mid-afternoon and will be picked up by the next check.
+The 1:00pm ET slate's official inactive lists are already out and clean for Ben's active starters — nothing flipped. Diggs and Gesicki play Monday night, so there's nothing to check on either of them until closer to that kickoff. The only action still open anywhere on the card is tonight's SUPER_FLEX fix (Kirk Cousins, before the 8:20pm ET kickoff) — see the lineup report.
 
 Read off a fresh sync Sunday afternoon, with Week 11 games in progress.
