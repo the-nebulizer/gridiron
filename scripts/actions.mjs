@@ -1962,9 +1962,14 @@ async function checkConflictRules(allActions, snapshot, index, baseline, { stric
   const dropCount = actions.filter((a) => a.kind === 'drop').length;
   const irCount = actions.filter((a) => a.kind === 'ir').length;
   const activateCount = actions.filter((a) => a.kind === 'activate').length;
-  const openSlots = bnCount - benchLen + dropCount + irCount - activateCount;
+  // A starting slot with nobody in it is roster room too (2026-11-22: a two-for-one
+  // trade left SUPER_FLEX empty with a full bench, and the claim for the backup QB
+  // the trade made necessary was refused for want of a slot that existed).
+  const emptyStarters = (me?.starters ?? []).filter((p) => !p).length;
+  const openSlots = bnCount - benchLen + emptyStarters + dropCount + irCount - activateCount;
 
   const creditParts = [];
+  if (emptyStarters) creditParts.push(`+ ${emptyStarters} empty starting slot${emptyStarters === 1 ? '' : 's'}`);
   if (dropCount) creditParts.push(`+ ${dropCount} drop${dropCount === 1 ? '' : 's'}`);
   if (irCount) creditParts.push(`+ ${irCount} ir`);
   if (activateCount) creditParts.push(`- ${activateCount} activate${activateCount === 1 ? '' : 's'}`);

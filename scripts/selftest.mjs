@@ -637,6 +637,21 @@ console.log('\nsequencing — the seven fixes, pinned down permanently');
   check('...with the shortfall spelled out as arithmetic', /5 BN slot\(s\) - 4 on bench/.test(r.out), r.out);
 }
 {
+  // 2026-11-22: a two-for-one trade left SUPER_FLEX empty with the bench full, and the
+  // claim for the backup QB that trade made necessary was refused for want of a slot.
+  // An empty starting slot is roster room.
+  const snap = fixture();
+  snap.teams[0].bench = [P.qb3, P.rb4, P.rb5, P.wr4, P.qb2];   // 5 on bench, 5 BN slots: 0 open
+  snap.teams[0].starters = snap.teams[0].starters.map((p, i) => (i === snap.teams[0].starters.length - 1 ? null : p));
+  const dir = await sandbox(snap, {
+    '2026-09-15-waivers.md': block([
+      { kind: 'add', player: 'fa1', mode: 'waiver', faab: 5, urgency: 'by_tuesday', why: 'Needs a slot.' },
+    ]),
+  });
+  const r = runActions(dir);
+  check('an empty starting slot counts as room for a slotless add', r.code === 0 && !/bench slot\(s\) are open/.test(r.out), r.out);
+}
+{
   // Rule 2, trade worlds: two adds waiting on an even trade need bench room
   // the trade itself does not free — its give and get are the same size.
   const snap = fixture();
