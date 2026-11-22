@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-11-22T15:13:49.836Z",
+  "compiled_at": "2026-11-22T18:31:15.304Z",
   "season": "2026",
   "week": 11,
   "games_have_started": true,
@@ -47,10 +47,10 @@
     "trades": {
       "report": "2026-11-20-trades.md",
       "week": 11,
-      "verdict": "Offer Bryce Young + Juwan Johnson to annaf23 for Brock Bowers. Bowers's ankle doesn't look major, and the deal is ahead in every playoff week as long as he's back by Week 15. It only loses if he misses the playoffs.",
+      "verdict": "Decline annaf23's counter (Cousins + Gesicki for Bowers): it's worse in Week 15 on projections and Week 16 on matchups, and −16 over the season on matchups. Counter back with Bryce Young + Gesicki for Bowers.",
       "next_check": "Inactives, Sun 10am",
       "stale": false,
-      "written_at": "2026-11-22T00:52:14.000Z"
+      "written_at": "2026-11-22T18:31:12.368Z"
     },
     "inactives": {
       "report": "2026-11-22-inactives.md",
@@ -58,7 +58,7 @@
       "verdict": "No starter carries an injury tag and nothing in today's news flips that — hold the lineup as set.",
       "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-11-22T15:13:45.797Z"
+      "written_at": "2026-11-22T15:13:52.000Z"
     }
   },
   "actions": [
@@ -150,11 +150,11 @@
       "with_owner": "annaf23",
       "give": [
         "9228",
-        "7002"
+        "4993"
       ],
       "give_names": [
         "Bryce Young",
-        "Juwan Johnson"
+        "Mike Gesicki"
       ],
       "get": [
         "11604"
@@ -162,7 +162,7 @@
       "get_names": [
         "Brock Bowers"
       ],
-      "message": "With Daniel Jones cut, your SUPER_FLEX is empty. Bryce Young + Juwan Johnson for Bowers? You get a starting QB plus a tight end to replace him.",
+      "message": "Can't move Cousins, he's one of my two starting QBs. Bryce Young + Gesicki for Bowers? Same tight end you asked for, and Young fills your empty SUPER_FLEX.",
       "displaces": "4993",
       "displaces_name": "Mike Gesicki",
       "evidence": {
@@ -172,26 +172,26 @@
       },
       "consumes": [
         "9228",
-        "7002"
+        "4993"
       ],
       "urgency": "now",
-      "why": "Bowers (15.6 a game) over Kraft and Gesicki. Ahead every playoff week if he's back by Week 15 (+11 to +46 over the season, depending on how long he's out). Loses only if he misses the playoffs.",
+      "why": "Counter to annaf23's Cousins + Gesicki ask. Young instead of Cousins keeps both starting QBs. Ahead every playoff week on both methods (+25 to +27 over the season). Costs 2.5 to 7 this week.",
       "case": {
         "starts": "Brock Bowers starts over Mike Gesicki at TE",
         "need": "TE: you have 3 — not thin · gives QB depth (you have 3, start 2) · gives TE depth (you have 3, start 1)",
-        "cost": "gives Bryce Young, Juwan Johnson — 1 starter, 1 bench · no FAAB",
+        "cost": "gives Bryce Young, Mike Gesicki — 2 starters, 0 bench · no FAAB",
         "asks": "annaf23 starts Brock Bowers, Questionable — one of 1 TE they carry",
         "tradeoff": {
           "net": "neutral",
           "fixes": [],
           "opens": []
         },
-        "later": "opens no holes · frees 1 bench slot · empties SUPERFLEX this week — set a starter there before kickoff",
-        "points": "+2.7 this week · +30.5 rest of season · +15 playoffs",
+        "later": "opens no holes · frees 1 bench slot · empties SUPERFLEX, TE this week — set a starter there before kickoff",
+        "points": "-2.5 this week · +24.8 rest of season · +15 playoffs",
         "value": {
-          "this_week": 2.7,
-          "next_3": 8.3,
-          "rest_of_season": 30.5,
+          "this_week": -2.5,
+          "next_3": 2.6,
+          "rest_of_season": 24.8,
           "playoffs": 15,
           "playoff_weeks": [
             {
@@ -210,11 +210,11 @@
           "weeks": [
             {
               "week": 11,
-              "delta": 2.7
+              "delta": -2.5
             },
             {
               "week": 12,
-              "delta": 5.6
+              "delta": 5.1
             },
             {
               "week": 13,
@@ -240,11 +240,11 @@
           "by_week": [
             {
               "week": 11,
-              "delta": 2.7
+              "delta": -2.5
             },
             {
               "week": 12,
-              "delta": 5.6
+              "delta": 5.1
             },
             {
               "week": 14,
@@ -263,7 +263,8 @@
               "delta": 7.6
             }
           ]
-        }
+        },
+        "override": "Costs -6.7 this week (-2.5 on projections, -6.7 on matchups), but ahead over the season and in every playoff week."
       }
     }
   ]
