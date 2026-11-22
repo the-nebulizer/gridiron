@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-11-21T23:53:23.501Z",
+  "compiled_at": "2026-11-22T00:52:14.190Z",
   "season": "2026",
   "week": 11,
   "games_have_started": true,
@@ -47,10 +47,10 @@
     "trades": {
       "report": "2026-11-20-trades.md",
       "week": 11,
-      "verdict": "GehrmannJake declined Young + Jeanty for JSN. Hold. The only other deals that come out ahead for both teams both have a problem. Bowers is a game-time decision with an ankle and quad injury, and McBride + Addison means trading with this week's opponent: it's +6.5 for them this week and leans on an injured Addison. Keep Young as quarterback cover.",
+      "verdict": "Offer Bryce Young + Juwan Johnson to annaf23 for Brock Bowers. Bowers's ankle doesn't look major, and the deal is ahead in every playoff week as long as he's back by Week 15. It only loses if he misses the playoffs.",
       "next_check": "Inactives, Sun 10am",
       "stale": false,
-      "written_at": "2026-11-21T23:53:23.309Z"
+      "written_at": "2026-11-22T00:52:10.829Z"
     },
     "inactives": {
       "report": "2026-11-15-inactives.md",
@@ -139,6 +139,132 @@
       "urgency": "before_kickoff",
       "deadline_label": "before Sunday's 1:00pm ET games (Nov 22)",
       "why": "QBs are bunched on projection, but SF is the stingiest of the three matchups. Holds only if the open Young-for-Swift trade offer doesn't process first."
+    },
+    {
+      "id": "trades:trade:7",
+      "source": "trades",
+      "report": "2026-11-20-trades.md",
+      "kind": "trade",
+      "week": 11,
+      "with": 7,
+      "with_owner": "annaf23",
+      "give": [
+        "9228",
+        "7002"
+      ],
+      "give_names": [
+        "Bryce Young",
+        "Juwan Johnson"
+      ],
+      "get": [
+        "11604"
+      ],
+      "get_names": [
+        "Brock Bowers"
+      ],
+      "message": "With Daniel Jones cut, your SUPER_FLEX is empty. Bryce Young + Juwan Johnson for Bowers? You get a starting QB plus a tight end to replace him.",
+      "displaces": "4993",
+      "displaces_name": "Mike Gesicki",
+      "evidence": {
+        "note": "Bowers (right ankle, quad) is questionable for Sunday after limited practices Thursday and Friday. Good Morning Football reported he did not suffer a major ankle injury.",
+        "url": "https://www.fantasypros.com/nfl/news/621434/brock-bowers-anklequad-questionable-to-play-sunday.php",
+        "as_of": "2026-11-21"
+      },
+      "consumes": [
+        "9228",
+        "7002"
+      ],
+      "urgency": "now",
+      "why": "Bowers (15.6 a game) over Kraft and Gesicki. Ahead every playoff week if he's back by Week 15 (+11 to +46 over the season, depending on how long he's out). Loses only if he misses the playoffs.",
+      "case": {
+        "starts": "Brock Bowers starts over Mike Gesicki at TE",
+        "need": "TE: you have 3 — not thin · gives QB depth (you have 3, start 2) · gives TE depth (you have 3, start 1)",
+        "cost": "gives Bryce Young, Juwan Johnson — 1 starter, 1 bench · no FAAB",
+        "asks": "annaf23 starts Brock Bowers, Questionable — one of 1 TE they carry",
+        "tradeoff": {
+          "net": "neutral",
+          "fixes": [],
+          "opens": []
+        },
+        "later": "opens no holes · frees 1 bench slot · empties SUPERFLEX this week — set a starter there before kickoff",
+        "points": "+3.4 this week · +31.2 rest of season · +15 playoffs",
+        "value": {
+          "this_week": 3.4,
+          "next_3": 9,
+          "rest_of_season": 31.2,
+          "playoffs": 15,
+          "playoff_weeks": [
+            {
+              "week": 15,
+              "delta": 1.3
+            },
+            {
+              "week": 16,
+              "delta": 6.1
+            },
+            {
+              "week": 17,
+              "delta": 7.6
+            }
+          ],
+          "weeks": [
+            {
+              "week": 11,
+              "delta": 3.4
+            },
+            {
+              "week": 12,
+              "delta": 5.6
+            },
+            {
+              "week": 13,
+              "delta": 0
+            },
+            {
+              "week": 14,
+              "delta": 7.2
+            },
+            {
+              "week": 15,
+              "delta": 1.3
+            },
+            {
+              "week": 16,
+              "delta": 6.1
+            },
+            {
+              "week": 17,
+              "delta": 7.6
+            }
+          ],
+          "by_week": [
+            {
+              "week": 11,
+              "delta": 3.4
+            },
+            {
+              "week": 12,
+              "delta": 5.6
+            },
+            {
+              "week": 14,
+              "delta": 7.2
+            },
+            {
+              "week": 15,
+              "delta": 1.3
+            },
+            {
+              "week": 16,
+              "delta": 6.1
+            },
+            {
+              "week": 17,
+              "delta": 7.6
+            }
+          ]
+        }
+      }
     }
   ]
 }
