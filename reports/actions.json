@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-11-22T19:05:10.653Z",
+  "compiled_at": "2026-11-22T19:18:03.982Z",
   "season": "2026",
   "week": 11,
   "games_have_started": true,
@@ -32,33 +32,33 @@
       "report": "2026-11-22-waivers.md",
       "week": 11,
       "verdict": "Claim Anthony Richardson for $23 into the spot the Bowers trade opened. With Young gone, Goff and Cousins are your only healthy quarterbacks until Lamar returns. $23 is $1 more than GehrmannJake's entire budget, and they're the team most likely to want him.",
-      "next_check": "Waivers, Tue 7am",
+      "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-11-22T19:04:27.021Z"
+      "written_at": "2026-11-22T19:17:32.539Z"
     },
     "lineup": {
-      "report": "2026-11-19-lineup.md",
+      "report": "2026-11-22-lineup.md",
       "week": 11,
-      "verdict": "Gesicki in for Kraft at TE (bye) and Warren in for Washington at FLEX — both an easy call on the numbers. Keep Goff at QB; start Young over Cousins at SUPER_FLEX on the matchup.",
-      "next_check": "Inactives, Sun 10am",
+      "verdict": "Start Kirk Cousins at SUPER_FLEX before tonight's 8:20pm ET Vikings-49ers kickoff — that slot is empty right now and costs about 20 points sitting that way.",
+      "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-11-19T12:10:09.000Z"
+      "written_at": "2026-11-22T19:16:41.711Z"
     },
     "trades": {
-      "report": "2026-11-20-trades.md",
+      "report": "2026-11-22-trades.md",
       "week": 11,
-      "verdict": "Accept annaf23's counter: Bryce Young + Tucker Kraft for Brock Bowers. Ahead in every playoff week on both methods, nothing lost this week (Kraft's on bye, Young's points today stay yours), and Gesicki stays at TE.",
-      "next_check": "Inactives, Sun 10am",
+      "verdict": "Hold. This afternoon's Bowers-for-Young-and-Kraft trade already closed the one real hole on the roster; a fresh scan of all 11 other teams finds nothing else Ben would be certain to be better off making, with today being the last day trades process this season.",
+      "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-11-22T18:37:25.000Z"
+      "written_at": "2026-11-22T19:17:55.343Z"
     },
     "inactives": {
       "report": "2026-11-22-inactives.md",
       "week": 11,
-      "verdict": "No starter carries an injury tag and nothing in today's news flips that — hold the lineup as set.",
+      "verdict": "Nobody new is ruled out. The open item right now is the empty SUPER_FLEX left by this afternoon's trade — that's on the lineup report, not an inactive.",
       "next_check": "Trades, Mon 7am",
       "stale": false,
-      "written_at": "2026-11-22T15:13:52.000Z"
+      "written_at": "2026-11-22T19:17:01.311Z"
     }
   },
   "actions": [
@@ -153,89 +153,25 @@
       }
     },
     {
-      "id": "lineup:start:4993",
+      "id": "lineup:start:1166",
       "source": "lineup",
-      "report": "2026-11-19-lineup.md",
+      "report": "2026-11-22-lineup.md",
       "kind": "start",
       "week": 11,
-      "state": "done",
-      "player": "4993",
-      "name": "Mike Gesicki",
-      "pos": "TE",
-      "team": "CIN",
-      "slot": "TE",
-      "for": "9484",
-      "for_name": "Tucker Kraft",
-      "consumes": [],
-      "urgency": "before_kickoff",
-      "deadline_label": "before Sunday's 1:00pm ET games (Nov 22)",
-      "why": "Kraft is on bye. Gesicki's matchup is the better of the two bench tight ends — Washington gives up the 2nd-most fantasy points to TEs in the league."
-    },
-    {
-      "id": "lineup:start:8228",
-      "source": "lineup",
-      "report": "2026-11-19-lineup.md",
-      "kind": "start",
-      "week": 11,
-      "state": "done",
-      "player": "8228",
-      "name": "Jaylen Warren",
-      "pos": "RB",
-      "team": "PIT",
-      "slot": "FLEX",
-      "for": "11610",
-      "for_name": "Malik Washington",
-      "consumes": [],
-      "urgency": "before_kickoff",
-      "deadline_label": "before Sunday's 1:00pm ET games (Nov 22)",
-      "why": "Warren projects higher and grades higher on the matchup; Washington's Miami offense is down to its third different QB (McCord) this season."
-    },
-    {
-      "id": "lineup:start:9228",
-      "source": "lineup",
-      "report": "2026-11-19-lineup.md",
-      "kind": "start",
-      "week": 11,
-      "state": "gone",
-      "player": "9228",
-      "name": "Bryce Young",
+      "player": "1166",
+      "name": "Kirk Cousins",
       "pos": "QB",
-      "team": "CAR",
+      "team": "MIN",
       "slot": "SUPER_FLEX",
-      "for": "1166",
-      "for_name": "Kirk Cousins",
-      "consumes": [],
+      "consumes": [
+        "1166"
+      ],
       "urgency": "before_kickoff",
-      "deadline_label": "before Sunday's 1:00pm ET games (Nov 22)",
-      "why": "QBs are bunched on projection, but SF is the stingiest of the three matchups. Holds only if the open Young-for-Swift trade offer doesn't process first."
-    },
-    {
-      "id": "trades:trade:7",
-      "source": "trades",
-      "report": "2026-11-20-trades.md",
-      "kind": "trade",
-      "week": 11,
-      "state": "done",
-      "with": 7,
-      "with_owner": "annaf23",
-      "give": [
-        "9228",
-        "9484"
-      ],
-      "give_names": [
-        "Bryce Young",
-        "Tucker Kraft"
-      ],
-      "get": [
-        "11604"
-      ],
-      "get_names": [
-        "Brock Bowers"
-      ],
-      "message": "Deal. Accepting Young + Kraft for Bowers.",
-      "consumes": [],
-      "urgency": "now",
-      "why": "annaf23's own counter, and better for Ben than his: Kraft is on bye this week, so Gesicki stays at TE. Ahead every playoff week (+23 to +33 over the season). Loses only if Bowers misses the playoffs."
+      "deadline_label": "before tonight's 8:20pm ET kickoff (Vikings at 49ers, Mexico City)",
+      "why": "SUPER_FLEX emptied out when the Bowers trade processed with Young's game already underway; Cousins projects 20.3, far clear of every other bench body, and his game hasn't kicked off yet.",
+      "case": {
+        "starts": "Kirk Cousins in at SUPERFLEX"
+      }
     }
   ]
 }
