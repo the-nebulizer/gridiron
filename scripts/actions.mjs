@@ -717,9 +717,19 @@ export function pointsFindings(out, snapshot, index) {
     const addsNothing = value.this_week <= 0 && value.rest_of_season <= 0;
     const bidding = out.mode === 'waiver' && Number.isInteger(out.faab) && out.faab > 0;
     if (bidding && addsNothing && !out.purpose) {
-      fails.push(`${out.name} adds nothing to my lineup, so $${out.faab} is a block or a trade-chip bid — set purpose to "block" or "trade_chip" (node scripts/denial.mjs --player ${out.player} shows who gains), or drop the bid`);
+      fails.push(`${out.name} adds nothing to my lineup, so $${out.faab} is a block, a trade-chip or a cover bid — set purpose to "block", "trade_chip" or "cover" (node scripts/denial.mjs --player ${out.player} shows who gains), or drop the bid`);
     }
-    if (out.purpose) {
+    if (out.purpose === 'cover') {
+      // Insurance at a position where losing one body breaks the lineup (Ben,
+      // 2026-11-24: after the Bowers trade left two QBs for two QB-eligible
+      // slots, the backup-QB claim could only be filed as a "block"). The
+      // lineup model scores a backup at zero by construction, so the test is
+      // the outlook's own re-solved answer, not points.
+      const noCover = snapshot.outlook?.roster_shape?.no_cover_positions ?? [];
+      if (!noCover.includes(out.pos)) {
+        fails.push(`purpose "cover" for ${out.name}: ${out.pos} isn't a no-cover position (the outlook says losing one ${out.pos} doesn't break the lineup: no-cover is ${noCover.join(', ') || 'nothing'}), so this is depth, priced like depth`);
+      }
+    } else if (out.purpose) {
       const pool = candidatePool(snapshot).find((p) => p.id === out.player);
       if (!pool) {
         fails.push(`purpose "${out.purpose}" needs an unrostered target, and ${out.name} is not in the free-agent pool`);
@@ -1382,8 +1392,8 @@ async function validateAndBuildAction(action, i, snapshot, index, problems, opts
   // "The case" — docs/ACTIONS.md "The case — why this move, in four lines".
   // Only computed for a genuinely open action: done/gone actions get no case,
   // the same reasoning that already exempts them from the world checks above.
-  if (out.purpose !== undefined && (kind !== 'add' || !['block', 'trade_chip'].includes(out.purpose))) {
-    push(`(${kind}) purpose is only valid on an add, and must be "block" or "trade_chip" — omit it for an add that improves my own lineup`);
+  if (out.purpose !== undefined && (kind !== 'add' || !['block', 'trade_chip', 'cover'].includes(out.purpose))) {
+    push(`(${kind}) purpose is only valid on an add, and must be "block", "trade_chip" or "cover" — omit it for an add that improves my own lineup`);
     bad = true;
   }
   if (out.value_note !== undefined && (!isNonEmptyString(out.value_note) || out.value_note.length > 200)) {

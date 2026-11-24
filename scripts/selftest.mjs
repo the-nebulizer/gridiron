@@ -2954,7 +2954,7 @@ console.log('\ndenial — block / trade-chip / contested');
   const idx = buildIndex(claimed);
   const bid = { kind: 'add', player: 'hot', name: 'HOT', pos: 'RB', mode: 'waiver', faab: 10 };
   const bare = pointsFindings(bid, claimed, idx);
-  check('a bid for a player who adds nothing to my lineup is refused without a purpose', bare.fails.some((f) => /block or a trade-chip/.test(f)), bare.fails.join(' | '));
+  check('a bid for a player who adds nothing to my lineup is refused without a purpose', bare.fails.some((f) => /a block, a trade-chip or a cover bid/.test(f)), bare.fails.join(' | '));
   const withBlock = pointsFindings({ ...bid, purpose: 'block' }, claimed, idx);
   check('...and accepted as a block when a rival who matters would start him', withBlock.fails.length === 0, withBlock.fails.join(' | '));
   const noSupport = pointsFindings({ ...bid, player: 'meh', name: 'MEH', purpose: 'block' }, build({ pool: ['meh', 'hotalt'] }), buildIndex(build({ pool: ['meh', 'hotalt'] })));
@@ -2962,6 +2962,14 @@ console.log('\ndenial — block / trade-chip / contested');
   const marketBid = pointsFindings({ ...bid, player: 'meh', name: 'MEH', purpose: 'trade_chip', value_note: 'Starter hurt; role open per beat reporter' },
     scramble, buildIndex(scramble));
   check('...but a contested player passes with a value_note naming the reason', marketBid.fails.length === 0, marketBid.fails.join(' | '));
+  // 2026-11-24: a backup QB after a trade left two QBs for two QB-eligible slots. The lineup
+  // model scores a backup at zero, so "cover" is checked against the outlook's no-cover list.
+  const covered = { ...claimed, outlook: { roster_shape: { no_cover_positions: ['RB'] } } };
+  const cov = pointsFindings({ ...bid, purpose: 'cover' }, covered, buildIndex(covered));
+  check('a cover bid passes at a position the outlook says has no cover', cov.fails.length === 0, cov.fails.join(' | '));
+  const notThin = { ...claimed, outlook: { roster_shape: { no_cover_positions: ['K'] } } };
+  const cov2 = pointsFindings({ ...bid, purpose: 'cover' }, notThin, buildIndex(notThin));
+  check('...and is refused at a position that has cover, as depth priced like depth', cov2.fails.some((f) => /isn't a no-cover position/.test(f)), cov2.fails.join(' | '));
 }
 
 // ---- season rollover and rules drift ---------------------------------------
