@@ -1,7 +1,7 @@
 {
-  "compiled_at": "2026-11-23T12:04:54.650Z",
+  "compiled_at": "2026-11-24T12:18:40.646Z",
   "season": "2026",
-  "week": 11,
+  "week": 12,
   "games_have_started": true,
   "roster": {
     "starters": [
@@ -29,19 +29,19 @@
   },
   "sources": {
     "waivers": {
-      "report": "2026-11-22-waivers.md",
-      "week": 11,
-      "verdict": "Claim Anthony Richardson for $23 into the spot the Bowers trade opened. With Young gone, Goff and Cousins are your only healthy quarterbacks until Lamar returns. $23 is $1 more than GehrmannJake's entire budget, and they're the team most likely to want him.",
-      "next_check": "Trades, Mon 7am",
+      "report": "2026-11-24-waivers.md",
+      "week": 12,
+      "verdict": "Claim Justice Hill for $0 — JackRAndrew has no FAAB left to beat it, so it costs nothing to deny him the Derrick Henry handcuff. Nothing else clears the bar this week.",
+      "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-11-22T20:11:31.000Z"
+      "written_at": "2026-11-24T12:18:35.443Z"
     },
     "lineup": {
       "report": "2026-11-22-lineup.md",
       "week": 11,
       "verdict": "Start Kirk Cousins at SUPER_FLEX before tonight's 8:20pm ET Vikings-49ers kickoff — that slot is empty right now and costs about 20 points sitting that way. Bowers being ruled out for today's game changes nothing else.",
       "next_check": "Trades, Mon 7am",
-      "stale": false,
+      "stale": true,
       "written_at": "2026-11-22T20:11:31.000Z"
     },
     "trades": {
@@ -49,53 +49,47 @@
       "week": 11,
       "verdict": "Hold. Today is the last day trades process this season (league trade_deadline = Week 11); a fresh scan of all 11 other rosters, including this weekend's injury news, finds nothing Ben would be certain to be better off making.",
       "next_check": "Waivers, Tue 7am",
-      "stale": false,
-      "written_at": "2026-11-23T12:04:49.581Z"
+      "stale": true,
+      "written_at": "2026-11-23T12:04:59.000Z"
     },
     "inactives": {
       "report": "2026-11-22-inactives.md",
       "week": 11,
       "verdict": "Brock Bowers is officially out for today's Raiders-Broncos game. He's bench depth, not a starter, so nothing in the active lineup changes. The open item is still the empty SUPER_FLEX from this afternoon's trade — that's on the lineup report, not an inactive.",
       "next_check": "Trades, Mon 7am",
-      "stale": false,
+      "stale": true,
       "written_at": "2026-11-22T20:11:31.000Z"
     }
   },
   "actions": [
     {
-      "id": "waivers:add:9229",
+      "id": "waivers:add:5995",
       "source": "waivers",
-      "report": "2026-11-22-waivers.md",
+      "report": "2026-11-24-waivers.md",
       "kind": "add",
-      "week": 11,
-      "player": "9229",
-      "name": "Anthony Richardson Sr.",
-      "pos": "QB",
-      "team": "IND",
+      "week": 12,
+      "player": "5995",
+      "name": "Justice Hill",
+      "pos": "RB",
+      "team": "BAL",
       "mode": "waiver",
-      "faab": 23,
-      "value_note": "QB cover: Goff and Cousins are the only healthy QBs until Lamar returns (Week 16 at the earliest); the lineup model doesn't price a backup. Also keeps him from GehrmannJake.",
-      "purpose": "block",
+      "faab": 0,
       "displaces": null,
       "displaces_name": null,
-      "evidence": {
-        "note": "The Colts made Richardson their starter after moving on from Daniel Jones; Riley Leonard is Out.",
-        "url": "https://www.nfl.com/news/nfl-week-11-injury-report-2026-season",
-        "as_of": "2026-11-22"
-      },
+      "evidence": null,
       "consumes": [],
       "needs_slot": true,
       "urgency": "by_tuesday",
-      "why": "Backup QB for a superflex roster down to two. Projects 14–15 a week from Week 12 (bye Week 13). $23 beats GehrmannJake's $22 budget.",
+      "why": "Henry is Questionable; Hill is his only backup and would start for JackRAndrew, a direct rival with $0 FAAB left — a $0 claim can't be beaten by him.",
       "case": {
-        "starts": "Bench — QB3 behind Jared Goff",
+        "starts": "Bench — RB4 behind Ashton Jeanty, Bucky Irving, Jaylen Warren",
         "tradeoff": {
           "net": "neutral",
           "fixes": [],
           "opens": []
         },
-        "need": "QB: you have 2 — starts 2, no cover · fixes nothing on the calendar",
-        "cost": "$23 of $61 · league average $32 left · not trending",
+        "need": "RB: you have 3 — not thin · fixes nothing on the calendar",
+        "cost": "$0 of $61 · league average $32 left · #2 most-added in Sleeper this week",
         "later": "opens no holes · uses your last bench slot",
         "points": "0 this week · 0 rest of season · 0 playoffs",
         "value": {
@@ -118,10 +112,6 @@
             }
           ],
           "weeks": [
-            {
-              "week": 11,
-              "delta": 0
-            },
             {
               "week": 12,
               "delta": 0
@@ -148,27 +138,8 @@
             }
           ],
           "by_week": []
-        },
-        "override": "QB cover: Goff and Cousins are the only healthy QBs until Lamar returns (Week 16 at the earliest); the lineup model doesn't price a backup. Also keeps him from GehrmannJake."
+        }
       }
-    },
-    {
-      "id": "lineup:start:1166",
-      "source": "lineup",
-      "report": "2026-11-22-lineup.md",
-      "kind": "start",
-      "week": 11,
-      "state": "stale",
-      "state_reason": "Kirk Cousins's game has already kicked off (complete)",
-      "player": "1166",
-      "name": "Kirk Cousins",
-      "pos": "QB",
-      "team": "MIN",
-      "slot": "SUPER_FLEX",
-      "consumes": [],
-      "urgency": "before_kickoff",
-      "deadline_label": "before tonight's 8:20pm ET kickoff (Vikings at 49ers, Mexico City)",
-      "why": "SUPER_FLEX emptied out when the Bowers trade processed with Young's game already underway; Cousins projects 20.3, far clear of every other bench body, and his game hasn't kicked off yet."
     }
   ]
 }
