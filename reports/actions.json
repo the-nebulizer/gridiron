@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-11-24T12:18:40.646Z",
+  "compiled_at": "2026-11-24T17:34:19.167Z",
   "season": "2026",
   "week": 12,
   "games_have_started": true,
@@ -31,10 +31,10 @@
     "waivers": {
       "report": "2026-11-24-waivers.md",
       "week": 12,
-      "verdict": "Claim Justice Hill for $0 — JackRAndrew has no FAAB left to beat it, so it costs nothing to deny him the Derrick Henry handcuff. Nothing else clears the bar this week.",
+      "verdict": "Claim Anthony Richardson for $23, no drop, as quarterback cover. No Justice Hill claim: Richardson takes the open roster spot, and a Hill block would cost a real drop (−3.4 over the season for the Broncos) to deny JackRAndrew a fifth running back. Revised Tuesday afternoon from the 7am version.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-11-24T12:18:35.443Z"
+      "written_at": "2026-11-24T17:34:07.497Z"
     },
     "lineup": {
       "report": "2026-11-22-lineup.md",
@@ -63,33 +63,39 @@
   },
   "actions": [
     {
-      "id": "waivers:add:5995",
+      "id": "waivers:add:9229",
       "source": "waivers",
       "report": "2026-11-24-waivers.md",
       "kind": "add",
       "week": 12,
-      "player": "5995",
-      "name": "Justice Hill",
-      "pos": "RB",
-      "team": "BAL",
+      "player": "9229",
+      "name": "Anthony Richardson Sr.",
+      "pos": "QB",
+      "team": "IND",
       "mode": "waiver",
-      "faab": 0,
+      "faab": 23,
+      "value_note": "QB has no cover: Goff and Cousins are the only healthy QBs for two QB-eligible slots, and Lamar projects 0 through Week 17. Richardson is the only free QB projected to play.",
+      "purpose": "cover",
       "displaces": null,
       "displaces_name": null,
-      "evidence": null,
+      "evidence": {
+        "note": "The Colts made Richardson their starter after moving on from Daniel Jones; Riley Leonard is Out.",
+        "url": "https://www.nfl.com/news/nfl-week-11-injury-report-2026-season",
+        "as_of": "2026-11-22"
+      },
       "consumes": [],
       "needs_slot": true,
       "urgency": "by_tuesday",
-      "why": "Henry is Questionable; Hill is his only backup and would start for JackRAndrew, a direct rival with $0 FAAB left — a $0 claim can't be beaten by him.",
+      "why": "Quarterback insurance for the playoff weeks. Projects 13.6–15.4 a week (bye Week 13). $23 beats GehrmannJake's whole budget and most of sweeneyb's.",
       "case": {
-        "starts": "Bench — RB4 behind Ashton Jeanty, Bucky Irving, Jaylen Warren",
+        "starts": "Bench — QB3 behind Jared Goff",
         "tradeoff": {
           "net": "neutral",
           "fixes": [],
           "opens": []
         },
-        "need": "RB: you have 3 — not thin · fixes nothing on the calendar",
-        "cost": "$0 of $61 · league average $32 left · #2 most-added in Sleeper this week",
+        "need": "QB: you have 2 — starts 2, no cover · fixes nothing on the calendar",
+        "cost": "$23 of $61 · league average $32 left · not trending",
         "later": "opens no holes · uses your last bench slot",
         "points": "0 this week · 0 rest of season · 0 playoffs",
         "value": {
@@ -138,7 +144,8 @@
             }
           ],
           "by_week": []
-        }
+        },
+        "override": "QB has no cover: Goff and Cousins are the only healthy QBs for two QB-eligible slots, and Lamar projects 0 through Week 17. Richardson is the only free QB projected to play."
       }
     }
   ]
