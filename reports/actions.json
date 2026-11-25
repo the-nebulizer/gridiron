@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-11-25T12:53:52.106Z",
+  "compiled_at": "2026-11-25T13:02:20.159Z",
   "season": "2026",
   "week": 12,
   "games_have_started": true,
@@ -10,19 +10,18 @@
       "11584",
       "12526",
       "2449",
-      "4993",
+      "11604",
       "8228",
-      null,
+      "1166",
       "11792",
-      "HOU"
+      "DEN"
     ],
     "bench": [
-      "11604",
       "11610",
-      "1166",
+      "4993",
       "7002",
       "9229",
-      "DEN"
+      "HOU"
     ],
     "reserve": [
       "4881"
@@ -43,7 +42,7 @@
       "verdict": "Two moves: Kirk Cousins into SUPER_FLEX, which has sat empty since Young left in the trade, and the Denver defense over Houston. Denver plays Friday at Pittsburgh against backup Mason Rudolph, with Aaron Rodgers benched.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-11-25T12:53:51.913Z"
+      "written_at": "2026-11-25T13:02:19.935Z"
     },
     "trades": {
       "report": "2026-11-25-trades.md",
@@ -69,19 +68,15 @@
       "report": "2026-11-25-lineup.md",
       "kind": "start",
       "week": 12,
+      "state": "done",
       "player": "1166",
       "name": "Kirk Cousins",
       "pos": "QB",
       "team": "MIN",
       "slot": "SUPER_FLEX",
-      "consumes": [
-        "1166"
-      ],
+      "consumes": [],
       "urgency": "now",
-      "why": "The slot has been empty since the Bryce Young trade, so as it stands it scores zero. Cousins (21.3 projected) hosts Atlanta Sunday.",
-      "case": {
-        "starts": "Kirk Cousins in at SUPERFLEX"
-      }
+      "why": "The slot has been empty since the Bryce Young trade, so as it stands it scores zero. Cousins (21.3 projected) hosts Atlanta Sunday."
     },
     {
       "id": "lineup:start:DEN",
@@ -89,6 +84,7 @@
       "report": "2026-11-25-lineup.md",
       "kind": "start",
       "week": 12,
+      "state": "done",
       "player": "DEN",
       "name": "Denver Broncos",
       "pos": "DEF",
@@ -96,17 +92,10 @@
       "slot": "DEF",
       "for": "HOU",
       "for_name": "Houston Texans",
-      "consumes": [
-        "HOU",
-        "DEN"
-      ],
+      "consumes": [],
       "urgency": "before_kickoff",
       "deadline_label": "before Fri 3pm ET",
-      "why": "Pittsburgh benched Rodgers for backup Mason Rudolph; Denver −3, total 38, so Pittsburgh scores about 17.5. Houston faces Baltimore, about 20 (46.5 total).",
-      "case": {
-        "starts": "Denver Broncos in at DEF, Houston Texans to the bench",
-        "need": "Houston Texans: healthy, HOU bye W8"
-      }
+      "why": "Pittsburgh benched Rodgers for backup Mason Rudolph; Denver −3, total 38, so Pittsburgh scores about 17.5. Houston faces Baltimore, about 20 (46.5 total)."
     }
   ]
 }
