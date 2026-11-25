@@ -1,6 +1,6 @@
 {
-  "fingerprint": "119adef555f3ce2a92ae725268e63c677e265df550f85a39fb62a337d679ca04",
-  "updated_at": "2026-11-22T20:08:27.257Z",
+  "fingerprint": "be144c4cf9d4d8237b9c19e25b1490415186d4262fbf4fb93c8e7d95c56c2be7",
+  "updated_at": "2026-11-25T12:10:12.993Z",
   "roster": {
     "starters": [
       "3163",
@@ -19,13 +19,13 @@
       "11610",
       "1166",
       "7002",
+      "9229",
       "DEN"
     ],
     "reserve": [
       "4881"
     ],
     "hurt": [
-      "11604:Out",
       "4881:IR"
     ]
   }
