@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-11-25T13:02:20.159Z",
+  "compiled_at": "2026-11-25T13:02:39.789Z",
   "season": "2026",
   "week": 12,
   "games_have_started": true,
@@ -42,7 +42,7 @@
       "verdict": "Two moves: Kirk Cousins into SUPER_FLEX, which has sat empty since Young left in the trade, and the Denver defense over Houston. Denver plays Friday at Pittsburgh against backup Mason Rudolph, with Aaron Rodgers benched.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-11-25T13:02:19.935Z"
+      "written_at": "2026-11-25T13:02:39.670Z"
     },
     "trades": {
       "report": "2026-11-25-trades.md",
