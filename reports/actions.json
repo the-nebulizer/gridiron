@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-11-25T12:17:38.040Z",
+  "compiled_at": "2026-11-25T12:53:52.106Z",
   "season": "2026",
   "week": 12,
   "games_have_started": true,
@@ -35,15 +35,15 @@
       "verdict": "Nothing to claim this week. The Richardson claim from last week's report cleared Wednesday morning as planned — $23 spent, no drop, $38 left. Everything else on the wire is a pass.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-11-25T12:17:26.750Z"
+      "written_at": "2026-11-25T12:17:45.000Z"
     },
     "lineup": {
       "report": "2026-11-25-lineup.md",
       "week": 12,
-      "verdict": "Start Brock Bowers over Mike Gesicki at TE, and put Kirk Cousins in the SUPER_FLEX slot that's currently sitting empty — both free moves, no cost, before Sunday's games.",
-      "next_check": "Inactives, Sun 10am",
+      "verdict": "Two moves: Kirk Cousins into SUPER_FLEX, which has sat empty since Young left in the trade, and the Denver defense over Houston. Denver plays Friday at Pittsburgh against backup Mason Rudolph, with Aaron Rodgers benched.",
+      "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-11-25T12:16:33.854Z"
+      "written_at": "2026-11-25T12:53:51.913Z"
     },
     "trades": {
       "report": "2026-11-25-trades.md",
@@ -51,7 +51,7 @@
       "verdict": "Hold. The trade deadline (Week 11) passed two days ago — no trade can be made for the rest of the season.",
       "next_check": "Waivers, Tue 7am",
       "stale": false,
-      "written_at": "2026-11-25T12:17:31.694Z"
+      "written_at": "2026-11-25T12:17:45.000Z"
     },
     "inactives": {
       "report": "2026-11-25-inactives.md",
@@ -59,35 +59,10 @@
       "verdict": "Not actionable today. No NFL games are underway or about to kick off — the first game of the week is Thanksgiving, tomorrow. This check runs again Sunday morning before the early games.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-11-25T12:17:36.434Z"
+      "written_at": "2026-11-25T12:17:45.000Z"
     }
   },
   "actions": [
-    {
-      "id": "lineup:start:11604",
-      "source": "lineup",
-      "report": "2026-11-25-lineup.md",
-      "kind": "start",
-      "week": 12,
-      "player": "11604",
-      "name": "Brock Bowers",
-      "pos": "TE",
-      "team": "LV",
-      "slot": "TE",
-      "for": "4993",
-      "for_name": "Mike Gesicki",
-      "consumes": [
-        "4993",
-        "11604"
-      ],
-      "urgency": "before_kickoff",
-      "deadline_label": "before Sunday's games kick off",
-      "why": "Bowers projects almost double Gesicki (13.4 vs 7), still ahead matchup-adjusted (18.3 vs 9.8); last-3-game usage (68% snaps, 6.7 targets) is a real role despite the knee tag.",
-      "case": {
-        "starts": "Brock Bowers in at TE, Mike Gesicki to the bench",
-        "need": "Mike Gesicki: healthy, CIN bye W6"
-      }
-    },
     {
       "id": "lineup:start:1166",
       "source": "lineup",
@@ -102,11 +77,35 @@
       "consumes": [
         "1166"
       ],
-      "urgency": "before_kickoff",
-      "deadline_label": "before Sunday's games kick off",
-      "why": "Slot is empty, scoring zero. Cousins projects 21.3 with a full snap share; bench alternative Richardson projects lower (15.4) off a tiny sample as the new Colts starter.",
+      "urgency": "now",
+      "why": "The slot has been empty since the Bryce Young trade, so as it stands it scores zero. Cousins (21.3 projected) hosts Atlanta Sunday.",
       "case": {
         "starts": "Kirk Cousins in at SUPERFLEX"
+      }
+    },
+    {
+      "id": "lineup:start:DEN",
+      "source": "lineup",
+      "report": "2026-11-25-lineup.md",
+      "kind": "start",
+      "week": 12,
+      "player": "DEN",
+      "name": "Denver Broncos",
+      "pos": "DEF",
+      "team": "DEN",
+      "slot": "DEF",
+      "for": "HOU",
+      "for_name": "Houston Texans",
+      "consumes": [
+        "HOU",
+        "DEN"
+      ],
+      "urgency": "before_kickoff",
+      "deadline_label": "before Fri 3pm ET",
+      "why": "Pittsburgh benched Rodgers for backup Mason Rudolph; Denver −3, total 38, so Pittsburgh scores about 17.5. Houston faces Baltimore, about 20 (46.5 total).",
+      "case": {
+        "starts": "Denver Broncos in at DEF, Houston Texans to the bench",
+        "need": "Houston Texans: healthy, HOU bye W8"
       }
     }
   ]
