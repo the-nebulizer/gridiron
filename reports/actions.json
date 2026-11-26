@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-11-25T13:18:31.378Z",
+  "compiled_at": "2026-11-26T12:06:22.597Z",
   "season": "2026",
   "week": 12,
   "games_have_started": true,
@@ -34,15 +34,15 @@
       "verdict": "Nothing to claim this week. The Richardson claim cleared Wednesday morning as planned — $23 spent, no drop, $38 left. Bowers returning to Questionable settles the TE spot without a wire move. Everything else on the wire is a pass.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-11-25T13:18:17.866Z"
+      "written_at": "2026-11-25T13:18:37.000Z"
     },
     "lineup": {
-      "report": "2026-11-25-lineup.md",
+      "report": "2026-11-26-lineup.md",
       "week": 12,
-      "verdict": "Lineup is already set right. Cousins at SUPER_FLEX and Denver at defense are both in from Monday's moves, and Bowers is correctly back at TE now that he's Questionable instead of Out — nothing to change tonight.",
+      "verdict": "Hold the lineup as set. Nothing has changed since Wednesday — this is still the highest-scoring legal lineup on both the projection and the matchup read.",
       "next_check": "Inactives, Sun 10am",
       "stale": false,
-      "written_at": "2026-11-25T13:17:59.542Z"
+      "written_at": "2026-11-26T12:06:17.991Z"
     },
     "trades": {
       "report": "2026-11-25-trades.md",
@@ -50,7 +50,7 @@
       "verdict": "Hold. The trade deadline (Week 11) passed two days ago — no trade can be made for the rest of the season.",
       "next_check": "Waivers, Tue 7am",
       "stale": false,
-      "written_at": "2026-11-25T13:18:23.266Z"
+      "written_at": "2026-11-25T13:18:37.000Z"
     },
     "inactives": {
       "report": "2026-11-25-inactives.md",
@@ -58,7 +58,7 @@
       "verdict": "Not actionable today. No NFL games are underway or about to kick off — the first game of the week is Thanksgiving, tomorrow. This check runs again Sunday morning before the early games.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-11-25T13:18:27.714Z"
+      "written_at": "2026-11-25T13:18:37.000Z"
     }
   },
   "actions": []
