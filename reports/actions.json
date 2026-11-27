@@ -1,5 +1,5 @@
 {
-  "compiled_at": "2026-11-26T12:06:22.597Z",
+  "compiled_at": "2026-11-27T20:13:12.401Z",
   "season": "2026",
   "week": 12,
   "games_have_started": true,
@@ -29,36 +29,36 @@
   },
   "sources": {
     "waivers": {
-      "report": "2026-11-25-waivers.md",
+      "report": "2026-11-27-waivers.md",
       "week": 12,
-      "verdict": "Nothing to claim this week. The Richardson claim cleared Wednesday morning as planned — $23 spent, no drop, $38 left. Bowers returning to Questionable settles the TE spot without a wire move. Everything else on the wire is a pass.",
+      "verdict": "Nothing to claim this week. Juwan Johnson (bench TE) was ruled Out, but he's buried behind Bowers and Gesicki, so it doesn't open a hole. Everything else on the wire is still a pass.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-11-25T13:18:37.000Z"
+      "written_at": "2026-11-27T20:12:51.816Z"
     },
     "lineup": {
-      "report": "2026-11-26-lineup.md",
+      "report": "2026-11-27-lineup.md",
       "week": 12,
-      "verdict": "Hold the lineup as set. Nothing has changed since Wednesday — this is still the highest-scoring legal lineup on both the projection and the matchup read.",
+      "verdict": "Hold the lineup as set. Juwan Johnson (bench TE) was ruled Out, but he was never in the lineup, so nothing changes.",
       "next_check": "Inactives, Sun 10am",
       "stale": false,
-      "written_at": "2026-11-26T12:06:17.991Z"
+      "written_at": "2026-11-27T20:12:36.108Z"
     },
     "trades": {
-      "report": "2026-11-25-trades.md",
+      "report": "2026-11-27-trades.md",
       "week": 12,
-      "verdict": "Hold. The trade deadline (Week 11) passed two days ago — no trade can be made for the rest of the season.",
+      "verdict": "Hold. The trade deadline (Week 11) passed last week — no trade can be made for the rest of the season.",
       "next_check": "Waivers, Tue 7am",
       "stale": false,
-      "written_at": "2026-11-25T13:18:37.000Z"
+      "written_at": "2026-11-27T20:12:56.744Z"
     },
     "inactives": {
-      "report": "2026-11-25-inactives.md",
+      "report": "2026-11-27-inactives.md",
       "week": 12,
-      "verdict": "Not actionable today. No NFL games are underway or about to kick off — the first game of the week is Thanksgiving, tomorrow. This check runs again Sunday morning before the early games.",
+      "verdict": "Not actionable beyond today's Black Friday game, which is already locked. Jaylen Warren and the Denver defense kicked off healthy and in the lineup; nothing to pivot. The rest of the slate kicks off Sunday, and that's when the real inactives check runs.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-11-25T13:18:37.000Z"
+      "written_at": "2026-11-27T20:13:06.772Z"
     }
   },
   "actions": []

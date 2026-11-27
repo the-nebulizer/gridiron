@@ -1,6 +1,6 @@
 {
-  "fingerprint": "06e0ad9d873dd254782a7ebd8c2635e2a6bbd4533a2e0fb1e4d902224ea996c0",
-  "updated_at": "2026-11-25T13:12:06.275Z",
+  "fingerprint": "c030a03f9dcfadbd318641e699a629fc4f27898c87db5655879e0f5f9bdf073b",
+  "updated_at": "2026-11-27T20:08:50.855Z",
   "roster": {
     "starters": [
       "3163",
@@ -25,7 +25,8 @@
       "4881"
     ],
     "hurt": [
-      "4881:IR"
+      "4881:IR",
+      "7002:Out"
     ]
   }
 }
