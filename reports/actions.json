@@ -1,24 +1,24 @@
 {
-  "compiled_at": "2026-11-27T20:13:12.401Z",
+  "compiled_at": "2026-11-28T00:14:58.560Z",
   "season": "2026",
   "week": 12,
   "games_have_started": true,
   "roster": {
     "starters": [
       "3163",
-      "12527",
       "11584",
+      "12527",
       "12526",
       "2449",
-      "11604",
+      "4993",
       "8228",
       "1166",
       "11792",
       "DEN"
     ],
     "bench": [
+      "11604",
       "11610",
-      "4993",
       "7002",
       "9229",
       "HOU"
@@ -29,37 +29,63 @@
   },
   "sources": {
     "waivers": {
-      "report": "2026-11-27-waivers.md",
+      "report": "2026-11-28-waivers.md",
       "week": 12,
-      "verdict": "Nothing to claim this week. Juwan Johnson (bench TE) was ruled Out, but he's buried behind Bowers and Gesicki, so it doesn't open a hole. Everything else on the wire is still a pass.",
+      "verdict": "Nothing to claim. The free-agent pool is open first-come-first-serve right now (post-Wednesday-run window), and nothing on it clears the bar for a roster spot I don't have — bench is full and the only open question (TE) is a lineup call, not a waiver one.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-11-27T20:12:51.816Z"
+      "written_at": "2026-11-28T00:14:36.085Z"
     },
     "lineup": {
-      "report": "2026-11-27-lineup.md",
+      "report": "2026-11-28-lineup.md",
       "week": 12,
-      "verdict": "Hold the lineup as set. Juwan Johnson (bench TE) was ruled Out, but he was never in the lineup, so nothing changes.",
+      "verdict": "Put Brock Bowers back in at TE and bench Mike Gesicki. Bowers is still only Questionable, not downgraded further, and he's well clear of Gesicki on the numbers, the matchup, and recent usage.",
       "next_check": "Inactives, Sun 10am",
       "stale": false,
-      "written_at": "2026-11-27T20:12:36.108Z"
+      "written_at": "2026-11-28T00:14:03.177Z"
     },
     "trades": {
-      "report": "2026-11-27-trades.md",
+      "report": "2026-11-28-trades.md",
       "week": 12,
       "verdict": "Hold. The trade deadline (Week 11) passed last week — no trade can be made for the rest of the season.",
       "next_check": "Waivers, Tue 7am",
       "stale": false,
-      "written_at": "2026-11-27T20:12:56.744Z"
+      "written_at": "2026-11-28T00:14:44.805Z"
     },
     "inactives": {
-      "report": "2026-11-27-inactives.md",
+      "report": "2026-11-28-inactives.md",
       "week": 12,
-      "verdict": "Not actionable beyond today's Black Friday game, which is already locked. Jaylen Warren and the Denver defense kicked off healthy and in the lineup; nothing to pivot. The rest of the slate kicks off Sunday, and that's when the real inactives check runs.",
+      "verdict": "Not actionable. No NFL games are being played today — the next kickoffs are Sunday. Nothing to check or pivot yet.",
       "next_check": "Lineup, Thu 7am",
       "stale": false,
-      "written_at": "2026-11-27T20:13:06.772Z"
+      "written_at": "2026-11-28T00:14:53.881Z"
     }
   },
-  "actions": []
+  "actions": [
+    {
+      "id": "lineup:start:11604",
+      "source": "lineup",
+      "report": "2026-11-28-lineup.md",
+      "kind": "start",
+      "week": 12,
+      "player": "11604",
+      "name": "Brock Bowers",
+      "pos": "TE",
+      "team": "LV",
+      "slot": "TE",
+      "for": "4993",
+      "for_name": "Mike Gesicki",
+      "consumes": [
+        "4993",
+        "11604"
+      ],
+      "urgency": "before_kickoff",
+      "deadline_label": "before Sunday night's Raiders-Browns kickoff",
+      "why": "Bowers projects 12.0 (18.3 matchup-adjusted on 68% snaps/6.7 targets over his last three) vs Gesicki's 6.6 (9.8 adjusted); his tag hasn't moved past Questionable.",
+      "case": {
+        "starts": "Brock Bowers in at TE, Mike Gesicki to the bench",
+        "need": "Mike Gesicki: healthy, CIN bye W6"
+      }
+    }
+  ]
 }
